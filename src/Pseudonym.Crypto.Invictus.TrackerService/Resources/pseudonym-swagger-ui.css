@@ -1,0 +1,190 @@
+﻿body {
+    background-color: white;
+}
+
+.swagger-container {
+    margin-top: 100px;
+}
+
+.swagger-ui .topbar .download-url-wrapper .select-label select {
+    border: 2px solid #ca6f00;
+}
+
+.swagger-ui .topbar {
+    background-color: #41444e;
+    position: fixed;
+    overflow: hidden;
+    z-index: 2400;
+    top: 0px;
+    width: 100%;
+}
+
+.swagger-ui .prop-type {
+    color: #ca6f00;
+}
+
+.swagger-ui img {
+    margin-bottom: 0px !important;
+}
+
+.swagger-ui .response-control-media-type--accept-controller select {
+    border-color: #ff8d00;
+}
+
+.swagger-ui .response-control-media-type__accept-message {
+    color: #ff8d00;
+}
+
+.swagger-ui .scheme-container {
+    margin: -68px 0px 14px 0px;
+    padding: 0 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.swagger-ui .btn.authorize {
+    color: #ffffff;
+    border-color: #ca6f00;
+    background-color: #ff8d00;
+}
+
+.swagger-ui .btn.authorize svg {
+    fill: #ffffff;
+}
+
+.swagger-ui select {
+    border: 2px solid #ca6f00;
+}
+
+.swagger-ui .info a:hover {
+    color: #41444e;
+}
+
+.swagger-ui .info a:visited {
+    color: #ff8d00;
+}
+
+.swagger-ui .info a {
+    color: #ff8d00;
+}
+
+.swagger-ui .info .title {
+    color: #41444e;
+}
+
+.swagger-ui img {
+    margin-bottom: 12px;
+}
+
+.swagger-ui .info {
+    background: repeating-linear-gradient(45deg,#f2f2f2,#f2f2f2 25px,#ffffff 0px,#ffffff 50px);
+    width: 100%;
+    margin: 20px 0;
+    padding: 10px;
+    border: 2px solid #ff8d00;
+    border-radius: 4px;
+    box-shadow: 0 0 4px rgba(0,0,0,.19);
+}
+
+.swagger-ui .loading-container .info {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.swagger-ui .filter .operation-filter-input {
+    background-color: #ffffff;
+    border: 1px solid #ff8d00;
+    border-radius: 4px;
+    box-shadow: 0 0 4px rgba(0,0,0,.19);
+}
+
+.swagger-ui .btn.execute {
+    background-color: #ff8d00;
+    border-color: #ca6f00;
+}
+
+.swagger-ui .btn {
+    border: 2px solid #ff8d00;
+    background: #fcfcfc;
+}
+
+.swagger-ui .btn-group .btn:last-child {
+    border-left: 0px;
+}
+
+.swagger-ui .opblock.opblock-get {
+    border-color: #ff8d00;
+    background: repeating-linear-gradient(45deg,#f2f2f2,#f2f2f2 25px,#ffffff 0px,#ffffff 50px);
+}
+
+.swagger-ui .opblock.opblock-post {
+    border-color: #ff8d00;
+    background: repeating-linear-gradient(45deg,#f2f2f2,#f2f2f2 25px,#ffffff 0px,#ffffff 50px);
+}
+
+.swagger-ui .opblock.opblock-head {
+    border-color: #ff8d00;
+    background: repeating-linear-gradient(45deg,#f2f2f2,#f2f2f2 25px,#ffffff 0px,#ffffff 50px);
+}
+
+.swagger-ui .opblock.opblock-options {
+    border-color: #ff8d00;
+    background: repeating-linear-gradient(45deg,#f2f2f2,#f2f2f2 25px,#ffffff 0px,#ffffff 50px);
+}
+
+.swagger-ui .opblock.opblock-put {
+    border-color: #ff8d00;
+    background: repeating-linear-gradient(45deg,#f2f2f2,#f2f2f2 25px,#ffffff 0px,#ffffff 50px);
+}
+
+.swagger-ui .opblock.opblock-patch {
+    border-color: #ff8d00;
+    background: repeating-linear-gradient(45deg,#f2f2f2,#f2f2f2 25px,#ffffff 0px,#ffffff 50px);
+}
+
+.swagger-ui .opblock.opblock-delete {
+    border-color: #ff8d00;
+    background: repeating-linear-gradient(45deg,#f2f2f2,#f2f2f2 25px,#ffffff 0px,#ffffff 50px);
+}
+
+.swagger-ui .opblock.opblock-get .opblock-summary {
+    border-color: #e1e1e1;
+}
+
+.swagger-ui .opblock.opblock-post .opblock-summary {
+    border-color: #e1e1e1;
+}
+
+.swagger-ui .opblock.opblock-head .opblock-summary {
+    border-color: #e1e1e1;
+}
+
+.swagger-ui .opblock.opblock-options .opblock-summary {
+    border-color: #e1e1e1;
+}
+
+.swagger-ui .opblock.opblock-put .opblock-summary {
+    border-color: #e1e1e1;
+}
+
+.swagger-ui .opblock.opblock-patch .opblock-summary {
+    border-color: #e1e1e1;
+}
+
+.swagger-ui .opblock.opblock-delete .opblock-summary {
+    border-color: #e1e1e1;
+}
+
+.swagger-ui section.models.is-open h4 {
+    margin: 0px 0 20px;
+}
+
+.swagger-ui section.models {
+    margin: 30px 0;
+    border: none;
+}
+
+.swagger-ui .opblock-tag {
+    border-bottom: none;
+}
