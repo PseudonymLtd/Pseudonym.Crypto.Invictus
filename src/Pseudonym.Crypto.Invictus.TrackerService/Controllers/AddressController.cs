@@ -46,7 +46,7 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
             var portfolio = new ApiPortfolio()
             {
                 Address = address,
-                Currency = CurrencyCode.USD
+                Currency = queryFilter.CurrencyCode ?? CurrencyCode.USD
             };
 
             await foreach (var fund in fundService.ListFundsAsync(scopedCancellationToken.Token))
