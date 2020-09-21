@@ -12,16 +12,16 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Clients.Models
         public string Symbol { get; set; }
 
         [JsonProperty("circulating_supply")]
-        public decimal CirculatingSupply { get; set; }
+        public string CirculatingSupply { get; set; }
 
         [JsonProperty("net_asset_value")]
-        public decimal NetAssetValue { get; set; }
+        public string NetValue { get; set; }
 
         [JsonProperty("nav_per_token")]
-        public decimal NetAssetValuePerToken { get; set; }
+        public string NetAssetValuePerToken { get; set; }
 
         [JsonProperty("price")]
-        public decimal? MarketValuePerToken { get; set; }
+        public string MarketValuePerToken { get; set; }
 
         [JsonProperty("assets")]
         public IReadOnlyList<InvictusAsset> Assets { get; set; } = new List<InvictusAsset>();

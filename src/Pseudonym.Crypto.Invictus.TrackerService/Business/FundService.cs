@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -18,57 +19,100 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Business
     {
         private readonly AppSettings appSettings;
         private readonly IInvictusClient invictusClient;
+        private readonly ICurrencyConverter currencyConverter;
 
         public FundService(
             IOptions<AppSettings> appSettings,
-            IInvictusClient invictusClient)
+            IInvictusClient invictusClient,
+            ICurrencyConverter currencyConverter)
         {
             this.appSettings = appSettings.Value;
             this.invictusClient = invictusClient;
+            this.currencyConverter = currencyConverter;
         }
 
-        public async IAsyncEnumerable<IFund> ListFundsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<IFund> ListFundsAsync(CurrencyCode currencyCode, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             await foreach (var fund in invictusClient.ListFundsAsync(cancellationToken))
             {
-                yield return Map(fund);
+                if (Enum.TryParse(fund.Symbol, out Symbol symbol))
+                {
+                    yield return Map(fund, symbol, currencyCode);
+                }
             }
         }
 
-        public async Task<IFund> GetFundAsync(string fundName, CancellationToken cancellationToken)
+        public async Task<IFund> GetFundAsync(Symbol symbol, CurrencyCode currencyCode, CancellationToken cancellationToken)
         {
-            var fund = await invictusClient.GetFundAsync(fundName, cancellationToken);
+            var fund = await invictusClient.GetFundAsync(symbol, cancellationToken);
 
-            return Map(fund);
+            return Map(fund, symbol, currencyCode);
         }
 
-        private IFund Map(InvictusFund fund)
+        public async IAsyncEnumerable<IPerformance> ListPerformanceAsync(
+            Symbol symbol,
+            DateTime from,
+            DateTime to,
+            CurrencyCode currencyCode,
+            [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var tokenInfo = appSettings.Funds.SingleOrDefault(f => f.Symbol == fund.Symbol);
+            await foreach (var perf in invictusClient.ListPerformanceAsync(symbol, from, to, cancellationToken))
+            {
+                yield return new BusinessPerformance()
+                {
+                    Date = perf.Date,
+                    NetValue = currencyConverter.Convert(perf.NetValue.FromPythonString(), currencyCode),
+                    NetAssetValuePerToken = currencyConverter.Convert(perf.NetAssetValuePerToken.FromPythonString(), currencyCode),
+                };
+            }
+        }
+
+        private IFund Map(InvictusFund fund, Symbol symbol, CurrencyCode currencyCode)
+        {
+            var netVal = fund.NetValue.FromPythonString();
+            var marketVal = fund.MarketValuePerToken.FromOptionalPythonString();
+            var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
 
             return new BusinessFund()
             {
-                Name = fund.Name,
-                Token = tokenInfo != null
-                    ? new BusinessToken()
+                Name = string.Join(" ", fund.Name
+                    .Trim()
+                    .Split('-')
+                    .Select(x =>
                     {
-                        Symbol = tokenInfo.Symbol,
-                        ContractAddress = new EthereumAddress(tokenInfo.ContractAddress),
-                        Decimals = tokenInfo.Decimals
-                    }
-                    : new BusinessToken(),
-                CirculatingSupply = fund.CirculatingSupply,
-                NetAssetValue = fund.NetAssetValue,
-                MarketValuePerToken = fund.MarketValuePerToken,
-                NetAssetValuePerToken = fund.NetAssetValuePerToken,
+                        var chars = x.ToCharArray();
+                        chars[0] = char.ToUpperInvariant(chars[0]);
+                        return new string(chars);
+                    })),
+                Token = new BusinessToken()
+                {
+                    Symbol = fundInfo.Symbol,
+                    ContractAddress = new EthereumAddress(fundInfo.ContractAddress),
+                    Decimals = fundInfo.Decimals
+                },
+                CirculatingSupply = fund.CirculatingSupply.FromPythonString(),
+                NetValue = currencyConverter.Convert(netVal, currencyCode),
+                NetAssetValuePerToken = currencyConverter.Convert(fund.NetAssetValuePerToken.FromPythonString(), currencyCode),
+                MarketValuePerToken = marketVal.HasValue
+                    ? currencyConverter.Convert(marketVal.Value, currencyCode)
+                    : default(decimal?),
                 Assets = fund.Assets
+                    .Select(a => new BusinessAsset()
+                    {
+                        Symbol = a.Symbol,
+                        Name = a.Name,
+                        Value = currencyConverter.Convert(a.Value.FromPythonString(), currencyCode),
+                        Share = currencyConverter.Convert(a.Value.FromPythonString() / netVal * 100, currencyCode)
+                    })
+                    .Union(fundInfo.Assets
                         .Select(a => new BusinessAsset()
                         {
                             Symbol = a.Symbol,
                             Name = a.Name,
-                            Value = a.Value
-                        })
-                        .ToList()
+                            Value = currencyConverter.Convert(a.Value, currencyCode),
+                            Share = a.Share
+                        }))
+                    .ToList()
             };
         }
     }

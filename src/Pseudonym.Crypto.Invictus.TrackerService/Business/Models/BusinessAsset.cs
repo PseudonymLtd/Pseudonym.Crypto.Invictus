@@ -9,5 +9,7 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Business.Models
         public string Symbol { get; set; }
 
         public decimal Value { get; set; }
+
+        public decimal Share { get; set; }
     }
 }

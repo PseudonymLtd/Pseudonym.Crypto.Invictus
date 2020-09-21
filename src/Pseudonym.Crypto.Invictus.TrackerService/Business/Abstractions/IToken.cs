@@ -1,10 +1,11 @@
-﻿using Pseudonym.Crypto.Invictus.TrackerService.Models;
+﻿using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
+using Pseudonym.Crypto.Invictus.TrackerService.Models;
 
 namespace Pseudonym.Crypto.Investments.Business.Abstractions
 {
     public interface IToken
     {
-        string Symbol { get; }
+        Symbol Symbol { get; }
 
         int Decimals { get; }
 

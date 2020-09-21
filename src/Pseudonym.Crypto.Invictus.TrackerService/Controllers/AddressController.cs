@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +8,7 @@ using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Controllers.Models;
+using Pseudonym.Crypto.Invictus.TrackerService.Controllers.Models.Filters;
 using Pseudonym.Crypto.Invictus.TrackerService.Models;
 
 namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
@@ -18,18 +18,15 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
     [AllowAnonymous]
     public class AddressController : Controller
     {
-        private readonly ICurrencyConverter currencyConverter;
         private readonly IFundService fundService;
         private readonly IEtherscanClient etherscanClient;
         private readonly IScopedCancellationToken scopedCancellationToken;
 
         public AddressController(
-            ICurrencyConverter currencyConverter,
             IFundService fundService,
             IEtherscanClient etherscanClient,
             IScopedCancellationToken scopedCancellationToken)
         {
-            this.currencyConverter = currencyConverter;
             this.fundService = fundService;
             this.etherscanClient = etherscanClient;
             this.scopedCancellationToken = scopedCancellationToken;
@@ -42,14 +39,15 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
         public async Task<IActionResult> GetAddress([Required, FromRoute] string hex, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
             var address = new EthereumAddress(hex);
+            var currencyCode = queryFilter.CurrencyCode ?? CurrencyCode.USD;
 
             var portfolio = new ApiPortfolio()
             {
                 Address = address,
-                Currency = queryFilter.CurrencyCode ?? CurrencyCode.USD
+                Currency = currencyCode
             };
 
-            await foreach (var fund in fundService.ListFundsAsync(scopedCancellationToken.Token))
+            await foreach (var fund in fundService.ListFundsAsync(currencyCode, scopedCancellationToken.Token))
             {
                 var tokenCount = await etherscanClient.GetTokensForAddressAsync(
                     fund.Token,
@@ -58,23 +56,13 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
 
                 portfolio.Investments.Add(new ApiInvestment()
                 {
-                    Name = string.Join(" ", fund.Name
-                        .Trim()
-                        .Split('-')
-                        .Select(x =>
-                        {
-                            var chars = x.ToCharArray();
-                            chars[0] = char.ToUpperInvariant(chars[0]);
-                            return new string(chars);
-                        })),
+                    Name = fund.Name,
                     Held = tokenCount,
                     Share = tokenCount / fund.CirculatingSupply * 100,
-                    MarketValue = currencyConverter.Convert(
-                        (fund.MarketValuePerToken ?? fund.NetAssetValuePerToken) * tokenCount,
-                        queryFilter.CurrencyCode ?? CurrencyCode.USD),
-                    RealValue = currencyConverter.Convert(
-                        fund.NetAssetValuePerToken * tokenCount,
-                        queryFilter.CurrencyCode ?? CurrencyCode.USD)
+                    RealValue = fund.NetAssetValuePerToken * tokenCount,
+                    MarketValue = fund.MarketValuePerToken.HasValue
+                        ? fund.MarketValuePerToken.Value * tokenCount
+                        : default(decimal?)
                 });
             }
 

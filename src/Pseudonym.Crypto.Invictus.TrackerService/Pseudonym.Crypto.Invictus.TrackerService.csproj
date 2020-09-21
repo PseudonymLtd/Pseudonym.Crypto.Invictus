@@ -49,8 +49,4 @@
     <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="5.5.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Business\Mappers\" />
-  </ItemGroup>
-
 </Project>

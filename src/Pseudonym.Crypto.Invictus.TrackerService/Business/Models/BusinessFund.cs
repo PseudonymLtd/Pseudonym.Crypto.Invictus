@@ -9,11 +9,17 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Business.Models
 
         public IToken Token { get; set; }
 
+        public bool IsTradeable => MarketValuePerToken.HasValue;
+
         public decimal CirculatingSupply { get; set; }
 
-        public decimal NetAssetValue { get; set; }
+        public decimal NetValue { get; set; }
 
         public decimal NetAssetValuePerToken { get; set; }
+
+        public decimal? MarketValue => MarketValuePerToken.HasValue
+            ? MarketValuePerToken * CirculatingSupply
+            : default;
 
         public decimal? MarketValuePerToken { get; set; }
 

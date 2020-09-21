@@ -14,7 +14,7 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers.Models
         public decimal RealValue { get; set; }
 
         [JsonProperty("market_value")]
-        public decimal MarketValue { get; set; }
+        public decimal? MarketValue { get; set; }
 
         [JsonProperty("share")]
         public decimal Share { get; set; }

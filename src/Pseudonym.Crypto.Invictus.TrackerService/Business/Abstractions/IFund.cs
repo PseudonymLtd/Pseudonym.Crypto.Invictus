@@ -8,13 +8,15 @@ namespace Pseudonym.Crypto.Investments.Business.Abstractions
 
         IToken Token { get; }
 
+        bool IsTradeable { get; }
+
         decimal CirculatingSupply { get; set; }
 
-        public decimal NetAssetValue => NetAssetValuePerToken * CirculatingSupply;
-
-        public decimal MarketValue => (MarketValuePerToken ?? NetAssetValuePerToken) * CirculatingSupply;
+        decimal NetValue { get; }
 
         decimal NetAssetValuePerToken { get; }
+
+        decimal? MarketValue { get; }
 
         decimal? MarketValuePerToken { get; }
 

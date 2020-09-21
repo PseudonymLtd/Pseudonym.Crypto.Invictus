@@ -11,6 +11,6 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Clients.Models
         public string Symbol { get; set; }
 
         [JsonProperty("usd_value")]
-        public decimal Value { get; set; }
+        public string Value { get; set; }
     }
 }

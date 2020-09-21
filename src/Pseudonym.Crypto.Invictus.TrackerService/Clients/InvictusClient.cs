@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -9,6 +10,7 @@ using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Clients.Models;
 using Pseudonym.Crypto.Invictus.TrackerService.Configuration;
+using Pseudonym.Crypto.Invictus.TrackerService.Models.Exceptions;
 
 namespace Pseudonym.Crypto.Invictus.TrackerService.Clients
 {
@@ -27,35 +29,88 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Clients
 
         public async IAsyncEnumerable<InvictusFund> ListFundsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            using var client = httpClientFactory.CreateClient(nameof(InvictusClient));
+            var response = await GetAsync<ListFundsResponse>("/v2/funds", cancellationToken);
 
-            var response = await client.GetAsync(new Uri($"/v2/funds", UriKind.Relative), cancellationToken);
-
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            var data = JsonConvert.DeserializeObject<ListFundsResponse>(json);
-
-            foreach (var item in data.Funds)
+            foreach (var item in response.Funds)
             {
                 yield return item;
             }
         }
 
-        public async Task<InvictusFund> GetFundAsync(string fundName, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<InvictusPerformance> ListPerformanceAsync(
+            Symbol symbol,
+            DateTime from,
+            DateTime to,
+            [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
+
+            if (fundInfo != null)
+            {
+                var response = await GetAsync<ListPerformanceResponse>($"/v2/funds/{fundInfo.FundName}/history?start={from}&end={to}", cancellationToken);
+
+                foreach (var item in response.Performance)
+                {
+                    yield return item;
+                }
+            }
+            else
+            {
+                throw new PermanentException($"Could not find invictus fund with symbol `{symbol}`");
+            }
+        }
+
+        public async Task<InvictusFund> GetFundAsync(Symbol symbol, CancellationToken cancellationToken)
+        {
+            var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
+
+            if (fundInfo != null)
+            {
+                if (symbol == Symbol.C20)
+                {
+                    var fund = await GetAsync<InvictusC20Fund>("/v2/funds/c20_status", cancellationToken);
+
+                    return new InvictusFund()
+                    {
+                        Symbol = Symbol.C20.ToString(),
+                        Name = fund.Name,
+                        CirculatingSupply = fund.CirculatingSupply,
+                        NetValue = fund.NetValue,
+                        NetAssetValuePerToken = fund.NetAssetValuePerToken,
+                        MarketValuePerToken = fund.NetAssetValuePerToken, // Same as NAV,
+                        Assets = fund.Holdings
+                            .Select(h => new InvictusAsset()
+                            {
+                                Symbol = h.Symbol,
+                                Name = h.Name,
+                                Value = h.Value
+                            })
+                            .ToList()
+                    };
+                }
+                else
+                {
+                    return await GetAsync<InvictusFund>($"/v2/funds/{fundInfo.FundName}/nav", cancellationToken);
+                }
+            }
+            else
+            {
+                throw new PermanentException($"Could not find invictus fund with symbol `{symbol}`");
+            }
+        }
+
+        private async Task<TResponse> GetAsync<TResponse>(string url, CancellationToken cancellationToken)
+            where TResponse : class, new()
         {
             using var client = httpClientFactory.CreateClient(nameof(InvictusClient));
 
-            var response = await client.GetAsync(new Uri($"/v2/funds/{fundName}/nav", UriKind.Relative), cancellationToken);
+            var response = await client.GetAsync(new Uri(url, UriKind.Relative), cancellationToken);
 
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
 
-            var fund = JsonConvert.DeserializeObject<InvictusFund>(json);
-
-            return fund;
+            return JsonConvert.DeserializeObject<TResponse>(json);
         }
     }
 }
