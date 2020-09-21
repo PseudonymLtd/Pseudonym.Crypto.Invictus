@@ -117,7 +117,9 @@ namespace Pseudonym.Crypto.Invictus.TrackerService
                 .AddHttpClient(nameof(InvictusClient), client => client.BaseAddress = new Uri("https://api.invictuscapital.com", UriKind.Absolute));
 
             container.AddScoped<IEtherscanClient, EtherscanClient>()
-                .AddHttpClient(nameof(EtherscanClient), client => client.BaseAddress = new Uri("https://api.etherscan.io", UriKind.Absolute));
+                .AddScoped<ResponseTranslationHandler>()
+                .AddHttpClient(nameof(EtherscanClient), client => client.BaseAddress = new Uri("https://api.etherscan.io", UriKind.Absolute))
+                .AddHttpMessageHandler<ResponseTranslationHandler>();
 
             container.AddScoped<ICurrencyClient, CurrencyClient>()
                 .AddHttpClient(nameof(CurrencyClient), client => client.BaseAddress = new Uri("https://open.exchangerate-api.com", UriKind.Absolute));
