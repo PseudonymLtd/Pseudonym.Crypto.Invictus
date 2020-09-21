@@ -70,7 +70,7 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
             {
                 yield return new ApiPerformance()
                 {
-                    Date = perf.Date.Date,
+                    Date = perf.Date,
                     NetValue = perf.NetValue,
                     NetAssetValuePerToken = perf.NetAssetValuePerToken
                 };
