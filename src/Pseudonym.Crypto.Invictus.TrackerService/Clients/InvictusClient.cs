@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Clients.Models;
 using Pseudonym.Crypto.Invictus.TrackerService.Configuration;
+using Pseudonym.Crypto.Invictus.TrackerService.Hosting.Models;
 using Pseudonym.Crypto.Invictus.TrackerService.Models.Exceptions;
 
 namespace Pseudonym.Crypto.Invictus.TrackerService.Clients
@@ -17,13 +18,16 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Clients
     internal sealed class InvictusClient : IInvictusClient
     {
         private readonly AppSettings appSettings;
+        private readonly IScopedCorrelation scopedCorrelation;
         private readonly IHttpClientFactory httpClientFactory;
 
         public InvictusClient(
             IOptions<AppSettings> appSettings,
+            IScopedCorrelation scopedCorrelation,
             IHttpClientFactory httpClientFactory)
         {
             this.appSettings = appSettings.Value;
+            this.scopedCorrelation = scopedCorrelation;
             this.httpClientFactory = httpClientFactory;
         }
 
@@ -103,6 +107,8 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Clients
             where TResponse : class, new()
         {
             using var client = httpClientFactory.CreateClient(nameof(InvictusClient));
+
+            client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.CorrelationId, scopedCorrelation.CorrelationId);
 
             var response = await client.GetAsync(new Uri(url, UriKind.Relative), cancellationToken);
 

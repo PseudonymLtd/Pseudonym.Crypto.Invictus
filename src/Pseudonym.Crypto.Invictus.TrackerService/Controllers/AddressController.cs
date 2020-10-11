@@ -19,16 +19,16 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
     public class AddressController : Controller
     {
         private readonly IFundService fundService;
-        private readonly IEtherClientFactory etherClientFactory;
+        private readonly IEtherClient etherClient;
         private readonly IScopedCancellationToken scopedCancellationToken;
 
         public AddressController(
             IFundService fundService,
-            IEtherClientFactory etherClientFactory,
+            IEtherClient etherClient,
             IScopedCancellationToken scopedCancellationToken)
         {
             this.fundService = fundService;
-            this.etherClientFactory = etherClientFactory;
+            this.etherClient = etherClient;
             this.scopedCancellationToken = scopedCancellationToken;
         }
 
@@ -47,11 +47,9 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
                 Currency = currencyCode
             };
 
-            using var etherClient = etherClientFactory.CreateClient();
-
             await foreach (var fund in fundService.ListFundsAsync(currencyCode, scopedCancellationToken.Token))
             {
-                var tokenCount = await etherClient.GetContractBalance(fund.Token.ContractAddress, address); ;
+                var tokenCount = await etherClient.GetContractBalance(fund.Token.ContractAddress, address);
 
                 portfolio.Investments.Add(new ApiInvestment()
                 {

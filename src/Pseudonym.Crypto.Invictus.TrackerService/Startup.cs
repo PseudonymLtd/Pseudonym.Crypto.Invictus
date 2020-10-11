@@ -15,9 +15,7 @@ using Newtonsoft.Json.Converters;
 using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Business;
 using Pseudonym.Crypto.Invictus.TrackerService.Business.Abstractions;
-using Pseudonym.Crypto.Invictus.TrackerService.Clients;
 using Pseudonym.Crypto.Invictus.TrackerService.Configuration;
-using Pseudonym.Crypto.Invictus.TrackerService.Ethereum;
 using Pseudonym.Crypto.Invictus.TrackerService.Hosting;
 using Pseudonym.Crypto.Invictus.TrackerService.Hosting.Models;
 using Pseudonym.Crypto.Invictus.TrackerService.Services;
@@ -35,7 +33,8 @@ namespace Pseudonym.Crypto.Invictus.TrackerService
 
         public void ConfigureServices(IServiceCollection container)
         {
-            container.Configure<AppSettings>(Configuration);
+            container.Configure<AppSettings>(Configuration.GetSection(nameof(AppSettings)));
+            container.Configure<Dependencies>(Configuration.GetSection(nameof(Dependencies)));
 
             var mvcBuilder = container
                 .AddControllers()
@@ -114,13 +113,10 @@ namespace Pseudonym.Crypto.Invictus.TrackerService
                 .AddSwaggerGenNewtonsoftSupport();
 
             // Clients
-            container.AddScoped<IEtherClientFactory, EtherClientFactory>();
-
-            container.AddScoped<IInvictusClient, InvictusClient>()
-                .AddHttpClient(nameof(InvictusClient), client => client.BaseAddress = new Uri("https://api.invictuscapital.com", UriKind.Absolute));
-
-            container.AddScoped<ICurrencyClient, CurrencyClient>()
-                .AddHttpClient(nameof(CurrencyClient), client => client.BaseAddress = new Uri("https://open.exchangerate-api.com", UriKind.Absolute));
+            container
+                .AddInfuriaClient()
+                .AddInvictusClient()
+                .AddExchangeRateClient();
 
             container.AddTransient<IFundService, FundService>();
 

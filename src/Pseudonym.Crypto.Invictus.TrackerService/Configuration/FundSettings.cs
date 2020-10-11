@@ -5,7 +5,7 @@ using Pseudonym.Crypto.Invictus.TrackerService.Ethereum;
 
 namespace Pseudonym.Crypto.Invictus.TrackerService.Configuration
 {
-    public sealed class FundConfig
+    public sealed class FundSettings
     {
         public string FundName { get; set; }
 

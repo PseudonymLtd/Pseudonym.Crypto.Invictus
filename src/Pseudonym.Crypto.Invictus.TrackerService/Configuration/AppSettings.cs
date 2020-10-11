@@ -5,12 +5,12 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Configuration
 {
     public class AppSettings
     {
-        public TimeSpan Interval { get; set; } = TimeSpan.FromMinutes(1);
+        public string ServiceName { get; set; }
 
         public Version Version { get; set; }
 
-        public InfuriaConfig Infuria { get; set; }
+        public Uri HostUrl { get; set; }
 
-        public List<FundConfig> Funds { get; set; } = new List<FundConfig>();
+        public List<FundSettings> Funds { get; set; } = new List<FundSettings>();
     }
 }
