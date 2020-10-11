@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Pseudonym.Crypto.Investments.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Controllers.Models;
@@ -35,7 +34,9 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
         [ProducesResponseType(typeof(List<ApiFund>), StatusCodes.Status200OK)]
         public async IAsyncEnumerable<ApiFund> GetFunds([FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
-            await foreach (var fund in fundService.ListFundsAsync(queryFilter.CurrencyCode ?? CurrencyCode.USD, scopedCancellationToken.Token))
+            await foreach (var fund in fundService
+                .ListFundsAsync(queryFilter.CurrencyCode ?? CurrencyCode.USD)
+                .WithCancellation(scopedCancellationToken.Token))
             {
                 yield return Map(fund);
             }
@@ -47,10 +48,7 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
         [ProducesResponseType(typeof(ApiFund), StatusCodes.Status200OK)]
         public async Task<ApiFund> GetFund([Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
-            var fund = await fundService.GetFundAsync(
-                symbol,
-                queryFilter.CurrencyCode ?? CurrencyCode.USD,
-                scopedCancellationToken.Token);
+            var fund = await fundService.GetFundAsync(symbol, queryFilter.CurrencyCode ?? CurrencyCode.USD);
 
             return Map(fund);
         }
@@ -61,12 +59,9 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
         [ProducesResponseType(typeof(ApiFund), StatusCodes.Status200OK)]
         public async IAsyncEnumerable<ApiPerformance> ListPerformance([Required, FromRoute] Symbol symbol, [FromQuery] ApiPerformanceQueryFilter queryFilter)
         {
-            await foreach (var perf in fundService.ListPerformanceAsync(
-                symbol,
-                queryFilter.FromDate,
-                queryFilter.ToDate,
-                queryFilter.CurrencyCode ?? CurrencyCode.USD,
-                scopedCancellationToken.Token))
+            await foreach (var perf in fundService
+                .ListPerformanceAsync(symbol, queryFilter.FromDate, queryFilter.ToDate, queryFilter.CurrencyCode ?? CurrencyCode.USD)
+                .WithCancellation(scopedCancellationToken.Token))
             {
                 yield return new ApiPerformance()
                 {

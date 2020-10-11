@@ -1,4 +1,4 @@
-﻿namespace Pseudonym.Crypto.Investments.Business.Abstractions
+﻿namespace Pseudonym.Crypto.Invictus.TrackerService.Business.Abstractions
 {
     public interface IAsset
     {

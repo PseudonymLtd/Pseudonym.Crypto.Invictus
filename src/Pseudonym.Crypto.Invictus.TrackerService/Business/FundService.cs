@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
-using Pseudonym.Crypto.Investments.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Business.Models;
@@ -20,20 +19,25 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Business
         private readonly AppSettings appSettings;
         private readonly IInvictusClient invictusClient;
         private readonly ICurrencyConverter currencyConverter;
+        private readonly IScopedCancellationToken scopedCancellationToken;
 
         public FundService(
             IOptions<AppSettings> appSettings,
             IInvictusClient invictusClient,
-            ICurrencyConverter currencyConverter)
+            ICurrencyConverter currencyConverter,
+            IScopedCancellationToken scopedCancellationToken)
         {
             this.appSettings = appSettings.Value;
             this.invictusClient = invictusClient;
             this.currencyConverter = currencyConverter;
+            this.scopedCancellationToken = scopedCancellationToken;
         }
 
-        public async IAsyncEnumerable<IFund> ListFundsAsync(CurrencyCode currencyCode, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<IFund> ListFundsAsync(CurrencyCode currencyCode)
         {
-            await foreach (var fund in invictusClient.ListFundsAsync(cancellationToken))
+            await foreach (var fund in invictusClient
+                .ListFundsAsync()
+                .WithCancellation(scopedCancellationToken.Token))
             {
                 if (Enum.TryParse(fund.Symbol, out Symbol symbol))
                 {
@@ -42,21 +46,18 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Business
             }
         }
 
-        public async Task<IFund> GetFundAsync(Symbol symbol, CurrencyCode currencyCode, CancellationToken cancellationToken)
+        public async Task<IFund> GetFundAsync(Symbol symbol, CurrencyCode currencyCode)
         {
-            var fund = await invictusClient.GetFundAsync(symbol, cancellationToken);
+            var fund = await invictusClient.GetFundAsync(symbol);
 
             return Map(fund, symbol, currencyCode);
         }
 
-        public async IAsyncEnumerable<IPerformance> ListPerformanceAsync(
-            Symbol symbol,
-            DateTime from,
-            DateTime to,
-            CurrencyCode currencyCode,
-            [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<IPerformance> ListPerformanceAsync(Symbol symbol, DateTime from, DateTime to, CurrencyCode currencyCode)
         {
-            await foreach (var perf in invictusClient.ListPerformanceAsync(symbol, from, to, cancellationToken))
+            await foreach (var perf in invictusClient
+                .ListPerformanceAsync(symbol, from, to)
+                .WithCancellation(scopedCancellationToken.Token))
             {
                 yield return new BusinessPerformance()
                 {

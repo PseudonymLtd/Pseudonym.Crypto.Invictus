@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -19,21 +17,24 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Clients
     {
         private readonly AppSettings appSettings;
         private readonly IScopedCorrelation scopedCorrelation;
+        private readonly IScopedCancellationToken scopedCancellationToken;
         private readonly IHttpClientFactory httpClientFactory;
 
         public InvictusClient(
             IOptions<AppSettings> appSettings,
             IScopedCorrelation scopedCorrelation,
+            IScopedCancellationToken scopedCancellationToken,
             IHttpClientFactory httpClientFactory)
         {
             this.appSettings = appSettings.Value;
             this.scopedCorrelation = scopedCorrelation;
+            this.scopedCancellationToken = scopedCancellationToken;
             this.httpClientFactory = httpClientFactory;
         }
 
-        public async IAsyncEnumerable<InvictusFund> ListFundsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<InvictusFund> ListFundsAsync()
         {
-            var response = await GetAsync<ListFundsResponse>("/v2/funds", cancellationToken);
+            var response = await GetAsync<ListFundsResponse>("/v2/funds");
 
             foreach (var item in response.Funds)
             {
@@ -41,17 +42,13 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Clients
             }
         }
 
-        public async IAsyncEnumerable<InvictusPerformance> ListPerformanceAsync(
-            Symbol symbol,
-            DateTime from,
-            DateTime to,
-            [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<InvictusPerformance> ListPerformanceAsync(Symbol symbol, DateTime from, DateTime to)
         {
             var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
 
             if (fundInfo != null)
             {
-                var response = await GetAsync<ListPerformanceResponse>($"/v2/funds/{fundInfo.FundName}/history?start={from}&end={to}", cancellationToken);
+                var response = await GetAsync<ListPerformanceResponse>($"/v2/funds/{fundInfo.FundName}/history?start={from}&end={to}");
 
                 foreach (var item in response.Performance)
                 {
@@ -64,7 +61,7 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Clients
             }
         }
 
-        public async Task<InvictusFund> GetFundAsync(Symbol symbol, CancellationToken cancellationToken)
+        public async Task<InvictusFund> GetFundAsync(Symbol symbol)
         {
             var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
 
@@ -72,7 +69,7 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Clients
             {
                 if (symbol == Symbol.C20)
                 {
-                    var fund = await GetAsync<InvictusC20Fund>("/v2/funds/c20_status", cancellationToken);
+                    var fund = await GetAsync<InvictusC20Fund>("/v2/funds/c20_status");
 
                     return new InvictusFund()
                     {
@@ -94,7 +91,7 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Clients
                 }
                 else
                 {
-                    return await GetAsync<InvictusFund>($"/v2/funds/{fundInfo.FundName}/nav", cancellationToken);
+                    return await GetAsync<InvictusFund>($"/v2/funds/{fundInfo.FundName}/nav");
                 }
             }
             else
@@ -103,14 +100,14 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Clients
             }
         }
 
-        private async Task<TResponse> GetAsync<TResponse>(string url, CancellationToken cancellationToken)
+        private async Task<TResponse> GetAsync<TResponse>(string url)
             where TResponse : class, new()
         {
             using var client = httpClientFactory.CreateClient(nameof(InvictusClient));
 
             client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.CorrelationId, scopedCorrelation.CorrelationId);
 
-            var response = await client.GetAsync(new Uri(url, UriKind.Relative), cancellationToken);
+            var response = await client.GetAsync(new Uri(url, UriKind.Relative), scopedCancellationToken.Token);
 
             response.EnsureSuccessStatusCode();
 

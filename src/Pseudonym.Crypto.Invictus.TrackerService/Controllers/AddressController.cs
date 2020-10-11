@@ -1,12 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
-using Pseudonym.Crypto.Invictus.TrackerService.Business.Abstractions;
+using Pseudonym.Crypto.Invictus.TrackerService.Configuration;
 using Pseudonym.Crypto.Invictus.TrackerService.Controllers.Models;
 using Pseudonym.Crypto.Invictus.TrackerService.Controllers.Models.Filters;
 using Pseudonym.Crypto.Invictus.TrackerService.Ethereum;
@@ -18,17 +21,17 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
     [AllowAnonymous]
     public class AddressController : Controller
     {
-        private readonly IFundService fundService;
-        private readonly IEtherClient etherClient;
+        private readonly IOptions<AppSettings> appSettings;
+        private readonly IAddressService addressService;
         private readonly IScopedCancellationToken scopedCancellationToken;
 
         public AddressController(
-            IFundService fundService,
-            IEtherClient etherClient,
+            IOptions<AppSettings> appSettings,
+            IAddressService addressService,
             IScopedCancellationToken scopedCancellationToken)
         {
-            this.fundService = fundService;
-            this.etherClient = etherClient;
+            this.appSettings = appSettings;
+            this.addressService = addressService;
             this.scopedCancellationToken = scopedCancellationToken;
         }
 
@@ -47,23 +50,46 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
                 Currency = currencyCode
             };
 
-            await foreach (var fund in fundService.ListFundsAsync(currencyCode, scopedCancellationToken.Token))
+            await foreach (var investment in addressService
+                .ListInvestmentsAsync(address, currencyCode)
+                .WithCancellation(scopedCancellationToken.Token))
             {
-                var tokenCount = await etherClient.GetContractBalance(fund.Token.ContractAddress, address);
-
                 portfolio.Investments.Add(new ApiInvestment()
                 {
-                    Name = fund.Name,
-                    Held = tokenCount,
-                    Share = tokenCount / fund.CirculatingSupply * 100,
-                    RealValue = fund.NetAssetValuePerToken * tokenCount,
-                    MarketValue = fund.MarketValuePerToken.HasValue
-                        ? fund.MarketValuePerToken.Value * tokenCount
-                        : default(decimal?)
+                    Name = investment.Fund.Name,
+                    Held = investment.Held,
+                    Share = investment.Share,
+                    RealValue = investment.RealValue,
+                    MarketValue = investment.MarketValue
                 });
             }
 
             return Ok(portfolio);
+        }
+
+        [HttpGet]
+        [Route("{hex}/transactions/{symbol}")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(List<ApiTransaction>), StatusCodes.Status200OK)]
+        public async IAsyncEnumerable<ApiTransaction> GetTransactions(
+            [Required, FromRoute] string hex, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        {
+            var address = new EthereumAddress(hex);
+            var currencyCode = queryFilter.CurrencyCode ?? CurrencyCode.USD;
+
+            var fundInfo = appSettings.Value.Funds.Single(x => x.Symbol == symbol);
+
+            await foreach (var transaction in addressService
+                .ListTransactionsAsync(new EthereumAddress(fundInfo.ContractAddress), address, currencyCode)
+                .WithCancellation(scopedCancellationToken.Token))
+            {
+                yield return new ApiTransaction()
+                {
+                    Sender = transaction.Sender,
+                    Recipient = transaction.Recipient,
+                    Amount = transaction.Amount
+                };
+            }
         }
     }
 }

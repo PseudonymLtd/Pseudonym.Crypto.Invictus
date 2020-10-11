@@ -14,7 +14,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Business;
-using Pseudonym.Crypto.Invictus.TrackerService.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Configuration;
 using Pseudonym.Crypto.Invictus.TrackerService.Hosting;
 using Pseudonym.Crypto.Invictus.TrackerService.Hosting.Models;
@@ -118,6 +117,7 @@ namespace Pseudonym.Crypto.Invictus.TrackerService
                 .AddInvictusClient()
                 .AddExchangeRateClient();
 
+            container.AddTransient<IAddressService, AddressService>();
             container.AddTransient<IFundService, FundService>();
 
             container
