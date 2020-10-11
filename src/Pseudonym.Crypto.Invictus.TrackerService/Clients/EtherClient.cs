@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 using Nethereum.JsonRpc.Client;
 using Nethereum.Web3;
 using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
+using Pseudonym.Crypto.Invictus.TrackerService.Ethereum;
 using Pseudonym.Crypto.Invictus.TrackerService.Ethereum.Functions;
 using Pseudonym.Crypto.Invictus.TrackerService.Hosting.Models;
 
-namespace Pseudonym.Crypto.Invictus.TrackerService.Ethereum
+namespace Pseudonym.Crypto.Invictus.TrackerService.Clients
 {
     internal sealed class EtherClient : IEtherClient
     {

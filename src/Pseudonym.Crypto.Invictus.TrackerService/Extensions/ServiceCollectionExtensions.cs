@@ -7,7 +7,6 @@ using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Clients;
 using Pseudonym.Crypto.Invictus.TrackerService.Configuration;
-using Pseudonym.Crypto.Invictus.TrackerService.Ethereum;
 using Pseudonym.Crypto.Invictus.TrackerService.Hosting.Models;
 
 namespace Microsoft.Extensions.DependencyInjection
