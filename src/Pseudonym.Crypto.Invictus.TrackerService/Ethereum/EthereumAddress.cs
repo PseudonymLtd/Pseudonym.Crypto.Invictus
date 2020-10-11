@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.TrackerService.Models.Exceptions;
 
-namespace Pseudonym.Crypto.Invictus.TrackerService.Models
+namespace Pseudonym.Crypto.Invictus.TrackerService.Ethereum
 {
     public readonly struct EthereumAddress : IEquatable<EthereumAddress>
     {

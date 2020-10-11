@@ -9,7 +9,7 @@ using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Controllers.Models;
 using Pseudonym.Crypto.Invictus.TrackerService.Controllers.Models.Filters;
-using Pseudonym.Crypto.Invictus.TrackerService.Models;
+using Pseudonym.Crypto.Invictus.TrackerService.Ethereum;
 
 namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
 {
@@ -19,16 +19,16 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
     public class AddressController : Controller
     {
         private readonly IFundService fundService;
-        private readonly IEtherscanClient etherscanClient;
+        private readonly IEtherClientFactory etherClientFactory;
         private readonly IScopedCancellationToken scopedCancellationToken;
 
         public AddressController(
             IFundService fundService,
-            IEtherscanClient etherscanClient,
+            IEtherClientFactory etherClientFactory,
             IScopedCancellationToken scopedCancellationToken)
         {
             this.fundService = fundService;
-            this.etherscanClient = etherscanClient;
+            this.etherClientFactory = etherClientFactory;
             this.scopedCancellationToken = scopedCancellationToken;
         }
 
@@ -47,12 +47,11 @@ namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
                 Currency = currencyCode
             };
 
+            using var etherClient = etherClientFactory.CreateClient();
+
             await foreach (var fund in fundService.ListFundsAsync(currencyCode, scopedCancellationToken.Token))
             {
-                var tokenCount = await etherscanClient.GetTokensForAddressAsync(
-                    fund.Token,
-                    address,
-                    scopedCancellationToken.Token);
+                var tokenCount = await etherClient.GetContractBalance(fund.Token.ContractAddress, address); ;
 
                 portfolio.Investments.Add(new ApiInvestment()
                 {

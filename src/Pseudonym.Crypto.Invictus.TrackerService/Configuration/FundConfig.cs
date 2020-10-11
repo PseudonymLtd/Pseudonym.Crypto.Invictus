@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
-using Pseudonym.Crypto.Invictus.TrackerService.Models;
+using Pseudonym.Crypto.Invictus.TrackerService.Ethereum;
 
 namespace Pseudonym.Crypto.Invictus.TrackerService.Configuration
 {

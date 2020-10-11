@@ -1,5 +1,5 @@
 ﻿using Pseudonym.Crypto.Invictus.TrackerService.Abstractions;
-using Pseudonym.Crypto.Invictus.TrackerService.Models;
+using Pseudonym.Crypto.Invictus.TrackerService.Ethereum;
 
 namespace Pseudonym.Crypto.Investments.Business.Abstractions
 {

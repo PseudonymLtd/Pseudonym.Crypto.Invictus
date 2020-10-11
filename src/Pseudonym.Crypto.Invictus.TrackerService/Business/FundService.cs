@@ -11,7 +11,7 @@ using Pseudonym.Crypto.Invictus.TrackerService.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.TrackerService.Business.Models;
 using Pseudonym.Crypto.Invictus.TrackerService.Clients.Models;
 using Pseudonym.Crypto.Invictus.TrackerService.Configuration;
-using Pseudonym.Crypto.Invictus.TrackerService.Models;
+using Pseudonym.Crypto.Invictus.TrackerService.Ethereum;
 
 namespace Pseudonym.Crypto.Invictus.TrackerService.Business
 {
