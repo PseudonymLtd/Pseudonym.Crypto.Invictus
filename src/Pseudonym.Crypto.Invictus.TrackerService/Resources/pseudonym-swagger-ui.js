@@ -2,11 +2,12 @@
     window.addEventListener("load", function () {
         setTimeout(function () {
             const logo = document.getElementsByClassName('link')[0];
-            const logoUrl = window.location.href.toString().replace("swagger/index.html", "resources/logo.png");
-            const faviconUrl = window.location.href.toString().replace("swagger/index.html", "resources/favicon.png");
+            const logoUrl = window.location.href.toString().replace("index.html", "resources/logo.png");
+            const faviconUrl = window.location.href.toString().replace("index.html", "resources/favicon.png");
 
             logo.children[0].alt = "Pseudonym";
             logo.children[0].src = logoUrl;
+            logo.href = "https://www.pseudonym.org.uk";
 
             for (let i = 0; i < document.head.children.length; i++) {
                 if (document.head.children[i].tagName === "LINK" &&

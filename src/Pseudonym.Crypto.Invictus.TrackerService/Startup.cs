@@ -172,11 +172,11 @@ namespace Pseudonym.Crypto.Invictus.TrackerService
             applicationBuilder.UseMiddleware<StaticFilesMiddleware>();
             applicationBuilder.UseMiddleware<RequestExceptionMiddleware>();
 
-            applicationBuilder.UseSwagger(c => c.RouteTemplate = "swagger/{documentName}/schema.json");
+            applicationBuilder.UseSwagger(c => c.RouteTemplate = "{documentName}/schema.json");
             applicationBuilder.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/schema.json", $"Invictus Fund API v1");
-                c.RoutePrefix = "swagger";
+                c.SwaggerEndpoint("/v1/schema.json", $"Invictus Fund API v1");
+                c.RoutePrefix = string.Empty;
                 c.InjectStylesheet("/resources/pseudonym-swagger-ui.css");
                 c.InjectJavascript("/resources/pseudonym-swagger-ui.js");
                 c.DisplayRequestDuration();

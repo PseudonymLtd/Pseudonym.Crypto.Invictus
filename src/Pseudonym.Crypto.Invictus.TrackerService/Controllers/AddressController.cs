@@ -16,7 +16,7 @@ using Pseudonym.Crypto.Invictus.TrackerService.Ethereum;
 
 namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
 {
-    [Route("address")]
+    [Route("api/v1/address")]
     [ApiController]
     [AllowAnonymous]
     public class AddressController : Controller

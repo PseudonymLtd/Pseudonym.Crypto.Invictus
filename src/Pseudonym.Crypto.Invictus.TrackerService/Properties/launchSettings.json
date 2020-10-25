@@ -18,7 +18,7 @@
     "Pseudonym.Crypto.Invictus.TrackerService": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "swagger",
+      "launchUrl": "",
       "workingDirectory": "bin\\Debug\\netcoreapp3.1",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

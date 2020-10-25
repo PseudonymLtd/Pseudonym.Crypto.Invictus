@@ -13,7 +13,7 @@ using Pseudonym.Crypto.Invictus.TrackerService.Controllers.Models.Filters;
 
 namespace Pseudonym.Crypto.Invictus.TrackerService.Controllers
 {
-    [Route("funds")]
+    [Route("api/v1/funds")]
     [ApiController]
     [AllowAnonymous]
     public class FundController
