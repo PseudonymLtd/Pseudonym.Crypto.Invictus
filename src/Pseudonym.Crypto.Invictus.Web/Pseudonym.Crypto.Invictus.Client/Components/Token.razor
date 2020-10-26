@@ -6,10 +6,7 @@
 }
 else
 {
-    <div class="tooltip-container">
-        @Symbol <a href="https://etherscan.io/token/@ContractAddress" target="_blank"><span class="oi oi-external-link" style="font-size: 12px;"></span></a>
-        <span class="tooltip-text" style="font-size: 12px; width: 120px">View on etherscan</span>
-    </div>
+    <Link DisplayText="@Symbol" CaptionText="View on etherscan" Url="@Link" />
 }
 
 @code {
@@ -19,4 +16,6 @@ else
 
     [Parameter]
     public string ContractAddress { get; set; }
+
+    internal string Link => $"https://etherscan.io/token/{ContractAddress}";
 }

@@ -1,0 +1,15 @@
+﻿<div class="tooltip-container">
+    @DisplayText <a href="@Url" target="_blank"><span class="oi oi-external-link" style="font-size: 12px;"></span></a>
+    <span class="tooltip-text" style="font-size: 12px; width: 120px">@CaptionText</span>
+</div>
+
+@code {
+    [Parameter]
+    public string DisplayText { get; set; }
+
+    [Parameter]
+    public string CaptionText { get; set; }
+
+    [Parameter]
+    public string Url { get; set; }
+}

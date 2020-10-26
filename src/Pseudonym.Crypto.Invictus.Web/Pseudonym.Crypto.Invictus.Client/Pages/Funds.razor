@@ -27,7 +27,7 @@ else
             @foreach (var fund in funds.OrderBy(x => x.Name))
             {
                 <tr>
-                    <td>@fund.Name</td>
+                    <td><FundLink DisplayName="@fund.DisplayName" Name="@fund.Name" /></td>
                     <td><Token Symbol="@fund.Token.Symbol.ToString()" ContractAddress="@fund.Token.Address" /></td>
                     <td><LargeNumber Value="fund.CirculatingSupply" Decimals="2" /></td>
                     <td><Money Value="@fund.NetAssetValue" /></td>

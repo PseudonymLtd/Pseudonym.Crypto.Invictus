@@ -1,0 +1,11 @@
+﻿<Link DisplayText="@DisplayName" CaptionText="View on Invictus" Url="@Link" />
+
+@code {
+    [Parameter]
+    public string DisplayName { get; set; }
+
+    [Parameter]
+    public string Name { get; set; }
+
+    internal string Link => $"https://invictuscapital.com/{Name}";
+}
