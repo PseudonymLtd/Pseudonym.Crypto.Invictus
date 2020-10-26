@@ -6,6 +6,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
     {
         string Name { get; }
 
+        string DisplayName { get; }
+
         IToken Token { get; }
 
         bool IsTradeable { get; }

@@ -15,7 +15,7 @@ using Pseudonym.Crypto.Invictus.Shared.Models;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Controllers
 {
-    [ApiKey]
+    [Authorize]
     [ApiController]
     [Route("api/v1/funds")]
     public class FundController
@@ -79,6 +79,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
             return new ApiFund()
             {
                 Name = fund.Name,
+                DisplayName = fund.DisplayName,
                 Token = new ApiToken()
                 {
                     Symbol = fund.Token.Symbol,

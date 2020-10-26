@@ -76,15 +76,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
             return new BusinessFund()
             {
-                Name = string.Join(" ", fund.Name
-                    .Trim()
-                    .Split('-')
-                    .Select(x =>
-                    {
-                        var chars = x.ToCharArray();
-                        chars[0] = char.ToUpperInvariant(chars[0]);
-                        return new string(chars);
-                    })),
+                Name = fund.Name,
                 Token = new BusinessToken()
                 {
                     Symbol = fundInfo.Symbol,

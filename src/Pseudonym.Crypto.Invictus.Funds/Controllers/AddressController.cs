@@ -18,7 +18,7 @@ using Pseudonym.Crypto.Invictus.Shared.Models;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Controllers
 {
-    [ApiKey]
+    [Authorize]
     [ApiController]
     [Route("api/v1/addresses")]
     public class AddressController : Controller

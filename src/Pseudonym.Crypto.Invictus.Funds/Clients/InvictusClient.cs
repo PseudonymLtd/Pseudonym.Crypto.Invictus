@@ -66,7 +66,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
         public async Task<InvictusFund> GetFundAsync(Symbol symbol)
         {
             var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
-
             if (fundInfo != null)
             {
                 if (symbol == Symbol.C20)
@@ -93,7 +92,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
                 }
                 else
                 {
-                    return await GetAsync<InvictusFund>($"/v2/funds/{fundInfo.FundName}/nav");
+                    var fund = await GetAsync<InvictusFund>($"/v2/funds/{fundInfo.FundName}/nav");
+
+                    if (symbol == Symbol.C10)
+                    {
+                        fund.Name = fundInfo.FundName + "Hedged";
+                    }
+
+                    return fund;
                 }
             }
             else

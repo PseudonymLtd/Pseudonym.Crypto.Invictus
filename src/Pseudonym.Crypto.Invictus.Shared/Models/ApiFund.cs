@@ -8,6 +8,9 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        [JsonProperty("display_name")]
+        public string DisplayName { get; set; }
+
         [JsonProperty("token")]
         public ApiToken Token { get; set; }
 

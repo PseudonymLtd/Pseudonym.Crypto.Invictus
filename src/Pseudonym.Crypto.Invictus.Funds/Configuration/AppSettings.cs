@@ -13,6 +13,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 
         public Uri HostUrl { get; set; }
 
+        public string JwtSecret { get; set; }
+
+        public string JwtIssuer => HostUrl.OriginalString;
+
+        public string JwtAudience { get; set; }
+
+        public TimeSpan JwtTimeout { get; set; }
+
         public List<FundSettings> Funds { get; set; } = new List<FundSettings>();
     }
 }

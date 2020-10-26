@@ -1,14 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Reflection;
+using System.Text;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -26,6 +32,8 @@ namespace Pseudonym.Crypto.Invictus.Funds
 {
     public sealed class Startup
     {
+        private const string PolicyName = "Mixed";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -49,7 +57,16 @@ namespace Pseudonym.Crypto.Invictus.Funds
                     options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                     options.SerializerSettings.Formatting = Formatting.Indented;
                 })
-                .AddApplicationPart(Assembly.GetExecutingAssembly());
+                .AddApplicationPart(Assembly.GetExecutingAssembly())
+                .ConfigureApiBehaviorOptions(options =>
+                {
+                    options.InvalidModelStateResponseFactory = context =>
+                    {
+                        var problems = new FailureDetails(context);
+
+                        return new BadRequestObjectResult(problems);
+                    };
+                });
 
             container.AddSingleton<IEnvironmentNameAccessor, EnvironmentNameAccessor>();
             container.AddScoped<IExceptionHandler, ExceptionHandler>();
@@ -74,6 +91,46 @@ namespace Pseudonym.Crypto.Invictus.Funds
             });
 
             container.AddHttpContextAccessor();
+
+            var appSettings = Configuration.GetSection(nameof(AppSettings)).Get<AppSettings>();
+            var jwtKey = Encoding.ASCII.GetBytes(appSettings.JwtSecret);
+
+            container
+                .AddAuthentication(auth =>
+                {
+                    auth.DefaultScheme = PolicyName;
+                    auth.DefaultChallengeScheme = PolicyName;
+                })
+                .AddPolicyScheme(PolicyName, "API-Key or Authorization Bearer", options =>
+                {
+                    options.ForwardDefaultSelector = context =>
+                    {
+                        if (context.Request.Headers.ContainsKey(Headers.ApiKey))
+                        {
+                            return Headers.ApiKey;
+                        }
+                        else
+                        {
+                            return JwtBearerDefaults.AuthenticationScheme;
+                        }
+                    };
+                })
+                .AddScheme<AuthenticationSchemeOptions, ApiKeyHandler>(Headers.ApiKey, options => options.ClaimsIssuer = appSettings.JwtIssuer)
+                .AddJwtBearer(x =>
+                {
+                    x.RequireHttpsMetadata = false;
+                    x.SaveToken = true;
+                    x.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(jwtKey),
+                        ValidateIssuer = true,
+                        ValidIssuer = appSettings.JwtIssuer,
+                        ValidAudience = appSettings.JwtAudience,
+                        ValidateAudience = true,
+                        ValidateLifetime = true
+                    };
+                });
 
             container.AddResponseCompression(options =>
             {
@@ -119,8 +176,28 @@ namespace Pseudonym.Crypto.Invictus.Funds
                         In = ParameterLocation.Header,
                         Type = SecuritySchemeType.ApiKey
                     });
+                    options.AddSecurityDefinition(JwtConstants.TokenType, new OpenApiSecurityScheme
+                    {
+                        Description = "JWT token used to interact with the system.",
+                        Name = Headers.Authorization,
+                        In = ParameterLocation.Header,
+                        Type = SecuritySchemeType.Http,
+                        Scheme = JwtBearerDefaults.AuthenticationScheme.ToLower(),
+                        BearerFormat = JwtConstants.TokenType
+                    });
                     options.AddSecurityRequirement(new OpenApiSecurityRequirement
                     {
+                        {
+                            new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Id = JwtConstants.TokenType,
+                                    Type = ReferenceType.SecurityScheme,
+                                }
+                            },
+                            new List<string>()
+                        },
                         {
                             new OpenApiSecurityScheme
                             {
@@ -142,6 +219,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
                 .AddInvictusClient()
                 .AddExchangeRateClient();
 
+            container.AddTransient<IAuthService, AuthService>();
             container.AddTransient<IAddressService, AddressService>();
             container.AddTransient<IFundService, FundService>();
 
