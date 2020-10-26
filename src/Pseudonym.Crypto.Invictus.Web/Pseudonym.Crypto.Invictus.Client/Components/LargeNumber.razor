@@ -1,0 +1,64 @@
+﻿
+@if (Value == Decimal.Zero)
+{
+    <div>-</div>
+}
+else if (GetRoundedNumber().Length < GetFullNumber().Length)
+{
+    <div class="tooltip-container">
+        @GetRoundedNumber()
+        <span class="tooltip-text">@GetFullNumber()</span>
+    </div>
+}
+else
+{
+    <div style="display: inline-block; position: relative;">
+        @GetFullNumber()
+    </div>
+}
+
+@code {
+    [Parameter]
+    public decimal Value { get; set; }
+
+    [Parameter]
+    public int Decimals { get; set; } = 0;
+
+    private string GetRoundedNumber()
+    {
+        var number = Value.ToCommaFormat(Decimals);
+        var index = number.IndexOf('.') + Decimals + 1;
+
+        if (number.Contains('.'))
+        {
+            return number.Substring(0, Math.Min(index, number.Length));
+        }
+        else
+        {
+            return number;
+        }
+    }
+
+    private string GetFullNumber()
+    {
+        var number = Value.ToCommaFormat();
+
+        if (number.Contains('.'))
+        {
+            var index = number.IndexOf('.') + Decimals + 1;
+
+            var decimalEnd = Math.Min(index, number.Length);
+
+            return string.Format(
+                "{0}{1}",
+                number.Substring(0, decimalEnd),
+                number.Length > decimalEnd
+                    ? number.Substring(decimalEnd).TrimEnd('0')
+                    : string.Empty);
+        }
+        else
+        {
+            return number;
+        }
+    }
+}

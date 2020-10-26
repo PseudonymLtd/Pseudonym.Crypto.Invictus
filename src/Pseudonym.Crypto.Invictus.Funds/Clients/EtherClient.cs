@@ -2,18 +2,17 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Numerics;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using Nethereum.JsonRpc.Client;
 using Nethereum.Web3;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
-using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
-using Pseudonym.Crypto.Invictus.Funds.Business.Models;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum.Events;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum.Functions;
-using Pseudonym.Crypto.Invictus.Funds.Hosting.Models;
+using Pseudonym.Crypto.Invictus.Shared;
+using Pseudonym.Crypto.Invictus.Shared.Abstractions;
+using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Clients
 {
@@ -81,13 +80,20 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
 
         private async Task<TResponse> ExecuteAsync<TResponse>(Func<IWeb3, Task<TResponse>> func)
         {
-            using var client = httpClientFactory.CreateClient(nameof(EtherClient));
+            try
+            {
+                using var client = httpClientFactory.CreateClient(nameof(EtherClient));
 
-            client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.CorrelationId, scopedCorrelation.CorrelationId);
+                client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.CorrelationId, scopedCorrelation.CorrelationId);
 
-            var web3 = new Web3(new RpcClient(client.BaseAddress, client, client.DefaultRequestHeaders.Authorization));
+                var web3 = new Web3(new RpcClient(client.BaseAddress, client, client.DefaultRequestHeaders.Authorization));
 
-            return await func(web3);
+                return await func(web3);
+            }
+            catch (Exception e)
+            {
+                throw new TransientException($"{GetType().Name} Error calling web3", e);
+            }
         }
     }
 }

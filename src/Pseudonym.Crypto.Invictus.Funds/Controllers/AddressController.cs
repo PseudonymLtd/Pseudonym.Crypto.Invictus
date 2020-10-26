@@ -10,15 +10,17 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
-using Pseudonym.Crypto.Invictus.Funds.Controllers.Models;
-using Pseudonym.Crypto.Invictus.Funds.Controllers.Models.Filters;
+using Pseudonym.Crypto.Invictus.Funds.Controllers.Filters;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
+using Pseudonym.Crypto.Invictus.Shared.Abstractions;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
+using Pseudonym.Crypto.Invictus.Shared.Models;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Controllers
 {
     [ApiKey]
     [ApiController]
-    [Route("api/v1/address")]
+    [Route("api/v1/addresses")]
     public class AddressController : Controller
     {
         private readonly IOptions<AppSettings> appSettings;
@@ -39,7 +41,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [Route("{hex}")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(ApiPortfolio), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAddress([Required, FromRoute] string hex, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        public async Task<IActionResult> GetPortfolio([Required, FromRoute] string hex, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
             var address = new EthereumAddress(hex);
             var currencyCode = queryFilter.CurrencyCode ?? CurrencyCode.USD;

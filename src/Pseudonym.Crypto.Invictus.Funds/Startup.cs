@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -18,8 +16,11 @@ using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Hosting;
-using Pseudonym.Crypto.Invictus.Funds.Hosting.Models;
 using Pseudonym.Crypto.Invictus.Funds.Services;
+using Pseudonym.Crypto.Invictus.Shared;
+using Pseudonym.Crypto.Invictus.Shared.Abstractions;
+using Pseudonym.Crypto.Invictus.Shared.Hosting;
+using Pseudonym.Crypto.Invictus.Shared.Hosting.Models;
 
 namespace Pseudonym.Crypto.Invictus.Funds
 {
@@ -50,6 +51,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
                 })
                 .AddApplicationPart(Assembly.GetExecutingAssembly());
 
+            container.AddSingleton<IEnvironmentNameAccessor, EnvironmentNameAccessor>();
             container.AddScoped<IExceptionHandler, ExceptionHandler>();
 
             container

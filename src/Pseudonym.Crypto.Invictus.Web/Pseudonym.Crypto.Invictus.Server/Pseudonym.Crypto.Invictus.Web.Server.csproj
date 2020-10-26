@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UserSecretsId>8b894184-db4d-471a-a0e2-d5207b745c4b</UserSecretsId>
+    <CodeAnalysisRuleSet>..\..\..\StyleCop.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="3.2.1" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pseudonym.Crypto.Invictus.Client\Pseudonym.Crypto.Invictus.Web.Client.csproj" />
+    <ProjectReference Include="..\..\Pseudonym.Crypto.Invictus.Shared\Pseudonym.Crypto.Invictus.Shared.csproj" />
+  </ItemGroup>
+
+
+</Project>

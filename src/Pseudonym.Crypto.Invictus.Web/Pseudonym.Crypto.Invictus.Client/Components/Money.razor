@@ -1,0 +1,24 @@
+﻿@if (Value == Decimal.Zero)
+{
+    <span>
+        <LargeNumber Value="@Value" Decimals="@Decimals" />
+    </span>
+}
+else
+{
+    <span>
+        @CurrencyCode.GetSymbol()
+        <LargeNumber Value="@Value" Decimals="@Decimals" />
+    </span>
+}
+
+@code {
+    [Parameter]
+    public decimal Value { get; set; }
+
+    [Parameter]
+    public int Decimals { get; set; } = 2;
+
+    [Parameter]
+    public CurrencyCode CurrencyCode { get; set; } = CurrencyCode.USD;
+}

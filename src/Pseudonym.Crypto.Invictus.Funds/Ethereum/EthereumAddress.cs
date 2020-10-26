@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
-using Pseudonym.Crypto.Invictus.Funds.Models.Exceptions;
+using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Ethereum
 {

@@ -8,8 +8,10 @@ using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
-using Pseudonym.Crypto.Invictus.Funds.Hosting.Models;
-using Pseudonym.Crypto.Invictus.Funds.Models.Exceptions;
+using Pseudonym.Crypto.Invictus.Shared;
+using Pseudonym.Crypto.Invictus.Shared.Abstractions;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
+using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Clients
 {
@@ -103,17 +105,24 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
         private async Task<TResponse> GetAsync<TResponse>(string url)
             where TResponse : class, new()
         {
-            using var client = httpClientFactory.CreateClient(nameof(InvictusClient));
+            try
+            {
+                using var client = httpClientFactory.CreateClient(nameof(InvictusClient));
 
-            client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.CorrelationId, scopedCorrelation.CorrelationId);
+                client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.CorrelationId, scopedCorrelation.CorrelationId);
 
-            var response = await client.GetAsync(new Uri(url, UriKind.Relative), scopedCancellationToken.Token);
+                var response = await client.GetAsync(new Uri(url, UriKind.Relative), scopedCancellationToken.Token);
 
-            response.EnsureSuccessStatusCode();
+                response.EnsureSuccessStatusCode();
 
-            var json = await response.Content.ReadAsStringAsync();
+                var json = await response.Content.ReadAsStringAsync();
 
-            return JsonConvert.DeserializeObject<TResponse>(json);
+                return JsonConvert.DeserializeObject<TResponse>(json);
+            }
+            catch (HttpRequestException e)
+            {
+                throw new TransientException($"{GetType().Name} Error calling GET {url}", e);
+            }
         }
     }
 }

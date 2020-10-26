@@ -1,0 +1,22 @@
+﻿@if (string.IsNullOrWhiteSpace(ContractAddress))
+{
+    <div style="display: inline-block; position: relative;">
+        @Symbol
+    </div>
+}
+else
+{
+    <div class="tooltip-container">
+        @Symbol <a href="https://etherscan.io/token/@ContractAddress" target="_blank"><span class="oi oi-external-link" style="font-size: 12px;"></span></a>
+        <span class="tooltip-text" style="font-size: 12px; width: 120px">View on etherscan</span>
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public string Symbol { get; set; }
+
+    [Parameter]
+    public string ContractAddress { get; set; }
+}

@@ -2,12 +2,11 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Clients;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
-using Pseudonym.Crypto.Invictus.Funds.Hosting.Models;
+using Pseudonym.Crypto.Invictus.Shared;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

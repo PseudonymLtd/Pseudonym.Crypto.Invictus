@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
 {

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
-using Pseudonym.Crypto.Invictus.Funds.Hosting.Models;
+using Pseudonym.Crypto.Invictus.Shared;
 
 namespace Microsoft.AspNetCore.Authorization
 {

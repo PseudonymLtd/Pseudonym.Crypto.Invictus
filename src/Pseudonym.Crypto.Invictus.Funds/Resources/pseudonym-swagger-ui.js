@@ -8,6 +8,7 @@
             logo.children[0].alt = "Pseudonym";
             logo.children[0].src = logoUrl;
             logo.href = "https://www.pseudonym.org.uk";
+            logo.target = "_blank";
 
             for (let i = 0; i < document.head.children.length; i++) {
                 if (document.head.children[i].tagName === "LINK" &&

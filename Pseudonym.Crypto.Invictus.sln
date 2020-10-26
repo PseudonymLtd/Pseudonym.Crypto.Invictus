@@ -7,11 +7,26 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pseudonym.Crypto.Invictus.F
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{860114B7-07C9-4462-8B63-FAE84A7866C5}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 		NuGet.config = NuGet.config
 		README.md = README.md
 		StyleCop.ruleset = StyleCop.ruleset
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pseudonym.Crypto.Invictus.Web.Server", "src\Pseudonym.Crypto.Invictus.Web\Pseudonym.Crypto.Invictus.Server\Pseudonym.Crypto.Invictus.Web.Server.csproj", "{E89C91AD-9511-4914-9434-E9C52E576E71}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pseudonym.Crypto.Invictus.Web.Client", "src\Pseudonym.Crypto.Invictus.Web\Pseudonym.Crypto.Invictus.Client\Pseudonym.Crypto.Invictus.Web.Client.csproj", "{6BB18D72-3E73-447F-90A2-F6B7A950F4C1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pseudonym.Crypto.Invictus.Shared", "src\Pseudonym.Crypto.Invictus.Shared\Pseudonym.Crypto.Invictus.Shared.csproj", "{8213B8ED-68B7-4E6C-9F48-0E538DCE35FF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F79FC8B6-99CC-415C-BEA6-6FD5617B8E51}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "api", "api", "{BC749131-9189-4AC2-B0E7-7E6F9D8FE00C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "web", "web", "{61BC11E4-6DC5-43AE-8E5D-0B802052D963}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{E8CD41D2-876C-4FBA-9431-F32E6279AF5E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,9 +38,30 @@ Global
 		{8F617BA0-EC93-4E3F-9A3C-445AA29DF76D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F617BA0-EC93-4E3F-9A3C-445AA29DF76D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F617BA0-EC93-4E3F-9A3C-445AA29DF76D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E89C91AD-9511-4914-9434-E9C52E576E71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E89C91AD-9511-4914-9434-E9C52E576E71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E89C91AD-9511-4914-9434-E9C52E576E71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E89C91AD-9511-4914-9434-E9C52E576E71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BB18D72-3E73-447F-90A2-F6B7A950F4C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BB18D72-3E73-447F-90A2-F6B7A950F4C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BB18D72-3E73-447F-90A2-F6B7A950F4C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BB18D72-3E73-447F-90A2-F6B7A950F4C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8213B8ED-68B7-4E6C-9F48-0E538DCE35FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8213B8ED-68B7-4E6C-9F48-0E538DCE35FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8213B8ED-68B7-4E6C-9F48-0E538DCE35FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8213B8ED-68B7-4E6C-9F48-0E538DCE35FF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8F617BA0-EC93-4E3F-9A3C-445AA29DF76D} = {BC749131-9189-4AC2-B0E7-7E6F9D8FE00C}
+		{E89C91AD-9511-4914-9434-E9C52E576E71} = {61BC11E4-6DC5-43AE-8E5D-0B802052D963}
+		{6BB18D72-3E73-447F-90A2-F6B7A950F4C1} = {61BC11E4-6DC5-43AE-8E5D-0B802052D963}
+		{8213B8ED-68B7-4E6C-9F48-0E538DCE35FF} = {E8CD41D2-876C-4FBA-9431-F32E6279AF5E}
+		{BC749131-9189-4AC2-B0E7-7E6F9D8FE00C} = {F79FC8B6-99CC-415C-BEA6-6FD5617B8E51}
+		{61BC11E4-6DC5-43AE-8E5D-0B802052D963} = {F79FC8B6-99CC-415C-BEA6-6FD5617B8E51}
+		{E8CD41D2-876C-4FBA-9431-F32E6279AF5E} = {F79FC8B6-99CC-415C-BEA6-6FD5617B8E51}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5143AEB1-1AB5-4701-B1C4-757C15AF5D9B}

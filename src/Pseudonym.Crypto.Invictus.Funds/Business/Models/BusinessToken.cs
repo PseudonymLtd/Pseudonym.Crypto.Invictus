@@ -1,6 +1,6 @@
-﻿using Pseudonym.Crypto.Invictus.Funds.Abstractions;
-using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
+﻿using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 {

@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models;
-using Pseudonym.Crypto.Invictus.Funds.Hosting.Models;
+using Pseudonym.Crypto.Invictus.Shared;
+using Pseudonym.Crypto.Invictus.Shared.Abstractions;
+using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Clients
 {
@@ -24,17 +26,24 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
 
         public async Task<CurrencyRates> GetRatesAsync(CancellationToken cancellationToken)
         {
-            using var client = httpClientFactory.CreateClient(nameof(CurrencyClient));
+            try
+            {
+                using var client = httpClientFactory.CreateClient(nameof(CurrencyClient));
 
-            client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.CorrelationId, scopedCorrelation.CorrelationId);
+                client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.CorrelationId, scopedCorrelation.CorrelationId);
 
-            var response = await client.GetAsync(new Uri("/v6/latest", UriKind.Relative), cancellationToken);
+                var response = await client.GetAsync(new Uri("/v6/latest", UriKind.Relative), cancellationToken);
 
-            response.EnsureSuccessStatusCode();
+                response.EnsureSuccessStatusCode();
 
-            var json = await response.Content.ReadAsStringAsync();
+                var json = await response.Content.ReadAsStringAsync();
 
-            return JsonConvert.DeserializeObject<CurrencyRates>(json);
+                return JsonConvert.DeserializeObject<CurrencyRates>(json);
+            }
+            catch (HttpRequestException e)
+            {
+                throw new TransientException($"{GetType().Name} Error calling GET /v6/latest", e);
+            }
         }
     }
 }

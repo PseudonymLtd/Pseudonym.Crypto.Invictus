@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
@@ -11,6 +9,8 @@ using Pseudonym.Crypto.Invictus.Funds.Business.Models;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
+using Pseudonym.Crypto.Invictus.Shared.Abstractions;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business
 {

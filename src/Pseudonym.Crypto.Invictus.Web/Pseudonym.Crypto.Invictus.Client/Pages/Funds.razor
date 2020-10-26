@@ -1,0 +1,50 @@
+@page "/funds"
+@inject HttpClient Http
+
+<h1>Funds Overview</h1>
+
+<p>Below shows the summary of funds provided by <a href="https://invictuscapital.com/" target="_blank">Invictus Capital</a>. There are currently @(funds?.Count ?? 0) available funds.</p>
+
+@if (funds == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Token</th>
+                <th>Circulating Supply</th>
+                <th>Net Value</th>
+                <th>Nav</th>
+                <th>Market Value</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var fund in funds.OrderBy(x => x.Name))
+            {
+                <tr>
+                    <td>@fund.Name</td>
+                    <td><Token Symbol="@fund.Token.Symbol.ToString()" ContractAddress="@fund.Token.Address" /></td>
+                    <td><LargeNumber Value="fund.CirculatingSupply" Decimals="2" /></td>
+                    <td><Money Value="@fund.NetAssetValue" /></td>
+                    <td><Money Value="@fund.NetAssetValuePerToken" /></td>
+                    <td><Money Value="fund.MarketValue ?? 0" /></td>
+                    <td><Money Value="fund.MarketValuePerToken ?? 0" /></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<ApiFund> funds;
+
+    protected override async Task OnInitializedAsync()
+    {
+        funds = await Http.GetFromJsonAsync<List<ApiFund>>("api/funds");
+    }
+}

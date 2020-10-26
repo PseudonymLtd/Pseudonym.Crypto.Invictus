@@ -8,8 +8,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
-using Pseudonym.Crypto.Invictus.Funds.Controllers.Models;
-using Pseudonym.Crypto.Invictus.Funds.Controllers.Models.Filters;
+using Pseudonym.Crypto.Invictus.Funds.Controllers.Filters;
+using Pseudonym.Crypto.Invictus.Shared.Abstractions;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
+using Pseudonym.Crypto.Invictus.Shared.Models;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Controllers
 {
