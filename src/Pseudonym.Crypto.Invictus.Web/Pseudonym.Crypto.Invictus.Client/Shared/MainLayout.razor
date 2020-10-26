@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject IWebAssemblyHostEnvironment env
+@inject IOptions<AppSettings> settings
 
 <div class="sidebar">
     <NavMenu />
@@ -10,6 +12,14 @@
     </div>
 
     <div class="content px-4">
+        @if (env.IsDevelopment())
+        {
+            <div class="dev-header">
+                <p>API Url @settings.Value.ApiUrl</p>
+                <p>Service Name @settings.Value.ServiceName</p>
+                <p>Service Version @settings.Value.Version</p>
+            </div>
+        }
         @Body
     </div>
 </div>

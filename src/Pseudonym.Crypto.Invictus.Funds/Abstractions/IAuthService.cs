@@ -1,7 +1,9 @@
-﻿namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
+﻿using Pseudonym.Crypto.Invictus.Funds.Business.Models;
+
+namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
 {
     public interface IAuthService
     {
-        string GenerateToken();
+        BusinessLogin Login();
     }
 }

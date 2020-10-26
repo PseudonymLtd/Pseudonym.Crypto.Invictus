@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +6,6 @@ using Newtonsoft.Json;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Hosting.Models
 {
-
     public class FailureDetails
     {
         public FailureDetails()

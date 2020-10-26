@@ -12,6 +12,21 @@ a, .btn-link {
     color: #cf2127;
 }
 
+.dev-header {
+    margin: 0;
+    padding: 5px;
+    background-color: #cf2127;
+    position: relative;
+    display: inline-block;
+}
+
+    .dev-header p {
+        margin: 0;
+        font-size: 10px;
+        color: white;
+        padding: 5px;
+    }
+
 .btn-primary {
     color: #fff;
     background-color: #cf2127;

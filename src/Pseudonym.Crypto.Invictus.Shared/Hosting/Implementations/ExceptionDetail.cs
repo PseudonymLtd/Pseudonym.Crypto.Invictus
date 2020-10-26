@@ -4,7 +4,6 @@ using System.Linq;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Hosting.Models
 {
-
     public class ExceptionDetail
     {
         public string Message { get; set; }

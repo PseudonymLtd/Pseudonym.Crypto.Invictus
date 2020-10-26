@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
+using Pseudonym.Crypto.Invictus.Funds.Business.Models;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 
@@ -24,9 +25,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             this.environmentNameAccessor = environmentNameAccessor;
         }
 
-        public string GenerateToken()
+        public BusinessLogin Login()
         {
             var time = DateTime.UtcNow;
+            var expiry = time.Add(appSettings.JwtTimeout);
             var tokenHandler = new JwtSecurityTokenHandler();
 
             var payload = new JwtPayload(
@@ -39,7 +41,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     new Claim(ClaimsIdentity.DefaultRoleClaimType, "None", null, appSettings.JwtIssuer)
                 },
                 time,
-                time.Add(appSettings.JwtTimeout),
+                expiry,
                 time);
 
             var token = new JwtSecurityToken(
@@ -49,7 +51,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                         SecurityAlgorithms.HmacSha256Signature)),
                 payload);
 
-            return tokenHandler.WriteToken(token);
+            return new BusinessLogin()
+            {
+                AccessToken = tokenHandler.WriteToken(token),
+                ExpiresAt = expiry.Subtract(TimeSpan.FromSeconds(15))
+            };
         }
     }
 }

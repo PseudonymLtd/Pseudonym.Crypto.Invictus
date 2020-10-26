@@ -40,7 +40,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
 
             foreach (var item in response.Funds)
             {
-                yield return item;
+                yield return Format(item);
             }
         }
 
@@ -72,7 +72,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
                 {
                     var fund = await GetAsync<InvictusC20Fund>("/v2/funds/c20_status");
 
-                    return new InvictusFund()
+                    return Format(new InvictusFund()
                     {
                         Symbol = Symbol.C20.ToString(),
                         Name = fund.Name,
@@ -88,18 +88,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
                                 Value = h.Value
                             })
                             .ToList()
-                    };
+                    });
                 }
                 else
                 {
                     var fund = await GetAsync<InvictusFund>($"/v2/funds/{fundInfo.FundName}/nav");
 
-                    if (symbol == Symbol.C10)
-                    {
-                        fund.Name = fundInfo.FundName + "Hedged";
-                    }
-
-                    return fund;
+                    return Format(fund);
                 }
             }
             else
@@ -129,6 +124,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             {
                 throw new TransientException($"{GetType().Name} Error calling GET {url}", e);
             }
+        }
+
+        private InvictusFund Format(InvictusFund item)
+        {
+            if (item.Symbol.Equals(Symbol.C10.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                item.Name = item.Name + "hedged";
+            }
+
+            return item;
         }
     }
 }

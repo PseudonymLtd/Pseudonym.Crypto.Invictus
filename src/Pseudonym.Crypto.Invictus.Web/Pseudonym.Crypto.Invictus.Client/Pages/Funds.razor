@@ -1,11 +1,11 @@
 @page "/funds"
-@inject HttpClient Http
+@inject IApiClient Client
 
 <h1>Funds Overview</h1>
 
 <p>Below shows the summary of funds provided by <a href="https://invictuscapital.com/" target="_blank">Invictus Capital</a>. There are currently @(funds?.Count ?? 0) available funds.</p>
 
-@if (funds == null)
+@if (!funds.Any())
 {
     <p><em>Loading...</em></p>
 }
@@ -41,10 +41,18 @@ else
 }
 
 @code {
-    private IReadOnlyList<ApiFund> funds;
+    private readonly List<ApiFund> funds;
+
+    public Funds()
+    {
+        funds = new List<ApiFund>();
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        funds = await Http.GetFromJsonAsync<List<ApiFund>>("api/funds");
+        await foreach (var item in Client.ListFundsAsync())
+        {
+            funds.Add(item);
+        }
     }
 }

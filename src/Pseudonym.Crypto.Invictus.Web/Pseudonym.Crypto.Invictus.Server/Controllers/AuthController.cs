@@ -1,13 +1,12 @@
 ﻿using System.Net.Mime;
-using Microsoft.AspNetCore.Authorization;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Models;
+using Pseudonym.Crypto.Invictus.Web.Server.Abstractions;
 
-namespace Pseudonym.Crypto.Invictus.Funds.Controllers
+namespace Pseudonym.Crypto.Invictus.Web.Server.Controllers
 {
-    [Authorize]
     [ApiController]
     [Route("api/v1/auth")]
     public class AuthController : Controller
@@ -22,15 +21,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [HttpGet]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(ApiLogin), StatusCodes.Status200OK)]
-        public IActionResult GetToken()
+        public async Task<IActionResult> GetToken()
         {
-            var login = authService.Login();
+            var loginResponse = await authService.LoginAsync();
 
-            return Ok(new ApiLogin()
-            {
-                AccessToken = login.AccessToken,
-                ExpiresAt = login.ExpiresAt
-            });
+            return Ok(loginResponse);
         }
     }
 }

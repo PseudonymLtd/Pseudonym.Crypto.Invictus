@@ -3,22 +3,25 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Hosting;
 using Pseudonym.Crypto.Invictus.Shared.Hosting.Models;
 using Pseudonym.Crypto.Invictus.Web.Server.Abstractions;
-using Pseudonym.Crypto.Invictus.Web.Server.Clients;
+using Pseudonym.Crypto.Invictus.Web.Server.Business;
 using Pseudonym.Crypto.Invictus.Web.Server.Configuration;
 using Pseudonym.Crypto.Invictus.Web.Server.Hosting;
 
@@ -37,7 +40,27 @@ namespace Pseudonym.Crypto.Invictus.Web.Server
         {
             container.Configure<AppSettings>(Configuration.GetSection(nameof(AppSettings)));
 
-            container.AddControllersWithViews();
+            container.AddControllersWithViews()
+                .AddNewtonsoftJson(options =>
+                {
+                    options.SerializerSettings.Converters.Add(new StringEnumConverter());
+                    options.SerializerSettings.Converters.Add(new VersionConverter());
+                    options.SerializerSettings.DateFormatString = "yyyy-MM-ddTHH:mm:ss";
+                    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                    options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                    options.SerializerSettings.Formatting = Formatting.Indented;
+                })
+                .AddApplicationPart(Assembly.GetExecutingAssembly())
+                .ConfigureApiBehaviorOptions(options =>
+                {
+                    options.InvalidModelStateResponseFactory = context =>
+                    {
+                        var problems = new FailureDetails(context);
+
+                        return new BadRequestObjectResult(problems);
+                    };
+                });
+
             container.AddRazorPages();
 
             container.AddSingleton<IEnvironmentNameAccessor, EnvironmentNameAccessor>();
@@ -82,20 +105,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Server
                 options.Providers.Add<GzipCompressionProvider>();
             });
 
-            container
-                .AddScoped<IApiClient, ApiClient>()
-                .AddHttpClient(
-                    nameof(ApiClient),
-                    (sp, client) =>
-                    {
-                        var settings = sp.GetRequiredService<IOptions<AppSettings>>();
-
-                        client.BaseAddress = settings.Value.ApiUrl;
-                        client.Timeout = TimeSpan.FromSeconds(10);
-                        client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.ApiKey, settings.Value.ApiKey);
-                        client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.Origin, settings.Value.HostUrl.OriginalString);
-                        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(settings.Value.ServiceName, $"v{settings.Value.Version.ToString(3)}"));
-                    });
+            container.AddScoped<IAuthService, AuthService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
