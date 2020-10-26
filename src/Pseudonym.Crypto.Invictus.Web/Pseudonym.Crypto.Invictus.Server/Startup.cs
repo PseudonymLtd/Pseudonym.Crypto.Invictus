@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
@@ -132,7 +133,11 @@ namespace Pseudonym.Crypto.Invictus.Web.Server
 
             app.UseCors(options =>
                 options
-                .WithOrigins("https://localhost:5001", "http://localhost:5000")
+                .WithOrigins(Configuration
+                    .GetSection("Cors")
+                    .GetChildren()
+                    .Select(x => x.Value)
+                    .ToArray())
                 .WithExposedHeaders(Headers.CorrelationId)
                 .AllowAnyHeader()
                 .AllowAnyMethod()
