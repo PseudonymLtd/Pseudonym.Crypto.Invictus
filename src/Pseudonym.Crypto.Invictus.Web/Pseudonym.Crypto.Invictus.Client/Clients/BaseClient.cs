@@ -17,7 +17,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
             this.httpClientFactory = httpClientFactory;
         }
 
-        protected async Task<TResponse> GetAsync<TResponse>(string url)
+        protected virtual async Task<TResponse> GetAsync<TResponse>(string url)
             where TResponse : class, new()
         {
             try

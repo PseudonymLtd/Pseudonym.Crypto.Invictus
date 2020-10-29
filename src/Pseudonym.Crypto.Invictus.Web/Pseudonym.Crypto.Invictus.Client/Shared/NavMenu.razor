@@ -1,4 +1,7 @@
-﻿<div class="top-row pl-4 navbar navbar-dark">
+﻿@inject IUserSettingsHandle UserSettingsHandle
+@inject IAppState AppState
+
+<div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="https://invictuscapital.com/" target="_blank"></a>
     <button class="navbar-toggler" @onclick="ToggleNavMenu">
         <span class="navbar-toggler-icon"></span>
@@ -9,13 +12,30 @@
     <ul class="nav flex-column">
         <li class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
+                <span class="oi oi-graph" aria-hidden="true"></span> Funds
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="funds">
-                <span class="oi oi-graph" aria-hidden="true"></span> Funds
+            <NavLink class="nav-link" href="portfolio">
+                <span class="oi oi-bar-chart" aria-hidden="true"></span> Portfolio
             </NavLink>
+        </li>
+        <li class="nav-item px-3">
+            <div class="form-group">
+                <label for="dropdownMenuButton" style="color:#d7d7d7">Currency</label>
+                <div class="dropdown">
+                    <button class="btn btn-danger dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-describedby="currencyCodeHelp" style="min-width: 218px;">
+                        @UserSettingsHandle.Settings.CurrencyCode
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="overflow-y: scroll; max-height: 250px; z-index: 10000;">
+                        @foreach (var item in Enum.GetValues(typeof(CurrencyCode)).Cast<CurrencyCode>())
+                        {
+                            <span class="dropdown-item" @onclick="@(async (e) => await ChangeCurrencyCodeAsync(@item))">@item</span>
+                        }
+                    </div>
+                </div>
+                <small id="currencyCodeHelp" class="form-text" style="color:#d7d7d7">Conversions from USD -> @UserSettingsHandle.Settings.CurrencyCode.</small>
+            </div>
         </li>
     </ul>
 </div>
@@ -25,8 +45,24 @@
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+    }
+
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task ChangeCurrencyCodeAsync(CurrencyCode currencyCode)
+    {
+        Console.WriteLine($"Changing currency to CurrencyCode: {currencyCode}");
+
+        await UserSettingsHandle.UpdateAsync(us => us.CurrencyCode = currencyCode);
+              
+        AppState.NotifyStateChanged();
+
+        Console.WriteLine(UserSettingsHandle.Settings.CurrencyCode);
     }
 }

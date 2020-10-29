@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
-@inject IWebAssemblyHostEnvironment env
-@inject IOptions<AppSettings> settings
+@inject IWebAssemblyHostEnvironment Environment
+@inject IOptions<AppSettings> Settings
+@inject IAppState AppState
 
 <div class="sidebar">
     <NavMenu />
@@ -12,14 +13,22 @@
     </div>
 
     <div class="content px-4">
-        @if (env.IsDevelopment())
+        @if (Environment.IsDevelopment())
         {
             <div class="dev-header">
-                <p>API Url @settings.Value.ApiUrl</p>
-                <p>Service Name @settings.Value.ServiceName</p>
-                <p>Service Version @settings.Value.Version</p>
+                <p>API Url @Settings.Value.ApiUrl</p>
+                <p>Service Name @Settings.Value.ServiceName</p>
+                <p>Service Version @Settings.Value.Version</p>
             </div>
         }
         @Body
     </div>
 </div>
+
+@code
+{
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+    }
+}

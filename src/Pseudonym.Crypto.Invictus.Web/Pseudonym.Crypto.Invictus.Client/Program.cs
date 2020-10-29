@@ -11,6 +11,7 @@ using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
 using Pseudonym.Crypto.Invictus.Web.Client.Clients;
 using Pseudonym.Crypto.Invictus.Web.Client.Configuration;
 using Pseudonym.Crypto.Invictus.Web.Client.Hosting;
+using Pseudonym.Crypto.Invictus.Web.Client.Services;
 
 namespace Pseudonym.Crypto.Invictus.Web.Client
 {
@@ -32,7 +33,15 @@ namespace Pseudonym.Crypto.Invictus.Web.Client
         {
             container.Configure<AppSettings>(configuration.GetSection(nameof(AppSettings)));
 
-            container.AddScoped<ISessionStore, SessionStore>();
+            container.AddSingleton<IAppState, AppState>();
+            container.AddSingleton<ISessionStore, SessionStore>();
+            container.AddSingleton(sp => sp
+                    .GetRequiredService<ISessionStore>()
+                    .Get<UserSettings>(StoreKeys.UserSettings)
+                        ?? new UserSettings())
+                .AddSingleton<IUserSettings>(sp => sp.GetRequiredService<UserSettings>());
+
+            container.AddSingleton<IUserSettingsHandle, UserSettingsHandle>();
             container.AddSingleton<IEnvironmentNameAccessor, EnvironmentNameAccessor>();
 
             container

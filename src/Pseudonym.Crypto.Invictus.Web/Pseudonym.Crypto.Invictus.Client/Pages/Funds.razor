@@ -1,13 +1,25 @@
-@page "/funds"
+@page "/"
+@inject IUserSettings UserSettings
 @inject IApiClient Client
+@inject IAppState AppState
 
 <h1>Funds Overview</h1>
 
-<p>Below shows the summary of funds provided by <a href="https://invictuscapital.com/" target="_blank">Invictus Capital</a>. There are currently @(funds?.Count ?? 0) available funds.</p>
+<div class="alert alert-secondary mt-4" role="alert">
+    <span class="oi oi-info mr-2" aria-hidden="true"></span>
+    <span class="text-wrap">
+        Below shows the summary of funds provided by <a href="https://invictuscapital.com/" target="_blank">Invictus Capital</a>.
+        There are currently @(funds?.Count ?? 0) available funds.
+    </span>
+</div>
 
 @if (!funds.Any())
 {
-    <p><em>Loading...</em></p>
+    <div class="text-center">
+        <div class="spinner-border text-danger" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
 }
 else
 {
@@ -30,10 +42,10 @@ else
                     <td><FundLink DisplayName="@fund.DisplayName" Name="@fund.Name" /></td>
                     <td><Token Symbol="@fund.Token.Symbol.ToString()" ContractAddress="@fund.Token.Address" /></td>
                     <td><LargeNumber Value="fund.CirculatingSupply" Decimals="2" /></td>
-                    <td><Money Value="@fund.NetAssetValue" /></td>
-                    <td><Money Value="@fund.NetAssetValuePerToken" /></td>
-                    <td><Money Value="fund.MarketValue ?? 0" /></td>
-                    <td><Money Value="fund.MarketValuePerToken ?? 0" /></td>
+                    <td><Money Value="@fund.NetAssetValue" CurrencyCode="UserSettings.CurrencyCode" /></td>
+                    <td><Money Value="@fund.NetAssetValuePerToken" CurrencyCode="UserSettings.CurrencyCode" /></td>
+                    <td><Money Value="fund.MarketValue ?? 0" CurrencyCode="UserSettings.CurrencyCode" /></td>
+                    <td><Money Value="fund.MarketValuePerToken ?? 0" CurrencyCode="UserSettings.CurrencyCode" /></td>
                 </tr>
             }
         </tbody>
@@ -50,9 +62,25 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        AppState.Assign(async () => await DrawAsync(false));
+
+        await DrawAsync(true);
+    }
+
+    private async Task DrawAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            funds.Clear();
+
+            StateHasChanged();
+        }
+
         await foreach (var item in Client.ListFundsAsync())
         {
             funds.Add(item);
         }
+
+        StateHasChanged();
     }
 }

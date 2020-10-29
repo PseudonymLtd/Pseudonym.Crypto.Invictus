@@ -1,4 +1,6 @@
-﻿@if (Value == Decimal.Zero)
+﻿@inject IAppState AppState
+
+@if (Value == Decimal.Zero)
 {
     <span>
         <LargeNumber Value="@Value" Decimals="@Decimals" />
@@ -21,4 +23,9 @@ else
 
     [Parameter]
     public CurrencyCode CurrencyCode { get; set; } = CurrencyCode.USD;
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+    }
 }

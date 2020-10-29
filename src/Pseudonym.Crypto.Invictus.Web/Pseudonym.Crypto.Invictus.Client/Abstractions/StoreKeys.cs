@@ -3,5 +3,6 @@
     public static class StoreKeys
     {
         public const string JwtToken = "jwt";
+        public const string UserSettings = "user-settings";
     }
 }

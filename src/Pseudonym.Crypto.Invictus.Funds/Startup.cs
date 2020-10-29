@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
@@ -256,7 +257,11 @@ namespace Pseudonym.Crypto.Invictus.Funds
 
             applicationBuilder.UseCors(options =>
                 options
-                .WithOrigins("https://localhost:5001", "http://localhost:5000")
+                .WithOrigins(Configuration
+                    .GetSection("Cors")
+                    .GetChildren()
+                    .Select(x => x.Value)
+                    .ToArray())
                 .WithExposedHeaders(Headers.CorrelationId)
                 .AllowAnyHeader()
                 .AllowAnyMethod()

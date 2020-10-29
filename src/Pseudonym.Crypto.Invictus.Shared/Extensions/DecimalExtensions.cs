@@ -6,7 +6,7 @@ namespace System
     {
         public static string ToCommaFormat(this decimal m)
         {
-            var nonDecimalAmount = (int)m;
+            var nonDecimalAmount = (long)m;
             var decimalAmount = m - nonDecimalAmount;
 
             var moneyString = nonDecimalAmount.ToString();

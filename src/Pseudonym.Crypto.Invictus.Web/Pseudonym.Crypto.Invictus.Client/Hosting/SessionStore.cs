@@ -8,11 +8,23 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Hosting
 {
     internal sealed class SessionStore : ISessionStore, IAsyncDisposable
     {
-        private readonly IJSRuntime jsRuntime;
+        private readonly IJSInProcessRuntime jsRuntime;
 
         public SessionStore(IJSRuntime jSRuntime)
         {
-            jsRuntime = jSRuntime;
+            jsRuntime = (IJSInProcessRuntime)jSRuntime;
+        }
+
+        public void Set<T>(string key, T data)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            var serialisedData = JsonConvert.SerializeObject(data);
+
+            jsRuntime.InvokeVoid("sessionStorage.setItem", key, serialisedData);
         }
 
         public async Task SetAsync<T>(string key, T data)
@@ -35,6 +47,23 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Hosting
             }
 
             var serialisedData = await jsRuntime.InvokeAsync<string>("sessionStorage.getItem", key);
+
+            if (serialisedData == null)
+            {
+                return default;
+            }
+
+            return JsonConvert.DeserializeObject<T>(serialisedData);
+        }
+
+        public T Get<T>(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            var serialisedData = jsRuntime.Invoke<string>("sessionStorage.getItem", key);
 
             if (serialisedData == null)
             {

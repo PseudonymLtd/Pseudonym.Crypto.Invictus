@@ -6,16 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Pseudonym</title>
     <base href="/" />
-    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
     <link href="css/app.css" rel="stylesheet" />
     <link href="manifest.json" rel="manifest" />
-    <link rel="apple-touch-icon" sizes="512x512" href="Logo_Small_Light.png" />
+    <link rel="apple-touch-icon" sizes="230x230" href="Logo_Small_Light.png" />
     <link rel="icon" type="image/png" href="images/Logo_Small_Light.png" sizes="16x16">
     <link rel="icon" type="image/png" href="images/Logo_Small_Light.png" sizes="32x32">
+    <script src="js/jquery-3.5.1.slim.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
 </head>
 
 <body>
-    <app>Loading...</app>
+    <app>
+        <div class="text-center">
+            <div class="spinner-border text-danger" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+    </app>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.

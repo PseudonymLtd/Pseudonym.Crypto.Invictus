@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.WebUtilities;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Models;
 using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
+using Pseudonym.Crypto.Invictus.Web.Client.Configuration;
 
 namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
 {
@@ -49,6 +51,14 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
             return ListAsync<ApiTransaction>($"/api/v1/addresses/{address}/transactions/{symbol}");
         }
 
+        protected override async Task<TResponse> GetAsync<TResponse>(string url)
+        {
+            var currencyCode = await GetCurrencyCodeAsync();
+
+            return await base.GetAsync<TResponse>(
+                QueryHelpers.AddQueryString(url, "output-currency", currencyCode.ToString()));
+        }
+
         protected override async Task<HttpClient> CreateClientAsync()
         {
             var client = await base.CreateClientAsync();
@@ -73,6 +83,14 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
             {
                 yield return item;
             }
+        }
+
+        private async Task<CurrencyCode> GetCurrencyCodeAsync()
+        {
+            var userSettings = await sessionStore.GetAsync<UserSettings>(StoreKeys.UserSettings)
+                ?? new UserSettings();
+
+            return userSettings.CurrencyCode;
         }
     }
 }
