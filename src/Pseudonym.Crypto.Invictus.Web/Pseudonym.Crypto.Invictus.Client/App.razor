@@ -1,3 +1,7 @@
+@inject IUserSettingsHandle UserSettingsHandle
+@inject IApiClient Client
+@inject IAppState AppState
+
 <Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
@@ -9,3 +13,22 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await foreach (var item in Client.ListFundsAsync())
+        {
+            await UserSettingsHandle.UpdateAsync(x => x.AddFund(
+                item.Token.Symbol, 
+                new FundInfo()
+                {
+                    Name = item.Name,
+                    DisplayName = item.DisplayName,
+                    Description = item.Description,
+                    ContractAddress = item.Token.Address,
+                    Decimals = item.Token.Decimals
+                }));
+        }
+    }
+}

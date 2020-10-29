@@ -1,0 +1,119 @@
+﻿@page "/funds/{symbol}"
+@inject IUserSettings UserSettings
+@inject IApiClient Client
+@inject IAppState AppState
+@inject NavigationManager NavigationManager
+
+@if (fund == null)
+{
+    <div class="text-center">
+        <div class="spinner-border text-danger" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+}
+else
+{
+    <FundSummary Fund="fund" Clickable="false" />
+    <h2>Fund Assets</h2>
+    <div class="container-fluid" style="max-width: none">
+        @foreach (var asset in fund.Assets)
+        {
+            var symbol = Enum.IsDefined(typeof(Symbol), asset.Symbol)
+                ? Enum.Parse<Symbol>(asset.Symbol)
+                : default(Symbol?);
+
+            <div 
+                style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;"
+                class="@(symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value) ? "clickable-row row" : "row")" 
+                @onclick="@((e) => 
+                            { 
+                                if (symbol.HasValue) 
+                                {
+                                    NavigationManager.NavigateTo($"funds/{symbol.Value}");
+
+                                    Symbol = asset.Symbol;
+
+                                    AppState.NotifyStateChanged();
+                                }
+                            })">
+                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <small style="font-weight: bold;">Asset Name</small>
+                    <div>
+                        @if (symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value))
+                        {
+                            <FundLink DisplayName="@UserSettings.Funds[symbol.Value].DisplayName" Name="@UserSettings.Funds[symbol.Value].Name" />
+                        }
+                        else
+                        {
+                            @asset.Name
+                        }
+                    </div>
+                </div>
+                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <small style="font-weight: bold;">Token</small>
+                    <div>
+                        @if (symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value))
+                        {
+                            <Token Symbol="@asset.Symbol" ContractAddress="@UserSettings.Funds[symbol.Value].ContractAddress" />
+                        }
+                        else
+                        {
+                            @asset.Symbol
+                        }
+                    </div>
+                </div>
+                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <small style="font-weight: bold;">Value (@UserSettings.CurrencyCode.GetSymbol())</small>
+                    <div>
+                        <Money Value="@asset.Value" CurrencyCode="UserSettings.CurrencyCode" />
+                    </div>
+                </div>
+                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <small style="font-weight: bold;">Share</small>
+                    <div>
+                        <LargeNumber Value="asset.Share" Decimals="2" Suffix="PercentageSymbol" />
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+
+    private const char PercentageSymbol = '%';
+
+    private ApiFund fund;
+
+    [Parameter]
+    public string Symbol { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.Assign(async () => await DrawAsync(false));
+
+        await DrawAsync(true);
+    }
+
+    private async Task DrawAsync(bool firstRender)
+    {
+        if (Enum.TryParse(Symbol, out Symbol symbol))
+        {
+            if (!firstRender)
+            {
+                fund = null;
+
+                StateHasChanged();
+            }
+
+            fund = await Client.GetFundAsync(symbol);
+
+            StateHasChanged();
+        }
+        else
+        {
+            throw new ArgumentException($"Could not pass parameter '{Symbol}'", nameof(Symbol));
+        }
+    }
+}

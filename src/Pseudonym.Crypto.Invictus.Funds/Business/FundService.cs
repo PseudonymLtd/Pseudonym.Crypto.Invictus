@@ -77,6 +77,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             return new BusinessFund()
             {
                 Name = fund.Name,
+                Description = fundInfo.Description,
+                FactSheetUri = fundInfo.Links.Fact,
+                LitepaperUri = fundInfo.Links.Lite,
                 Token = new BusinessToken()
                 {
                     Symbol = fundInfo.Symbol,
@@ -97,6 +100,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                         Value = currencyConverter.Convert(a.Value.FromPythonString(), currencyCode),
                         Share = currencyConverter.Convert(a.Value.FromPythonString() / netVal * 100, currencyCode)
                     })
+                    .Where(x => x.Value > 0)
                     .Union(fundInfo.Assets
                         .Select(a => new BusinessAsset()
                         {

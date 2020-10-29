@@ -7,5 +7,5 @@
     [Parameter]
     public string Name { get; set; }
 
-    internal string Link => $"https://invictuscapital.com/{Name}";
+    internal string Link => $"https://invictuscapital.com/{Name.ToLower()}";
 }

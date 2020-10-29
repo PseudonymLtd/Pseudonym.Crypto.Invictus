@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 
@@ -18,6 +19,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
                     chars[0] = char.ToUpperInvariant(chars[0]);
                     return new string(chars);
                 }));
+
+        public string Description { get; set; }
+
+        public Uri FactSheetUri { get; set; }
+
+        public Uri LitepaperUri { get; set; }
 
         public IToken Token { get; set; }
 

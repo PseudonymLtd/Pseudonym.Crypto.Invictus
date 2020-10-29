@@ -15,6 +15,10 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         public string DisplayName { get; set; }
 
         [Required]
+        [JsonProperty("description")]
+        public string Description { get; set; }
+
+        [Required]
         [JsonProperty("token")]
         public ApiToken Token { get; set; }
 
@@ -45,5 +49,9 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [Required]
         [JsonProperty("assets")]
         public List<ApiAsset> Assets { get; set; }
+
+        [Required]
+        [JsonProperty("links")]
+        public ApiLinks Links { get; set; }
     }
 }

@@ -23,33 +23,16 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Token</th>
-                <th>Circulating Supply</th>
-                <th>Net Value</th>
-                <th>Nav</th>
-                <th>Market Value</th>
-                <th>Price</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var fund in funds.OrderBy(x => x.Name))
-            {
-                <tr>
-                    <td><FundLink DisplayName="@fund.DisplayName" Name="@fund.Name" /></td>
-                    <td><Token Symbol="@fund.Token.Symbol.ToString()" ContractAddress="@fund.Token.Address" /></td>
-                    <td><LargeNumber Value="fund.CirculatingSupply" Decimals="2" /></td>
-                    <td><Money Value="@fund.NetAssetValue" CurrencyCode="UserSettings.CurrencyCode" /></td>
-                    <td><Money Value="@fund.NetAssetValuePerToken" CurrencyCode="UserSettings.CurrencyCode" /></td>
-                    <td><Money Value="fund.MarketValue ?? 0" CurrencyCode="UserSettings.CurrencyCode" /></td>
-                    <td><Money Value="fund.MarketValuePerToken ?? 0" CurrencyCode="UserSettings.CurrencyCode" /></td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="container" style="display: contents;">
+        @foreach (var fund in funds.OrderBy(x => x.Name))
+        {
+            <div class="row">
+                <div class="col">
+                    <FundSummary Fund="fund" Clickable="true" />
+                </div>
+            </div>
+        }
+    </div>
 }
 
 @code {

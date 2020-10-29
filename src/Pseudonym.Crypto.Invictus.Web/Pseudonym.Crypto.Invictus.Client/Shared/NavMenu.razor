@@ -24,10 +24,10 @@
             <div class="form-group">
                 <label for="dropdownMenuButton" style="color:#d7d7d7">Currency</label>
                 <div class="dropdown">
-                    <button class="btn btn-danger dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-describedby="currencyCodeHelp" style="min-width: 218px;">
+                    <button class="btn btn-danger dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-describedby="currencyCodeHelp" style="width: 100%;">
                         @UserSettingsHandle.Settings.CurrencyCode
                     </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="overflow-y: scroll; max-height: 250px; z-index: 10000;">
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="overflow-y: scroll; max-height: 250px; z-index: 10000; width: 100%;">
                         @foreach (var item in Enum.GetValues(typeof(CurrencyCode)).Cast<CurrencyCode>())
                         {
                             <span class="dropdown-item" @onclick="@(async (e) => await ChangeCurrencyCodeAsync(@item))">@item</span>
@@ -35,6 +35,18 @@
                     </div>
                 </div>
                 <small id="currencyCodeHelp" class="form-text" style="color:#d7d7d7">Conversions from USD -> @UserSettingsHandle.Settings.CurrencyCode.</small>
+            </div>
+        </li>
+        <li class="nav-item px-3">
+            <div class="form-group">
+                <label for="ethAddress" style="color:#d7d7d7">Wallet Address</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="ethAddress" 
+                    style="border-color: #dc3545; font-size: small;"
+                    value="@UserSettingsHandle.Settings.WalletAddress"
+                    @onchange="ChangeWalletAddressAsync" />
             </div>
         </li>
     </ul>
@@ -60,9 +72,16 @@
         Console.WriteLine($"Changing currency to CurrencyCode: {currencyCode}");
 
         await UserSettingsHandle.UpdateAsync(us => us.CurrencyCode = currencyCode);
-              
-        AppState.NotifyStateChanged();
 
-        Console.WriteLine(UserSettingsHandle.Settings.CurrencyCode);
+        AppState.NotifyStateChanged();
+    }
+
+    private async Task ChangeWalletAddressAsync(ChangeEventArgs e)
+    {
+        Console.WriteLine($"Changing Address to: {e.Value}");
+
+        await UserSettingsHandle.UpdateAsync(us => us.WalletAddress = e.Value.ToString());
+
+        StateHasChanged();
     }
 }

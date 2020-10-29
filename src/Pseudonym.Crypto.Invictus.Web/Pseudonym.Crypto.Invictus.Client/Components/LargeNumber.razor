@@ -1,20 +1,20 @@
 ﻿@inject IAppState AppState
 
-@if (Value == Decimal.Zero)
+@if (Value == decimal.Zero)
 {
     <div>-</div>
 }
 else if (GetRoundedNumber().Length < GetFullNumber().Length)
 {
-    <div class="tooltip-container">
-        @GetRoundedNumber()
-        <span class="tooltip-text">@GetFullNumber()</span>
-    </div>
+<div class="tooltip-container">
+    @GetRoundedNumber()@Suffix
+    <span class="tooltip-text">@GetFullNumber()@Suffix</span>
+</div>
 }
 else
 {
     <div style="display: inline-block; position: relative;">
-        @GetFullNumber()
+        @GetFullNumber()@Suffix
     </div>
 }
 
@@ -24,6 +24,9 @@ else
 
     [Parameter]
     public int Decimals { get; set; } = 0;
+
+    [Parameter]
+    public char Suffix { get; set; } = ' ';
 
     protected override void OnInitialized()
     {

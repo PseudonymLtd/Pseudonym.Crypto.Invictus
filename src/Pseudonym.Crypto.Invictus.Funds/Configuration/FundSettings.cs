@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
@@ -9,12 +10,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
     {
         public string FundName { get; set; }
 
+        public string Description { get; set; }
+
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public Symbol Symbol { get; set; }
 
         public int Decimals { get; set; }
 
         public string ContractAddress { get; set; }
+
+        public FundLinks Links { get; set; }
 
         public List<FundAsset> Assets { get; set; } = new List<FundAsset>();
 
@@ -30,6 +35,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
             public decimal Value { get; set; }
 
             public decimal Share { get; set; }
+        }
+
+        public sealed class FundLinks
+        {
+            public Uri Lite { get; set; }
+
+            public Uri Fact { get; set; }
         }
     }
 }

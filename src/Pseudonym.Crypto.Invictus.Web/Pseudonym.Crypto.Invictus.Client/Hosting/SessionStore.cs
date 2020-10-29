@@ -1,13 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Web.Client.Hosting
 {
     internal sealed class SessionStore : ISessionStore, IAsyncDisposable
     {
+        private static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings()
+        {
+            Converters = new List<JsonConverter>()
+            {
+                new StringEnumConverter(),
+                new VersionConverter(),
+                new IsoDateTimeConverter()
+            }
+        };
+
         private readonly IJSInProcessRuntime jsRuntime;
 
         public SessionStore(IJSRuntime jSRuntime)
@@ -22,7 +34,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Hosting
                 throw new ArgumentNullException(nameof(key));
             }
 
-            var serialisedData = JsonConvert.SerializeObject(data);
+            var serialisedData = JsonConvert.SerializeObject(data, SerializerSettings);
 
             jsRuntime.InvokeVoid("sessionStorage.setItem", key, serialisedData);
         }
@@ -34,7 +46,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Hosting
                 throw new ArgumentNullException(nameof(key));
             }
 
-            var serialisedData = JsonConvert.SerializeObject(data);
+            var serialisedData = JsonConvert.SerializeObject(data, SerializerSettings);
 
             await jsRuntime.InvokeVoidAsync("sessionStorage.setItem", key, serialisedData);
         }
@@ -53,7 +65,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Hosting
                 return default;
             }
 
-            return JsonConvert.DeserializeObject<T>(serialisedData);
+            return JsonConvert.DeserializeObject<T>(serialisedData, SerializerSettings);
         }
 
         public T Get<T>(string key)
@@ -70,7 +82,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Hosting
                 return default;
             }
 
-            return JsonConvert.DeserializeObject<T>(serialisedData);
+            return JsonConvert.DeserializeObject<T>(serialisedData, SerializerSettings);
         }
 
         public async Task RemoveItemAsync(string key)

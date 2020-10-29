@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net.Mime;
@@ -6,8 +7,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
+using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Controllers.Filters;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
@@ -20,13 +23,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
     [Route("api/v1/funds")]
     public class FundController
     {
+        private readonly AppSettings appSettings;
         private readonly IFundService fundService;
         private readonly IScopedCancellationToken scopedCancellationToken;
 
         public FundController(
+            IOptions<AppSettings> appSettings,
             IFundService fundService,
             IScopedCancellationToken scopedCancellationToken)
         {
+            this.appSettings = appSettings.Value;
             this.fundService = fundService;
             this.scopedCancellationToken = scopedCancellationToken;
         }
@@ -80,6 +86,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
             {
                 Name = fund.Name,
                 DisplayName = fund.DisplayName,
+                Description = fund.Description,
                 Token = new ApiToken()
                 {
                     Symbol = fund.Token.Symbol,
@@ -100,7 +107,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                         Value = a.Value,
                         Share = a.Share
                     })
-                    .ToList()
+                    .ToList(),
+                Links = new ApiLinks()
+                {
+                    [nameof(ApiLinks.Self)] = new Uri(appSettings.HostUrl.OriginalString.TrimEnd('/') + $"/api/v1/funds/{fund.Token.Symbol}", UriKind.Absolute),
+                    [nameof(ApiLinks.Lite)] = fund.LitepaperUri,
+                    [nameof(ApiLinks.Fact)] = fund.FactSheetUri,
+                }
             };
         }
     }
