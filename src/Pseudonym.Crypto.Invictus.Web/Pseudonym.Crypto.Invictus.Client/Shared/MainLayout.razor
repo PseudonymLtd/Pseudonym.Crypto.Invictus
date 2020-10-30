@@ -9,19 +9,33 @@
 
 <div class="main">
     <div class="top-row px-4">
-        <a href="https://www.pseudonym.org.uk/" target="_blank" class="ml-md-auto">About Pseudonym</a>
+        <a href="about" target="_blank" class="ml-md-auto">About</a>
     </div>
 
-    <div class="content px-4">
-        @if (Environment.IsDevelopment())
-        {
-            <div class="dev-header">
-                <p>API Url @Settings.Value.ApiUrl</p>
-                <p>Service Name @Settings.Value.ServiceName</p>
-                <p>Service Version @Settings.Value.Version</p>
-            </div>
-        }
-        @Body
+    <div class="content px-4" style="position: relative; padding-bottom: 225px;">
+        <div>
+            @if (Environment.IsDevelopment())
+            {
+                <div class="dev-header">
+                    <p>API Url @Settings.Value.ApiUrl</p>
+                    <p>Service Name @Settings.Value.ServiceName</p>
+                    <p>Service Version @Settings.Value.Version</p>
+                </div>
+            }
+            @Body
+        </div>
+        <div style="position: absolute; bottom: 0; height: 225px; width: 100%;">
+            <footer class="page-footer font-small blue pt-4">
+                <hr class="clearfix w-100 d-md-none pb-3" />
+                <div class="footer-copyright text-center py-3">
+                    <div>
+                        <a href="https://www.pseudonym.org.uk/">
+                            <img src="images/Logo_Light.png" style="height: 60px;" alt="Pseudonym Ltd">
+                        </a>
+                    </div>
+                </div>
+            </footer>
+        </div>
     </div>
 </div>
 

@@ -6,8 +6,8 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
     public sealed class ApiInvestment
     {
         [Required]
-        [JsonProperty("name")]
-        public string Name { get; set; }
+        [JsonProperty("fund")]
+        public ApiFund Fund { get; set; }
 
         [Required]
         [JsonProperty("held")]

@@ -3,7 +3,7 @@
 @inject IApiClient Client
 @inject IAppState AppState
 
-<h1>Funds Overview</h1>
+<h1 class="display-2">Funds Overview</h1>
 
 <div class="alert alert-secondary mt-4" role="alert">
     <span class="oi oi-info mr-2" aria-hidden="true"></span>
@@ -24,7 +24,7 @@
 else
 {
     <div class="container" style="display: contents;">
-        @foreach (var fund in funds.OrderBy(x => x.Name))
+        @foreach (var fund in funds.OrderBy(x => x.DisplayName))
         {
             <div class="row">
                 <div class="col">

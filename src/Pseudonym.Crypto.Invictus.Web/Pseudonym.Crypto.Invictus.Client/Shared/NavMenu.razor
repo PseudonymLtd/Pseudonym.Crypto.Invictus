@@ -82,6 +82,6 @@
 
         await UserSettingsHandle.UpdateAsync(us => us.WalletAddress = e.Value.ToString());
 
-        StateHasChanged();
+        AppState.NotifyStateChanged();
     }
 }

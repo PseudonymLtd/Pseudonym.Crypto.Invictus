@@ -11,5 +11,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Abstractions
         string WalletAddress { get; }
 
         IReadOnlyDictionary<Symbol, FundInfo> Funds { get; }
+
+        bool HasValidAddress();
     }
 }

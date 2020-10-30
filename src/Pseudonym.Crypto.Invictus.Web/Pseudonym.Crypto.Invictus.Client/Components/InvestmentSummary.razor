@@ -1,0 +1,81 @@
+﻿@inject IAppState AppState
+@inject NavigationManager NavigationManager
+
+<div class="@Classes" @onclick="OnClick" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
+    <img src="images/funds/@FundImageName" class="mr-3" alt="@Investment.Fund.DisplayName">
+    <div class="media-body">
+        <h5 class="mt-0">
+            <FundLink DisplayName="@Investment.Fund.DisplayName" Name="@Investment.Fund.Name" />
+            <a class="badge badge-secondary" href="@Investment.Fund.Links.Lite" style="float: right; margin-left: 5px;" target="_blank">Lite</a>
+            <a class="badge @Investment.Fund.Token.Symbol.ToString().ToLower()" href="@Investment.Fund.Links.Fact" style="float: right; margin-left: 5px;" target="_blank">Fact</a>
+        </h5>
+        <div class="container-fluid" style="max-width: none">
+            <div class="row">
+                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <small style="font-weight: bold;">Token</small>
+                    <div>
+                        <Token Symbol="@Investment.Fund.Token.Symbol.ToString()" ContractAddress="@Investment.Fund.Token.Address" />
+                    </div>
+                </div>
+                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <small style="font-weight: bold;">Held</small>
+                    <div>
+                        <LargeNumber Value="Investment.Held" Decimals="2" />
+                    </div>
+                </div>
+                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <small style="font-weight: bold;">Net Value (@CurrencyCode.GetSymbol())</small>
+                    <div>
+                        <Money Value="Investment.RealValue" CurrencyCode="CurrencyCode" />
+                    </div>
+                </div>
+                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <small style="font-weight: bold;">Nav (@CurrencyCode.GetSymbol())</small>
+                    <div>
+                        <Money Value="Investment.MarketValue ?? 0" CurrencyCode="CurrencyCode" />
+                    </div>
+                </div>
+                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <small style="font-weight: bold;">Held</small>
+                    <div>
+                        <LargeNumber Value="Investment.Share" Decimals="2" Suffix="PercentageSymbol" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private const char PercentageSymbol = '%';
+
+    [Parameter]
+    public ApiInvestment Investment { get; set; }
+
+    [Parameter]
+    public CurrencyCode CurrencyCode { get; set; }
+
+    [Parameter]
+    public bool Clickable { get; set; }
+
+    public string FundImageName => $"{Investment.Fund.Token.Symbol}.png";
+
+    public string Classes => $"media " +
+        (Clickable
+            ? "clickable-row"
+            : string.Empty);
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+    }
+
+    protected void OnClick()
+    {
+        if (Clickable)
+        {
+            NavigationManager.NavigateTo($"/funds/{Investment.Fund.Token.Symbol}");
+        }
+    }
+}

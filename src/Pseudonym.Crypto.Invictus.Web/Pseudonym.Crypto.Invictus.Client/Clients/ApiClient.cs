@@ -4,26 +4,29 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
+using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Models;
 using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
-using Pseudonym.Crypto.Invictus.Web.Client.Configuration;
 
 namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
 {
     internal sealed class ApiClient : BaseClient, IApiClient
     {
         private readonly IHostClient hostClient;
+        private readonly IUserSettings userSettings;
         private readonly ISessionStore sessionStore;
 
         public ApiClient(
             IHostClient hostClient,
             ISessionStore sessionStore,
+            IUserSettings userSettings,
             IHttpClientFactory httpClientFactory)
             : base(httpClientFactory)
         {
             this.hostClient = hostClient;
             this.sessionStore = sessionStore;
+            this.userSettings = userSettings;
         }
 
         public IAsyncEnumerable<ApiFund> ListFundsAsync()
@@ -41,22 +44,39 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
             return ListAsync<ApiPerformance>($"/api/v1/funds/{symbol}/performance?from={fromDate}&to={toDate}");
         }
 
-        public Task<ApiPortfolio> ListPortfolioAsync(string address)
+        public Task<ApiPortfolio> GetPortfolioAsync()
         {
-            return GetAsync<ApiPortfolio>($"/api/v1/addresses/{address}");
+            if (userSettings.HasValidAddress())
+            {
+                return GetAsync<ApiPortfolio>($"/api/v1/addresses/{userSettings.WalletAddress}");
+            }
+            else
+            {
+                return Task.FromResult(new ApiPortfolio()
+                {
+                    Address = userSettings.WalletAddress,
+                    Currency = userSettings.CurrencyCode,
+                    Investments = new List<ApiInvestment>()
+                });
+            }
         }
 
-        public IAsyncEnumerable<ApiTransaction> ListTransactionsAsync(string address, Symbol symbol)
+        public IAsyncEnumerable<ApiTransaction> ListTransactionsAsync(Symbol symbol)
         {
-            return ListAsync<ApiTransaction>($"/api/v1/addresses/{address}/transactions/{symbol}");
+            if (userSettings.HasValidAddress())
+            {
+                return ListAsync<ApiTransaction>($"/api/v1/addresses/{userSettings.WalletAddress}/transactions/{symbol}");
+            }
+            else
+            {
+                return new EmptyAsyncEnumerable<ApiTransaction>();
+            }
         }
 
         protected override async Task<TResponse> GetAsync<TResponse>(string url)
         {
-            var currencyCode = await GetCurrencyCodeAsync();
-
             return await base.GetAsync<TResponse>(
-                QueryHelpers.AddQueryString(url, "output-currency", currencyCode.ToString()));
+                QueryHelpers.AddQueryString(url, "output-currency", userSettings.CurrencyCode.ToString()));
         }
 
         protected override async Task<HttpClient> CreateClientAsync()
@@ -83,14 +103,6 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
             {
                 yield return item;
             }
-        }
-
-        private async Task<CurrencyCode> GetCurrencyCodeAsync()
-        {
-            var userSettings = await sessionStore.GetAsync<UserSettings>(StoreKeys.UserSettings)
-                ?? new UserSettings();
-
-            return userSettings.CurrencyCode;
         }
     }
 }

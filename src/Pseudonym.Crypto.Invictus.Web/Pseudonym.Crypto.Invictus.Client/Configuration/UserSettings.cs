@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
@@ -9,6 +10,8 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Configuration
 {
     public sealed class UserSettings : IUserSettings
     {
+        private static readonly Regex AddressRegex = new Regex("0x+[A-F,a-f,0-9]{40}");
+
         private readonly Dictionary<Symbol, FundInfo> funds;
 
         public UserSettings()
@@ -24,6 +27,11 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Configuration
 
         [JsonProperty("funds")]
         public IReadOnlyDictionary<Symbol, FundInfo> Funds => funds;
+
+        public bool HasValidAddress()
+        {
+            return AddressRegex.IsMatch(WalletAddress ?? string.Empty);
+        }
 
         public void AddFund(Symbol symbol, FundInfo fund)
         {

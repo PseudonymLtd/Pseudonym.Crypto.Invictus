@@ -1,0 +1,15 @@
+﻿@if (!string.IsNullOrWhiteSpace(Address))
+{
+    <Link DisplayText="@Address" CaptionText="View on etherscan" Url="@Link" FontSize="@FontSize" />
+}
+
+@code {
+
+    [Parameter]
+    public string Address { get; set; }
+
+    [Parameter]
+    public int FontSize { get; set; } = 12;
+
+    internal string Link => $"https://etherscan.io/address/{Address}";
+}
