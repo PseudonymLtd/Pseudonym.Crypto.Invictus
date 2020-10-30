@@ -8,7 +8,7 @@
     public string Name { get; set; }
 
     internal string Classes => DisplayName.Length > 20
-        ? "text-mob-sm"
+        ? "text-mob-md"
         : string.Empty;
 
     internal string Link => $"https://invictuscapital.com/{Name.ToLower()}";
