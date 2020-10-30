@@ -1,4 +1,4 @@
-﻿<Link DisplayText="@DisplayName" CaptionText="View on Invictus" Url="@Link" />
+﻿<Link DisplayText="@DisplayName" CaptionText="View on Invictus" Url="@Link" Classes="@Classes" />
 
 @code {
     [Parameter]
@@ -6,6 +6,10 @@
 
     [Parameter]
     public string Name { get; set; }
+
+    internal string Classes => DisplayName.Length > 20
+        ? "text-mob-sm"
+        : string.Empty;
 
     internal string Link => $"https://invictuscapital.com/{Name.ToLower()}";
 }

@@ -293,6 +293,18 @@ app {
         text-align: center;
     }
 
+    .text-mob-sm {
+        font-size: small;
+    }
+
+    .text-mob-md {
+        font-size: medium;
+    }
+
+    .text-mob-lg {
+        font-size: large;
+    }
+
     .main .top-row:not(.auth) {
         display: none;
     }
