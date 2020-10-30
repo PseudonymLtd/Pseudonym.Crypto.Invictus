@@ -277,6 +277,22 @@ app {
     }
 
 @media (max-width: 767.98px) {
+    .display-1 {
+        text-align: center;
+    }
+
+    .display-2 {
+        text-align: center;
+    }
+
+    .display-3 {
+        text-align: center;
+    }
+
+    .display-4 {
+        text-align: center;
+    }
+
     .main .top-row:not(.auth) {
         display: none;
     }
