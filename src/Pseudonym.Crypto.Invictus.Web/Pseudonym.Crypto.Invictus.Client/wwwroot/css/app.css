@@ -305,6 +305,32 @@ app {
         font-size: large;
     }
 
+    .text-align-mob-left {
+        text-align: left !important;
+        display: block;
+    }
+
+    .text-align-mob-center {
+        text-align: center !important;
+        display: block;
+    }
+
+    .text-align-mob-right {
+        text-align: right !important;
+        display: block;
+    }
+
+    .address-mob {
+        font-size: small !important;
+        text-align: center !important;
+    }
+
+    .portfolio-address .tooltip-container {
+        display: block !important;
+        text-align: center;
+        border-bottom: none;
+    }
+
     .main .top-row:not(.auth) {
         display: none;
     }
