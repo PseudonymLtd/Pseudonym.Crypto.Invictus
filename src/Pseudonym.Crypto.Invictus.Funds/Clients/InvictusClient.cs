@@ -68,34 +68,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
             if (fundInfo != null)
             {
-                if (symbol == Symbol.C20)
-                {
-                    var fund = await GetAsync<InvictusC20Fund>("/v2/funds/c20_status");
+                var fund = await GetAsync<InvictusFund>($"/v2/funds/{fundInfo.FundName}/nav");
 
-                    return Format(new InvictusFund()
-                    {
-                        Symbol = Symbol.C20.ToString(),
-                        Name = fund.Name,
-                        CirculatingSupply = fund.CirculatingSupply,
-                        NetValue = fund.NetValue,
-                        NetAssetValuePerToken = fund.NetAssetValuePerToken,
-                        MarketValuePerToken = fund.NetAssetValuePerToken, // Same as NAV,
-                        Assets = fund.Holdings
-                            .Select(h => new InvictusAsset()
-                            {
-                                Symbol = h.Symbol,
-                                Name = h.Name,
-                                Value = h.Value
-                            })
-                            .ToList()
-                    });
-                }
-                else
-                {
-                    var fund = await GetAsync<InvictusFund>($"/v2/funds/{fundInfo.FundName}/nav");
-
-                    return Format(fund);
-                }
+                return Format(fund);
             }
             else
             {

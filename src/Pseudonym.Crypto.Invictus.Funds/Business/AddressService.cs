@@ -32,12 +32,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 .WithCancellation(scopedCancellationToken.Token))
             {
                 var tokenCount = await etherClient.GetContractBalanceAsync(fund.Token.ContractAddress, address);
-
-                yield return new BusinessInvestment()
+                if (tokenCount > 0)
                 {
-                    Fund = fund,
-                    Held = tokenCount
-                };
+                    yield return new BusinessInvestment()
+                    {
+                        Fund = fund,
+                        Held = tokenCount
+                    };
+                }
             }
         }
 

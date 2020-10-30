@@ -21,9 +21,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
     [Authorize]
     [ApiController]
     [Route("api/v1/addresses")]
-    public class AddressController : Controller
+    public class AddressController : AbstractController
     {
-        private readonly IOptions<AppSettings> appSettings;
         private readonly IAddressService addressService;
         private readonly IScopedCancellationToken scopedCancellationToken;
 
@@ -31,8 +30,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
             IOptions<AppSettings> appSettings,
             IAddressService addressService,
             IScopedCancellationToken scopedCancellationToken)
+            : base(appSettings)
         {
-            this.appSettings = appSettings;
             this.addressService = addressService;
             this.scopedCancellationToken = scopedCancellationToken;
         }
@@ -58,7 +57,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
             {
                 portfolio.Investments.Add(new ApiInvestment()
                 {
-                    Name = investment.Fund.Name,
+                    Fund = MapFund(investment.Fund),
                     Held = investment.Held,
                     Share = investment.Share,
                     RealValue = investment.RealValue,
@@ -79,7 +78,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
             var address = new EthereumAddress(hex);
             var currencyCode = queryFilter.CurrencyCode ?? CurrencyCode.USD;
 
-            var fundInfo = appSettings.Value.Funds.Single(x => x.Symbol == symbol);
+            var fundInfo = AppSettings.Funds.Single(x => x.Symbol == symbol);
 
             await foreach (var transaction in addressService
                 .ListTransactionsAsync(new EthereumAddress(fundInfo.ContractAddress), address, currencyCode)
