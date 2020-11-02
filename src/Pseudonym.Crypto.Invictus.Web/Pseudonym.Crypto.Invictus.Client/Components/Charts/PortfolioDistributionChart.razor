@@ -9,68 +9,78 @@
 
 @code {
 
-    private PieConfig config;
-    private ChartJsPieChart chart;
+        private PieConfig config;
+        private ChartJsPieChart chart;
 
-    [Parameter]
-    public int Height { get; set; } = 600;
+        [Parameter]
+        public int Height { get; set; } = 600;
 
-    [Parameter]
-    public int Width { get; set; } = 600;
+        [Parameter]
+        public int Width { get; set; } = 600;
 
-    [Parameter]
-    public string SubTitle { get; set; } = string.Empty;
+        [Parameter]
+        public string SubTitle { get; set; } = string.Empty;
 
-    [Parameter]
-    public bool IsHollow { get; set; }
+        [Parameter]
+        public bool IsHollow { get; set; }
 
-    [Parameter]
-    public List<ApiInvestment> Investments { get; set; }
+        [Parameter]
+        public List<ApiInvestment> Investments { get; set; }
 
-    protected override void OnInitialized()
-    {
-        AppState.Assign(StateHasChanged);
-
-        config = new PieConfig()
+        protected override void OnInitialized()
         {
-            Options = new PieOptions(IsHollow)
+            AppState.Assign(StateHasChanged);
+
+            config = new PieConfig()
             {
-                Responsive = true,
-                Tooltips = new Tooltips()
+                Options = new PieOptions(IsHollow)
                 {
-                    DisplayColors = true,
+                    Responsive = true,
+                    Tooltips = new Tooltips()
+                    {
+                        DisplayColors = true,
+                    },
+                    MaintainAspectRatio = true,
+                    Title = new OptionsTitle()
+                    {
+                        Display = !string.IsNullOrEmpty(SubTitle),
+                        Text = new IndexableOption<string>(SubTitle),
+                    },
+                    Animation = new ArcAnimation()
+                    {
+                        AnimateRotate = true,
+                        AnimateScale = true,
+                        Duration = 1000,
+                        Easing = Easing.EaseInOutCirc
+                    },
+                    ResponsiveAnimationDuration = 1000,
+                    OnClick = new DotNetInstanceClickHandler(InstanceClickHandler)
                 },
-                MaintainAspectRatio = true,
-                Title = new OptionsTitle()
-                {
-                    Display = !string.IsNullOrEmpty(SubTitle),
-                    Text = new IndexableOption<string>(SubTitle),
-                },
-                Animation = new ArcAnimation()
-                {
-                    AnimateRotate = true,
-                    AnimateScale = true,
-                    Duration = 1000,
-                    Easing = Easing.EaseInOutCirc
-                },
-                ResponsiveAnimationDuration = 1000,
-                OnClick = new DotNetInstanceClickHandler(InstanceClickHandler)
-            },
-        };
+            };
 
-        var colours = Investments
-            .Select(i => ColorUtil.FromDrawingColor(FundColours.GetByFund(i.Fund.Token.Symbol)))
-            .ToArray();
+            var colours = Investments
+                .Select(i => FundColours.GetByFund(i.Fund.Token.Symbol))
+                .ToList();
 
-        var dataSet = new PieDataset()
-        {
-            BorderWidth = 1,
-            BackgroundColor = colours,
-            BorderColor = colours,
-            HoverBorderWidth = 3,
-            HoverBorderColor = colours,
-            HoverBackgroundColor = colours,
-        };
+            var compiledColours = colours
+                .Select(c => ColorUtil.FromDrawingColor(c))
+                .ToArray();
+
+            var compiledHoverColours = colours
+                .Select(c => ColorUtil.ColorString(c.R, c.G, c.B, 0.5))
+                .ToArray();
+
+            var dataSet = new PieDataset()
+            {
+                BorderWidth = 2,
+                BackgroundColor = compiledColours,
+                BorderColor = compiledColours,
+                HoverBorderWidth = 2,
+                HoverBackgroundColor = compiledHoverColours,
+                HoverBorderColor = compiledColours,
+                BorderAlign = BorderAlign.Inner,
+                Weight = 1
+            };
 
         dataSet.Data.AddRange(Investments.Select(i => (double)Math.Round(i.RealValue, 2)));
 

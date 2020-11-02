@@ -62,8 +62,10 @@
         var colours = new List<Color>();
         var dataSet = new PieDataset()
         {
-            BorderWidth = 1,
-            HoverBorderWidth = 3
+            BorderWidth = 2,
+            HoverBorderWidth = 2,
+            BorderAlign = BorderAlign.Inner,
+            Weight = 1
         };
 
         foreach (var asset in Assets)
@@ -94,8 +96,13 @@
 
         dataSet.BackgroundColor = compiledColours;
         dataSet.BorderColor = compiledColours;
+
+        var compiledHoverColours = colours
+            .Select(c => ColorUtil.ColorString(c.R, c.G, c.B, 0.5))
+            .ToArray();
+
+        dataSet.HoverBackgroundColor = compiledHoverColours;
         dataSet.HoverBorderColor = compiledColours;
-        dataSet.HoverBackgroundColor = compiledColours;
 
         config.Data.Datasets.Add(dataSet);
     }
