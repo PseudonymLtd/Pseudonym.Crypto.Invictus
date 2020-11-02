@@ -1,0 +1,96 @@
+﻿@using ChartJs.Blazor.Charts
+@using ChartJs.Blazor.ChartJS.PieChart
+@inject IAppState AppState
+@inject NavigationManager NavigationManager
+
+<div style="max-width: @($"{Width}px"); max-height: @($"{Height}px"); margin-bottom: 40px;">
+    <ChartJsPieChart Config="config" Width="Width" Height="Height" @ref="chart" />
+</div>
+
+@code {
+
+    private PieConfig config;
+    private ChartJsPieChart chart;
+
+    [Parameter]
+    public int Height { get; set; } = 600;
+
+    [Parameter]
+    public int Width { get; set; } = 600;
+
+    [Parameter]
+    public string SubTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool IsHollow { get; set; }
+
+    [Parameter]
+    public List<ApiInvestment> Investments { get; set; }
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+
+        config = new PieConfig()
+        {
+            Options = new PieOptions(IsHollow)
+            {
+                Responsive = true,
+                Tooltips = new Tooltips()
+                {
+                    DisplayColors = true,
+                },
+                MaintainAspectRatio = true,
+                Title = new OptionsTitle()
+                {
+                    Display = !string.IsNullOrEmpty(SubTitle),
+                    Text = new IndexableOption<string>(SubTitle),
+                },
+                Animation = new ArcAnimation()
+                {
+                    AnimateRotate = true,
+                    AnimateScale = true,
+                    Duration = 1000,
+                    Easing = Easing.EaseInOutCirc
+                },
+                ResponsiveAnimationDuration = 1000,
+                OnClick = new DotNetInstanceClickHandler(InstanceClickHandler)
+            },
+        };
+
+        var colours = Investments
+            .Select(i => ColorUtil.FromDrawingColor(FundColours.GetByFund(i.Fund.Token.Symbol)))
+            .ToArray();
+
+        var dataSet = new PieDataset()
+        {
+            BorderWidth = 1,
+            BackgroundColor = colours,
+            BorderColor = colours,
+            HoverBorderWidth = 3,
+            HoverBorderColor = colours,
+            HoverBackgroundColor = colours,
+        };
+
+        dataSet.Data.AddRange(Investments.Select(i => (double)Math.Round(i.RealValue, 2)));
+
+        config.Data.Datasets.Add(dataSet);
+        config.Data.Labels.AddRange(Investments.Select(i => i.Fund.DisplayName));
+
+    }
+
+    [JSInvokable]
+    public void InstanceClickHandler(object sender, object args)
+    {
+        var clickData = JsonConvert.DeserializeObject<List<JClickData>>(args.ToString())
+            .First();
+
+        var investment = Investments.SingleOrDefault(i =>
+            i.Fund.DisplayName.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
+
+        if (investment != null)
+        {
+            NavigationManager.NavigateTo($"/funds/{investment.Fund.Token.Symbol}");
+        }
+    }
+}

@@ -6,16 +6,13 @@
 
 @if (fund == null)
 {
-    <div class="text-center">
-        <div class="spinner-border text-danger" role="status">
-            <span class="sr-only">Loading...</span>
-        </div>
-    </div>
+    <Loading />
 }
 else
 {
     <FundSummary Fund="fund" Clickable="false" />
     <h2 class="display-4">Fund Assets</h2>
+    <FundAssetDistributionChart Assets="fund.Assets" IsHollow="true" />
     <div class="container-fluid" style="max-width: none">
         @foreach (var asset in fund.Assets)
         {
@@ -23,18 +20,14 @@ else
                 ? Enum.Parse<Symbol>(asset.Symbol)
                 : default(Symbol?);
 
-            <div 
+            <div
                 style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;"
-                class="@(symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value) ? "clickable-row row" : "row")" 
-                @onclick="@((e) => 
-                            { 
-                                if (symbol.HasValue) 
+                class="@(symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value) ? "clickable-row row" : "row")"
+                @onclick="@((e) =>
+                            {
+                                if (symbol.HasValue)
                                 {
-                                    NavigationManager.NavigateTo($"funds/{symbol.Value}");
-
-                                    Symbol = asset.Symbol;
-
-                                    AppState.NotifyStateChanged();
+                                    NavigationManager.NavigateTo($"funds/{symbol.Value}", true);
                                 }
                             })">
                 <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">

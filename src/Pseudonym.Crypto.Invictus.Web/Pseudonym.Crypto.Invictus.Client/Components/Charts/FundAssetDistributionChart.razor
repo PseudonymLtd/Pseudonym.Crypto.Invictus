@@ -1,0 +1,117 @@
+﻿@using ChartJs.Blazor.Charts
+@using ChartJs.Blazor.ChartJS.PieChart
+@inject IUserSettings UserSettings
+@inject IAppState AppState
+@inject NavigationManager NavigationManager
+
+<div style="max-width: @($"{Width}px"); max-height: @($"{Height}px"); margin-bottom: 40px;">
+    <ChartJsPieChart Config="config" Width="Width" Height="Height" @ref="chart" />
+</div>
+
+@code {
+
+    private PieConfig config;
+    private ChartJsPieChart chart;
+
+    [Parameter]
+    public int Height { get; set; } = 600;
+
+    [Parameter]
+    public int Width { get; set; } = 600;
+
+    [Parameter]
+    public string SubTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool IsHollow { get; set; }
+
+    [Parameter]
+    public List<ApiAsset> Assets { get; set; }
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+
+        config = new PieConfig()
+        {
+            Options = new PieOptions(IsHollow)
+            {
+                Responsive = true,
+                Tooltips = new Tooltips()
+                {
+                    DisplayColors = true,
+                },
+                MaintainAspectRatio = true,
+                Title = new OptionsTitle()
+                {
+                    Display = !string.IsNullOrEmpty(SubTitle),
+                    Text = new IndexableOption<string>(SubTitle),
+                },
+                Animation = new ArcAnimation()
+                {
+                    AnimateRotate = true,
+                    AnimateScale = true,
+                    Duration = 1000,
+                    Easing = Easing.EaseInOutCirc
+                },
+                ResponsiveAnimationDuration = 1000,
+                OnClick = new DotNetInstanceClickHandler(InstanceClickHandler)
+            },
+        };
+
+        var colours = new List<Color>();
+        var dataSet = new PieDataset()
+        {
+            BorderWidth = 1,
+            HoverBorderWidth = 3
+        };
+
+        foreach (var asset in Assets)
+        {
+            dataSet.Data.Add((double)Math.Round(asset.Value, 2));
+
+            var symbol = Enum.IsDefined(typeof(Symbol), asset.Symbol)
+                ? Enum.Parse<Symbol>(asset.Symbol)
+                : default(Symbol?);
+
+            if (symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value))
+            {
+                colours.Add(FundColours.GetByFund(symbol.Value));
+
+                config.Data.Labels.Add(UserSettings.Funds[symbol.Value].DisplayName);
+            }
+            else
+            {
+                colours.Add(FundColours.RandomColor());
+
+                config.Data.Labels.Add(asset.Name);
+            }
+        }
+
+        var compiledColours = colours
+            .Select(c => ColorUtil.FromDrawingColor(c))
+            .ToArray();
+
+        dataSet.BackgroundColor = compiledColours;
+        dataSet.BorderColor = compiledColours;
+        dataSet.HoverBorderColor = compiledColours;
+        dataSet.HoverBackgroundColor = compiledColours;
+
+        config.Data.Datasets.Add(dataSet);
+    }
+
+    [JSInvokable]
+    public void InstanceClickHandler(object sender, object args)
+    {
+        var clickData = JsonConvert.DeserializeObject<List<JClickData>>(args.ToString())
+            .First();
+
+        var fund = UserSettings.Funds.SingleOrDefault(f =>
+        f.Value.DisplayName.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
+
+        if (!fund.Equals(default(KeyValuePair<Symbol, FundInfo>)))
+        {
+            NavigationManager.NavigateTo($"/funds/{fund.Key}", true);
+        }
+    }
+}

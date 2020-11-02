@@ -7,11 +7,7 @@
 
 @if (portfolio == null)
 {
-    <div class="text-center">
-        <div class="spinner-border text-danger" role="status">
-            <span class="sr-only">Loading...</span>
-        </div>
-    </div>
+    <Loading />
 }
 else
 {
@@ -41,6 +37,11 @@ else
             </div>
         </div>
     </div>
+    <h2 class="display-4">Portfolio Distribution</h2>
+
+    <PortfolioDistributionChart Investments="portfolio.Investments" IsHollow="false" />
+
+    <h2 class="display-4">Invested Funds</h2>
     <div class="container" style="display: contents;">
         @foreach (var investment in portfolio.Investments.OrderBy(x => x.Fund.DisplayName))
         {
