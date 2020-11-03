@@ -4,14 +4,26 @@
 @inject IAppState AppState
 @inject NavigationManager NavigationManager
 
-<div style="max-width: @($"{Width}px"); max-height: @($"{Height}px"); margin-bottom: 40px;">
-    <ChartJsPieChart Config="config" Width="Width" Height="Height" @ref="chart" />
-</div>
+@if (!config.Data.Datasets.Any())
+{
+    <Loading />
+}
+else
+{
+    <div style="max-width: @($"{Width}px"); max-height: @($"{Height}px"); margin-bottom: 40px;">
+        <ChartJsPieChart Config="config" Width="Width" Height="Height" @ref="chart" />
+    </div>
+}
 
 @code {
 
-    private PieConfig config;
+    private readonly PieConfig config;
     private ChartJsPieChart chart;
+
+    public FundAssetDistributionChart()
+    {
+        config = new PieConfig();
+    }
 
     [Parameter]
     public int Height { get; set; } = 600;
@@ -28,36 +40,61 @@
     [Parameter]
     public List<ApiAsset> Assets { get; set; }
 
+    [JSInvokable]
+    public void InstanceClickHandler(object sender, object args)
+    {
+        var clickData = JsonConvert.DeserializeObject<List<JClickData>>(args.ToString())
+            .First();
+
+        var fund = UserSettings.Funds.SingleOrDefault(f =>
+        f.Value.DisplayName.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
+
+        if (!fund.Equals(default(KeyValuePair<Symbol, FundInfo>)))
+        {
+            NavigationManager.NavigateTo($"/funds/{fund.Key}", true);
+        }
+    }
+
     protected override void OnInitialized()
     {
-        AppState.Assign(StateHasChanged);
+        AppState.Assign(() => Draw(false));
 
-        config = new PieConfig()
+        config.Options = new PieOptions(IsHollow)
         {
-            Options = new PieOptions(IsHollow)
+            Responsive = true,
+            Tooltips = new Tooltips()
             {
-                Responsive = true,
-                Tooltips = new Tooltips()
-                {
-                    DisplayColors = true,
-                },
-                MaintainAspectRatio = true,
-                Title = new OptionsTitle()
-                {
-                    Display = !string.IsNullOrEmpty(SubTitle),
-                    Text = new IndexableOption<string>(SubTitle),
-                },
-                Animation = new ArcAnimation()
-                {
-                    AnimateRotate = true,
-                    AnimateScale = true,
-                    Duration = 1000,
-                    Easing = Easing.EaseInOutCirc
-                },
-                ResponsiveAnimationDuration = 1000,
-                OnClick = new DotNetInstanceClickHandler(InstanceClickHandler)
+                DisplayColors = true,
             },
+            MaintainAspectRatio = true,
+            Title = new OptionsTitle()
+            {
+                Display = !string.IsNullOrEmpty(SubTitle),
+                Text = new IndexableOption<string>(SubTitle),
+            },
+            Animation = new ArcAnimation()
+            {
+                AnimateRotate = true,
+                AnimateScale = true,
+                Duration = 1000,
+                Easing = Easing.EaseInOutCirc
+            },
+            ResponsiveAnimationDuration = 1000,
+            OnClick = new DotNetInstanceClickHandler(InstanceClickHandler)
         };
+
+        Draw(true);
+    }
+
+    private void Draw(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            config.Data.Datasets.Clear();
+            config.Data.Labels.Clear();
+
+            StateHasChanged();
+        }
 
         var colours = new List<Color>();
         var dataSet = new PieDataset()
@@ -105,20 +142,7 @@
         dataSet.HoverBorderColor = compiledColours;
 
         config.Data.Datasets.Add(dataSet);
-    }
 
-    [JSInvokable]
-    public void InstanceClickHandler(object sender, object args)
-    {
-        var clickData = JsonConvert.DeserializeObject<List<JClickData>>(args.ToString())
-            .First();
-
-        var fund = UserSettings.Funds.SingleOrDefault(f =>
-        f.Value.DisplayName.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
-
-        if (!fund.Equals(default(KeyValuePair<Symbol, FundInfo>)))
-        {
-            NavigationManager.NavigateTo($"/funds/{fund.Key}", true);
-        }
+        StateHasChanged();
     }
 }

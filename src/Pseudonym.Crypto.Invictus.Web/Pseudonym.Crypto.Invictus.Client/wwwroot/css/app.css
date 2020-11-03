@@ -82,6 +82,12 @@ a, .btn-link {
     box-shadow: 0 0 0 0.2rem rgba(33, 37, 41, 0.25);
 }
 
+.date-picker {
+    width: 164px;
+    margin-left: -9px;
+    margin-bottom: -10px;
+}
+
 .dev-header {
     margin: 0;
     padding: 5px;
