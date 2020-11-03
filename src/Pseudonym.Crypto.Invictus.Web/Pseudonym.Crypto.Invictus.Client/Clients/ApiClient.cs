@@ -41,7 +41,8 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
 
         public IAsyncEnumerable<ApiPerformance> ListFundPerformanceAsync(Symbol symbol, DateTime fromDate, DateTime toDate)
         {
-            return ListAsync<ApiPerformance>($"/api/v1/funds/{symbol}/performance?from={fromDate}&to={toDate}");
+            return ListAsync<ApiPerformance>(
+                $"/api/v1/funds/{symbol}/performance?from={fromDate.ToString(Format.DateFormat)}&to={toDate.ToString(Format.DateFormat)}");
         }
 
         public Task<ApiPortfolio> GetPortfolioAsync()
