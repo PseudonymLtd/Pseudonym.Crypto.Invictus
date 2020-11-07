@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Hosting
 {
-    public class StaticFilesMiddleware : IMiddleware
+    internal sealed class StaticFilesMiddleware : IMiddleware
     {
         private const string EmbeddedFileNamespace = "Pseudonym.Crypto.Invictus.Funds.Resources";
 

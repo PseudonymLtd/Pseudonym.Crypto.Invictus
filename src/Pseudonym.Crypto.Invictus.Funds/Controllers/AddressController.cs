@@ -10,11 +10,12 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
-using Pseudonym.Crypto.Invictus.Funds.Controllers.Filters;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
+using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Models;
+using Pseudonym.Crypto.Invictus.Shared.Models.Filters;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Controllers
 {
@@ -24,64 +25,74 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
     public class AddressController : AbstractController
     {
         private readonly IAddressService addressService;
+        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IScopedCancellationToken scopedCancellationToken;
 
         public AddressController(
             IOptions<AppSettings> appSettings,
             IAddressService addressService,
+            IHttpContextAccessor httpContextAccessor,
             IScopedCancellationToken scopedCancellationToken)
             : base(appSettings)
         {
             this.addressService = addressService;
+            this.httpContextAccessor = httpContextAccessor;
             this.scopedCancellationToken = scopedCancellationToken;
         }
 
         [HttpGet]
-        [Route("{hex}")]
+        [Route("{address}/investments")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(ApiPortfolio), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetPortfolio([Required, FromRoute] string hex, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        [ProducesResponseType(typeof(List<ApiInvestment>), StatusCodes.Status200OK)]
+        public async IAsyncEnumerable<ApiInvestment> ListInvestments([Required, FromRoute] string address, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
-            var address = new EthereumAddress(hex);
-            var currencyCode = queryFilter.CurrencyCode ?? CurrencyCode.USD;
-
-            var portfolio = new ApiPortfolio()
-            {
-                Address = address,
-                Currency = currencyCode
-            };
-
             await foreach (var investment in addressService
-                .ListInvestmentsAsync(address, currencyCode)
+                .ListInvestmentsAsync(GetAddress(address), queryFilter.CurrencyCode)
                 .WithCancellation(scopedCancellationToken.Token))
             {
-                portfolio.Investments.Add(new ApiInvestment()
+                yield return new ApiInvestment()
                 {
                     Fund = MapFund(investment.Fund),
                     Held = investment.Held,
                     Share = investment.Share,
                     RealValue = investment.RealValue,
                     MarketValue = investment.MarketValue
-                });
+                };
             }
-
-            return Ok(portfolio);
         }
 
         [HttpGet]
-        [Route("{hex}/transactions/{symbol}")]
+        [Route("{address}/investments/{symbol}")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(ApiInvestment), StatusCodes.Status200OK)]
+        public async Task<ApiInvestment> GetInvestment(
+            [Required, FromRoute] string address, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        {
+            var fundInfo = AppSettings.Funds.Single(x => x.Symbol == symbol);
+
+            var investment = await addressService.GetInvestmentAsync(GetAddress(address), symbol, queryFilter.CurrencyCode);
+
+            return new ApiInvestment()
+            {
+                Fund = MapFund(investment.Fund),
+                Held = investment.Held,
+                Share = investment.Share,
+                RealValue = investment.RealValue,
+                MarketValue = investment.MarketValue
+            };
+        }
+
+        [HttpGet]
+        [Route("{address}/investments/{symbol}/transactions")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(List<ApiTransaction>), StatusCodes.Status200OK)]
         public async IAsyncEnumerable<ApiTransaction> GetTransactions(
-            [Required, FromRoute] string hex, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+            [Required, FromRoute] string address, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
-            var address = new EthereumAddress(hex);
-            var currencyCode = queryFilter.CurrencyCode ?? CurrencyCode.USD;
-
             var fundInfo = AppSettings.Funds.Single(x => x.Symbol == symbol);
 
             await foreach (var transaction in addressService
-                .ListTransactionsAsync(new EthereumAddress(fundInfo.ContractAddress), address, currencyCode)
+                .ListTransactionsAsync(new EthereumAddress(fundInfo.ContractAddress), GetAddress(address), queryFilter.CurrencyCode)
                 .WithCancellation(scopedCancellationToken.Token))
             {
                 yield return new ApiTransaction()
@@ -91,6 +102,15 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                     Amount = transaction.Amount
                 };
             }
+        }
+
+        private EthereumAddress GetAddress(string address)
+        {
+            var ethAddress = new EthereumAddress(address);
+
+            httpContextAccessor.HttpContext.Response.Headers.TryAdd(Headers.Address, ethAddress.Address);
+
+            return ethAddress;
         }
     }
 }

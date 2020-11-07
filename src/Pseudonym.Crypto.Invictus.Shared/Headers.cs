@@ -8,5 +8,7 @@
         public const string Origin = "Origin";
         public const string UserAgent = "User-Agent";
         public const string CorrelationId = "X-Correlation-Id";
+        public const string CurrencyCode = "X-Currency-Code";
+        public const string Address = "X-Eth-Address";
     }
 }

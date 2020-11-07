@@ -58,8 +58,8 @@ else
         await foreach (var item in Client.ListFundsAsync())
         {
             funds.Add(item);
-        }
 
-        StateHasChanged();
+            StateHasChanged();
+        }
     }
 }

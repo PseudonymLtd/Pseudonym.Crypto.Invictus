@@ -4,16 +4,19 @@
 @inject IAppState AppState
 
 <h1 class="display-3">Portfolio Overview</h1>
-
-@if (portfolio == null)
+@if (!UserSettings.HasValidAddress())
+{
+    <WalletEntry />
+}
+else if (!investments.Any())
 {
     <Loading />
 }
 else
 {
     <h2 class="portfolio-address">
-        <EthAddress Address="@portfolio.Address" FontSize="28" />
-        <small class="text-muted text-align-mob-center">(@portfolio.Investments.Count) Funds</small>
+        <EthAddress Address="@UserSettings.WalletAddress" FontSize="28" />
+        <small class="text-muted text-align-mob-center">(@investments.Count) Funds</small>
     </h2>
     <div class="alert alert-secondary mt-4" role="alert">
         <span class="oi oi-info mr-2" aria-hidden="true"></span>
@@ -26,28 +29,28 @@ else
             <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
                 <small style="font-weight: bold;">Total Net Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                 <div>
-                    <Money Value="portfolio.TotalAssetValue" Decimals="2" CurrencyCode="portfolio.Currency" />
+                    <Money Value="TotalAssetValue" Decimals="2" CurrencyCode="UserSettings.CurrencyCode" />
                 </div>
             </div>
             <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
                 <small style="font-weight: bold;">Total Market Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                 <div>
-                    <Money Value="portfolio.TotalMarketValue" Decimals="2" CurrencyCode="portfolio.Currency" />
+                    <Money Value="TotalMarketValue" Decimals="2" CurrencyCode="UserSettings.CurrencyCode" />
                 </div>
             </div>
         </div>
     </div>
     <h2 class="display-4">Portfolio Distribution</h2>
 
-    <PortfolioDistributionChart Investments="portfolio.Investments" IsHollow="false" />
+    <PortfolioDistributionChart Investments="investments" IsHollow="false" />
 
     <h2 class="display-4">Invested Funds</h2>
     <div class="container" style="display: contents;">
-        @foreach (var investment in portfolio.Investments.OrderBy(x => x.Fund.DisplayName))
+        @foreach (var investment in investments.OrderBy(x => x.RealValue))
         {
             <div class="row">
                 <div class="col">
-                    <InvestmentSummary Investment="investment" CurrencyCode="portfolio.Currency" Clickable="false" />
+                    <InvestmentSummary Investment="investment" CurrencyCode="UserSettings.CurrencyCode" Clickable="true" />
                 </div>
             </div>
         }
@@ -56,7 +59,16 @@ else
 
 
 @code {
-    private ApiPortfolio portfolio;
+    private readonly List<ApiInvestment> investments;
+
+    public Portfolio()
+    {
+        investments = new List<ApiInvestment>();
+    }
+
+    protected decimal TotalAssetValue => investments.Sum(x => x.RealValue);
+
+    protected decimal TotalMarketValue => investments.Sum(x => x.MarketValue ?? 0);
 
     protected override async Task OnInitializedAsync()
     {
@@ -69,13 +81,19 @@ else
     {
         if (!firstRender)
         {
-            portfolio = null;
+            investments.Clear();
 
             StateHasChanged();
         }
 
-        portfolio = await Client.GetPortfolioAsync();
+        if (UserSettings.HasValidAddress())
+        {
+            await foreach (var item in Client.ListInvestmentsAsync())
+            {
+                investments.Add(item);
+            }
 
-        StateHasChanged();
+            StateHasChanged();
+        }
     }
 }

@@ -2,16 +2,19 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Pseudonym.Crypto.Invictus.Funds.Controllers.Filters
+namespace Pseudonym.Crypto.Invictus.Shared.Models.Filters
 {
     public class ApiPerformanceQueryFilter : ApiCurrencyQueryFilter
     {
+        public const string FromQueryName = "from";
+        public const string ToQueryName = "to";
+
         [Required]
-        [FromQuery(Name = "from")]
+        [FromQuery(Name = FromQueryName)]
         public DateTime FromDate { get; set; }
 
         [Required]
-        [FromQuery(Name = "to")]
+        [FromQuery(Name = ToQueryName)]
         public DateTime ToDate { get; set; }
     }
 }

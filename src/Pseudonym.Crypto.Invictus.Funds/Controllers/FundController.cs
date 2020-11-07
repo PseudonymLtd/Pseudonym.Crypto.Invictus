@@ -9,10 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
-using Pseudonym.Crypto.Invictus.Funds.Controllers.Filters;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Models;
+using Pseudonym.Crypto.Invictus.Shared.Models.Filters;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Controllers
 {
@@ -40,7 +40,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         public async IAsyncEnumerable<ApiFund> GetFunds([FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
             await foreach (var fund in fundService
-                .ListFundsAsync(queryFilter.CurrencyCode ?? CurrencyCode.USD)
+                .ListFundsAsync(queryFilter.CurrencyCode)
                 .WithCancellation(scopedCancellationToken.Token))
             {
                 yield return MapFund(fund);
@@ -53,7 +53,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [ProducesResponseType(typeof(ApiFund), StatusCodes.Status200OK)]
         public async Task<ApiFund> GetFund([Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
-            var fund = await fundService.GetFundAsync(symbol, queryFilter.CurrencyCode ?? CurrencyCode.USD);
+            var fund = await fundService.GetFundAsync(symbol, queryFilter.CurrencyCode);
 
             return MapFund(fund);
         }
@@ -65,7 +65,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         public async IAsyncEnumerable<ApiPerformance> ListPerformance([Required, FromRoute] Symbol symbol, [FromQuery] ApiPerformanceQueryFilter queryFilter)
         {
             await foreach (var perf in fundService
-                .ListPerformanceAsync(symbol, queryFilter.FromDate, queryFilter.ToDate, queryFilter.CurrencyCode ?? CurrencyCode.USD)
+                .ListPerformanceAsync(symbol, queryFilter.FromDate, queryFilter.ToDate, queryFilter.CurrencyCode)
                 .WithCancellation(scopedCancellationToken.Token))
             {
                 yield return new ApiPerformance()

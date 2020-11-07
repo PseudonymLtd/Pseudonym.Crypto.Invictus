@@ -10,7 +10,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Configuration
 {
     public sealed class UserSettings : IUserSettings
     {
-        private static readonly Regex AddressRegex = new Regex("0x+[A-F,a-f,0-9]{40}");
+        private static readonly Regex AddressRegex = new Regex("^0x+[A-F,a-f,0-9]{40}$");
 
         private readonly Dictionary<Symbol, FundInfo> funds;
 

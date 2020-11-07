@@ -43,6 +43,18 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             }
         }
 
+        public async Task<IInvestment> GetInvestmentAsync(EthereumAddress address, Symbol symbol, CurrencyCode currencyCode)
+        {
+            var fund = await fundService.GetFundAsync(symbol, currencyCode);
+            var tokenCount = await etherClient.GetContractBalanceAsync(fund.Token.ContractAddress, address);
+
+            return new BusinessInvestment()
+            {
+                Fund = fund,
+                Held = tokenCount
+            };
+        }
+
         public async IAsyncEnumerable<ITransaction> ListTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address, CurrencyCode currencyCode)
         {
             await foreach (var transaction in etherClient

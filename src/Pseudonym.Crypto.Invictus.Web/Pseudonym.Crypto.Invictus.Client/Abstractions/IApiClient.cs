@@ -8,9 +8,11 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Abstractions
 {
     public interface IApiClient
     {
-        Task<ApiPortfolio> GetPortfolioAsync();
+        IAsyncEnumerable<ApiInvestment> ListInvestmentsAsync();
 
-        IAsyncEnumerable<ApiTransaction> ListTransactionsAsync(Symbol symbol);
+        Task<ApiInvestment> GetInvestmentAsync(Symbol symbol);
+
+        IAsyncEnumerable<ApiTransaction> ListInvestmentTransactionsAsync(Symbol symbol);
 
         IAsyncEnumerable<ApiFund> ListFundsAsync();
 

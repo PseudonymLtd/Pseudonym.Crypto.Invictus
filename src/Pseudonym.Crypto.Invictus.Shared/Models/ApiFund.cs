@@ -46,7 +46,6 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [JsonProperty("market_value_per_token")]
         public decimal? MarketValuePerToken { get; set; }
 
-        [Required]
         [JsonProperty("assets")]
         public List<ApiAsset> Assets { get; set; }
 

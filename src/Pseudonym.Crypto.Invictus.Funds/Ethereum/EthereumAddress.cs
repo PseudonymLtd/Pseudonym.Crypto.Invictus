@@ -9,7 +9,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Ethereum
     public readonly struct EthereumAddress : IEquatable<EthereumAddress>
     {
         private static readonly string EmptyHex = string.Empty.PadLeft(40, '0');
-        private static readonly Regex AddressRegex = new Regex("0x+[A-F,a-f,0-9]{40}");
+        private static readonly Regex AddressRegex = new Regex("^0x+[A-F,a-f,0-9]{40}$");
 
         public EthereumAddress(string hex)
         {

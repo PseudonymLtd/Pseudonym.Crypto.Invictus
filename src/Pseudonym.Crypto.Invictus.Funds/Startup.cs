@@ -84,6 +84,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
             container.AddScoped<ScopedCancellationTokenMiddleware>();
             container.AddScoped<ScopedCorrelationIdMiddleware>();
             container.AddScoped<StaticFilesMiddleware>();
+            container.AddScoped<ResponseHeadersMiddleware>();
             container.AddScoped<RequestExceptionMiddleware>();
 
             container.Configure<RouteOptions>(options =>
@@ -278,6 +279,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
             applicationBuilder.UseMiddleware<ScopedCorrelationIdMiddleware>();
             applicationBuilder.UseMiddleware<KestralResponseBodyMiddleware>();
             applicationBuilder.UseMiddleware<StaticFilesMiddleware>();
+            applicationBuilder.UseMiddleware<ResponseHeadersMiddleware>();
             applicationBuilder.UseMiddleware<RequestExceptionMiddleware>();
 
             applicationBuilder.UseSwagger(c => c.RouteTemplate = "{documentName}/schema.json");

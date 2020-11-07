@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Models;
+using Pseudonym.Crypto.Invictus.Shared.Models.Filters;
 using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
@@ -41,32 +42,37 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
 
         public IAsyncEnumerable<ApiPerformance> ListFundPerformanceAsync(Symbol symbol, DateTime fromDate, DateTime toDate)
         {
-            return ListAsync<ApiPerformance>(
-                $"/api/v1/funds/{symbol}/performance?from={fromDate.ToString(Format.DateFormat)}&to={toDate.ToString(Format.DateFormat)}");
+            return ListAsync<ApiPerformance>(string.Format(
+                    "/api/v1/funds/{0}/performance?{1}={2}&{3}={4}",
+                    symbol,
+                    ApiPerformanceQueryFilter.FromQueryName,
+                    fromDate.ToString(Format.DateFormat),
+                    ApiPerformanceQueryFilter.ToQueryName,
+                    toDate.ToString(Format.DateFormat)));
         }
 
-        public Task<ApiPortfolio> GetPortfolioAsync()
+        public IAsyncEnumerable<ApiInvestment> ListInvestmentsAsync()
         {
             if (userSettings.HasValidAddress())
             {
-                return GetAsync<ApiPortfolio>($"/api/v1/addresses/{userSettings.WalletAddress}");
+                return ListAsync<ApiInvestment>($"/api/v1/addresses/{userSettings.WalletAddress}/investments");
             }
             else
             {
-                return Task.FromResult(new ApiPortfolio()
-                {
-                    Address = userSettings.WalletAddress,
-                    Currency = userSettings.CurrencyCode,
-                    Investments = new List<ApiInvestment>()
-                });
+                return new EmptyAsyncEnumerable<ApiInvestment>();
             }
         }
 
-        public IAsyncEnumerable<ApiTransaction> ListTransactionsAsync(Symbol symbol)
+        public Task<ApiInvestment> GetInvestmentAsync(Symbol symbol)
+        {
+            return GetAsync<ApiInvestment>($"/api/v1/addresses/{userSettings.WalletAddress}/investments/{symbol}");
+        }
+
+        public IAsyncEnumerable<ApiTransaction> ListInvestmentTransactionsAsync(Symbol symbol)
         {
             if (userSettings.HasValidAddress())
             {
-                return ListAsync<ApiTransaction>($"/api/v1/addresses/{userSettings.WalletAddress}/transactions/{symbol}");
+                return ListAsync<ApiTransaction>($"/api/v1/addresses/{userSettings.WalletAddress}/investments/{symbol}/transactions");
             }
             else
             {
@@ -77,7 +83,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
         protected override async Task<TResponse> GetAsync<TResponse>(string url)
         {
             return await base.GetAsync<TResponse>(
-                QueryHelpers.AddQueryString(url, "output-currency", userSettings.CurrencyCode.ToString()));
+                QueryHelpers.AddQueryString(url, ApiCurrencyQueryFilter.CurrencyQueryName, userSettings.CurrencyCode.ToString()));
         }
 
         protected override async Task<HttpClient> CreateClientAsync()
