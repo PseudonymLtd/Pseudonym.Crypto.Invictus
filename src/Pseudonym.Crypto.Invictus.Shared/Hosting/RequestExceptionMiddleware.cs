@@ -30,7 +30,14 @@ namespace Pseudonym.Crypto.Invictus.Shared.Hosting
             }
             finally
             {
-                context.Response.Headers.Add(Headers.CorrelationId, scopedCorrelation.CorrelationId);
+                if (context.Response.Headers.ContainsKey(Headers.CorrelationId))
+                {
+                    context.Response.Headers[Headers.CorrelationId] = scopedCorrelation.CorrelationId;
+                }
+                else
+                {
+                    context.Response.Headers.Add(Headers.CorrelationId, scopedCorrelation.CorrelationId);
+                }
             }
         }
     }
