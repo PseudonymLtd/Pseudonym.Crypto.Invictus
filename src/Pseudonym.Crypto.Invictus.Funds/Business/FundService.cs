@@ -35,14 +35,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
         public async IAsyncEnumerable<IFund> ListFundsAsync(CurrencyCode currencyCode)
         {
-            await foreach (var fund in invictusClient
-                .ListFundsAsync()
-                .WithCancellation(scopedCancellationToken.Token))
+            foreach (var fundInfo in appSettings.Funds)
             {
-                if (Enum.TryParse(fund.Symbol, out Symbol symbol))
-                {
-                    yield return Map(fund, symbol, currencyCode);
-                }
+                var fund = await GetFundAsync(fundInfo.Symbol, currencyCode);
+
+                yield return fund;
             }
         }
 
