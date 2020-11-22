@@ -10,7 +10,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
     {
         IAsyncEnumerable<InvictusFund> ListFundsAsync();
 
-        IAsyncEnumerable<InvictusPerformance> ListPerformanceAsync(Symbol symbol, DateTime from, DateTime to);
+        IAsyncEnumerable<InvictusPerformanceSummary> ListPerformanceAsync(Symbol symbol, DateTime from, DateTime to);
 
         Task<InvictusFund> GetFundAsync(Symbol symbol);
     }

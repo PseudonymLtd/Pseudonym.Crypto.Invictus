@@ -18,6 +18,6 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Abstractions
 
         Task<ApiFund> GetFundAsync(Symbol symbol);
 
-        IAsyncEnumerable<ApiPerformance> ListFundPerformanceAsync(Symbol symbol, DateTime fromDate, DateTime toDate);
+        IAsyncEnumerable<ApiPerformance> ListFundPerformanceAsync(Symbol symbol, PriceMode marketMode, DateTime fromDate, DateTime toDate);
     }
 }

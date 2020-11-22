@@ -5,15 +5,27 @@
 @inject IAppState AppState
 @inject NavigationManager NavigationManager
 
-<DateRangePicker 
-    MinDate="DateTimeOffset.UtcNow.AddYears(-3)"
-    MaxDate="DateTimeOffset.UtcNow"
-    StartDate="StartDate"
-    EndDate="EndDate"
-    Culture="CultureInfo.CurrentUICulture"
-    ApplyButtonClasses="@Fund.Token.Symbol.ToString().ToLower()"
-    OnRangeSelect="OnRangeSelectAsync"
-    class="form-control form-control-sm date-picker" />
+<div>
+    <DateRangePicker MinDate="DateTimeOffset.UtcNow.AddYears(-1)"
+                     MaxDate="DateTimeOffset.UtcNow"
+                     StartDate="StartDate"
+                     EndDate="EndDate"
+                     Culture="CultureInfo.CurrentUICulture"
+                     ApplyButtonClasses="@Fund.Token.Symbol.ToString().ToLower()"
+                     OnRangeSelect="OnRangeSelectAsync"
+                     class="form-control form-control-sm date-picker" />
+    <ul class="pagination pagination-sm price-mode">
+        @foreach (PriceMode val in Enum.GetValues(typeof(PriceMode)))
+        {
+            <li class="page-item @(Mode == val ? "active" : string.Empty)" style="cursor: pointer">
+                <span class="page-link @($"{Fund.Token.Symbol.ToString().ToLower()}{(Mode == val ? string.Empty : "-text")}")" @onclick="async (e) => await OnClickAsync(val)">
+                    @val.ToString()
+                    <span class="sr-only">(@val.ToString())</span>
+                </span>
+            </li>
+        }
+    </ul>
+</div>
 <div style="max-width: 100%; max-height: @($"{Height}px"); margin-bottom: 40px;">
     <ChartJsLineChart Config="config" Width="Width" Height="Height" @ref="chart" />
 </div>
@@ -21,11 +33,13 @@
 @code {
 
     private readonly LineConfig config;
-    private readonly LineDataset<TimeTuple<decimal>> lineDataset;
+    private readonly LineDataset<TimeTuple<decimal>> navDataset;
+    private readonly LineDataset<TimeTuple<decimal>> marketDataset;
     private ChartJsLineChart chart;
 
     public FundPerformanceChart()
     {
+        Mode = PriceMode.Avg;
         EndDate = DateTimeOffset.UtcNow;
         StartDate = EndDate.Value.AddYears(-1);
 
@@ -89,7 +103,7 @@
             }
         };
 
-        lineDataset = new LineDataset<TimeTuple<decimal>>
+        navDataset = new LineDataset<TimeTuple<decimal>>
         {
             Fill = false,
             BorderWidth = 2,
@@ -101,7 +115,19 @@
             LineTension = 0
         };
 
-        config.Data.Datasets.Add(lineDataset);
+        marketDataset = new LineDataset<TimeTuple<decimal>>
+        {
+            Fill = false,
+            BorderWidth = 2,
+            PointRadius = 1,
+            PointHoverRadius = 3,
+            PointBorderWidth = 1,
+            PointHoverBorderWidth = 1,
+            SteppedLine = SteppedLine.False,
+            LineTension = 0,
+            BackgroundColor = ColorUtil.FromDrawingColor(InvictusColours.InvictusRed),
+            BorderColor = ColorUtil.FromDrawingColor(InvictusColours.InvictusRed)
+        };
     }
 
     [Parameter]
@@ -120,13 +146,24 @@
 
     protected DateTimeOffset? EndDate { get; private set; }
 
+    protected PriceMode Mode { get; private set; }
+
     protected override async Task OnInitializedAsync()
     {
         AppState.Assign(async () => await DrawAsync(false));
 
-        lineDataset.Label = $"Nav ({UserSettings.CurrencyCode.GetSymbol()})";
-        lineDataset.BackgroundColor = ColorUtil.FromDrawingColor(FundColours.GetByFund(Fund.Token.Symbol));
-        lineDataset.BorderColor = ColorUtil.FromDrawingColor(FundColours.GetByFund(Fund.Token.Symbol));
+        navDataset.Label = $"Nav ({UserSettings.CurrencyCode.GetSymbol()})";
+        navDataset.BackgroundColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Fund.Token.Symbol));
+        navDataset.BorderColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Fund.Token.Symbol));
+
+        config.Data.Datasets.Add(navDataset);
+
+        if (Fund.Market.IsTradeable)
+        {
+            marketDataset.Label = $"Price ({UserSettings.CurrencyCode.GetSymbol()})";
+
+            config.Data.Datasets.Add(marketDataset);
+        }
 
         await DrawAsync(true);
     }
@@ -135,12 +172,18 @@
     {
         if (!firstRender)
         {
-            lineDataset.RemoveAll(x => true);
+            navDataset.RemoveAll(x => true);
+            marketDataset.RemoveAll(x => true);
         }
 
-        await foreach (var perf in ApiClient.ListFundPerformanceAsync(Fund.Token.Symbol, StartDate.Value.UtcDateTime, EndDate.Value.UtcDateTime))
+        await foreach (var perf in ApiClient.ListFundPerformanceAsync(Fund.Token.Symbol, Mode, StartDate.Value.UtcDateTime, EndDate.Value.UtcDateTime))
         {
-            lineDataset.Add(new TimeTuple<decimal>(new Moment(perf.Date), perf.NetAssetValuePerToken));
+            navDataset.Add(new TimeTuple<decimal>(new Moment(perf.Date), perf.NetAssetValuePerToken));
+
+            if (perf.MarketValuePerToken.HasValue)
+            {
+                marketDataset.Add(new TimeTuple<decimal>(new Moment(perf.Date), perf.MarketValuePerToken.Value));
+            }
         }
 
         await chart.Update();
@@ -154,5 +197,15 @@
         EndDate = range.End;
 
         await DrawAsync(false);
+    }
+
+    protected async Task OnClickAsync(PriceMode mode)
+    {
+        if (Mode != mode)
+        {
+            Mode = mode;
+
+            await DrawAsync(false);
+        }
     }
 }

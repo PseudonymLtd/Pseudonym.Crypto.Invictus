@@ -40,15 +40,17 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
             return GetAsync<ApiFund>($"/api/v1/funds/{symbol}");
         }
 
-        public IAsyncEnumerable<ApiPerformance> ListFundPerformanceAsync(Symbol symbol, DateTime fromDate, DateTime toDate)
+        public IAsyncEnumerable<ApiPerformance> ListFundPerformanceAsync(Symbol symbol, PriceMode mode, DateTime fromDate, DateTime toDate)
         {
             return ListAsync<ApiPerformance>(string.Format(
-                    "/api/v1/funds/{0}/performance?{1}={2}&{3}={4}",
+                    "/api/v1/funds/{0}/performance?{1}={2}&{3}={4}&{5}={6}",
                     symbol,
                     ApiPerformanceQueryFilter.FromQueryName,
                     fromDate.ToString(Format.DateFormat),
                     ApiPerformanceQueryFilter.ToQueryName,
-                    toDate.ToString(Format.DateFormat)));
+                    toDate.ToString(Format.DateFormat),
+                    ApiPerformanceQueryFilter.ModeQueryName,
+                    mode));
         }
 
         public IAsyncEnumerable<ApiInvestment> ListInvestmentsAsync()

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Models.Filters
 {
@@ -8,6 +9,7 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models.Filters
     {
         public const string FromQueryName = "from";
         public const string ToQueryName = "to";
+        public const string ModeQueryName = "mode";
 
         [Required]
         [FromQuery(Name = FromQueryName)]
@@ -16,5 +18,8 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models.Filters
         [Required]
         [FromQuery(Name = ToQueryName)]
         public DateTime ToDate { get; set; }
+
+        [FromQuery(Name = ModeQueryName)]
+        public PriceMode Mode { get; set; } = PriceMode.Avg;
     }
 }

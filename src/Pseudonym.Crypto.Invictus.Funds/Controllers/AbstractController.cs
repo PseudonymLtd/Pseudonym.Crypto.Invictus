@@ -30,12 +30,23 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                     Decimals = fund.Token.Decimals,
                     Address = fund.Token.ContractAddress.Address
                 },
-                IsTradeable = fund.IsTradeable,
                 CirculatingSupply = fund.CirculatingSupply,
                 NetAssetValue = fund.NetValue,
                 NetAssetValuePerToken = fund.NetAssetValuePerToken,
-                MarketValue = fund.MarketValue,
-                MarketValuePerToken = fund.MarketValuePerToken,
+                Market = new ApiMarket()
+                {
+                    IsTradeable = fund.Market.IsTradable,
+                    Cap = fund.Market.Cap,
+                    Total = fund.Market.Total,
+                    PricePerToken = fund.Market.PricePerToken,
+                    DiffDaily = fund.Market.DiffDaily,
+                    DiffWeekly = fund.Market.DiffWeekly,
+                    DiffMonthly = fund.Market.DiffMonthly,
+                    Volume = fund.Market.Volume,
+                    VolumeDiffDaily = fund.Market.VolumeDiffDaily,
+                    VolumeDiffWeekly = fund.Market.VolumeDiffWeekly,
+                    VolumeDiffMonthly = fund.Market.VolumeDiffMonthly
+                },
                 Assets = fund.Assets
                     .Select(a => new ApiAsset()
                     {

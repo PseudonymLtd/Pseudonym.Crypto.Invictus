@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
 
 #pragma warning disable SA1402
 
@@ -48,7 +49,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Ethplorer
         public int Day { get; set; }
 
         [JsonIgnore]
-        public DateTimeOffset Date => new DateTimeOffset(Year, Month, Day, 0, 0, 0, TimeSpan.Zero);
+        public DateTime Date => new DateTime(Year, Month, Day, 0, 0, 0, DateTimeKind.Utc);
     }
 
     public sealed class EthplorerPrice
@@ -57,7 +58,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Ethplorer
         public int TransactionCount { get; set; }
 
         [JsonProperty("date")]
-        public DateTimeOffset Date { get; set; }
+        public DateTime Date { get; set; }
 
         [JsonProperty("hour")]
         public int Hour { get; set; }
@@ -85,5 +86,18 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Ethplorer
 
         [JsonProperty("average")]
         public decimal Average { get; set; }
+
+        public decimal GetMarketPrice(PriceMode priceMode)
+        {
+            return priceMode switch
+            {
+                PriceMode.Avg => Average,
+                PriceMode.Open => Open,
+                PriceMode.Close => Close,
+                PriceMode.High => High,
+                PriceMode.Low => Low,
+                _ => throw new ArgumentException($"Arg not handled: {priceMode}", nameof(priceMode)),
+            };
+        }
     }
 }

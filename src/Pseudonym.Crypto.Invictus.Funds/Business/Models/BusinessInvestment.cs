@@ -12,8 +12,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 
         public decimal RealValue => Fund.NetAssetValuePerToken * Held;
 
-        public decimal? MarketValue => Fund.MarketValuePerToken.HasValue
-                ? Fund.MarketValuePerToken.Value * Held
-                : default(decimal?);
+        public decimal? MarketValue => Fund.Market.IsTradable
+            ? Fund.Market.PricePerToken * Held
+            : default(decimal?);
     }
 }

@@ -4,8 +4,10 @@ using Pseudonym.Crypto.Invictus.Shared.Enums;
 
 namespace Pseudonym.Crypto.Invictus.Web.Client.Utils
 {
-    public static class FundColours
+    public static class InvictusColours
     {
+        public static Color InvictusRed => Color.FromArgb(1, 207, 33, 39);
+
         public static Color IBA => Color.FromArgb(1, 246, 122, 6);
 
         public static Color IML => Color.FromArgb(1, 4, 148, 208);

@@ -6,6 +6,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Ethplorer
 {
     public sealed class EthplorerPriceSummary
     {
+        [JsonProperty("marketCapUsd")]
+        public decimal MarketCap { get; set; }
+
+        [JsonIgnore]
+        public decimal MarketValue => MarketValuePerToken * CirculatingSupply;
+
         [JsonProperty("rate")]
         public decimal MarketValuePerToken { get; set; }
 
@@ -20,9 +26,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Ethplorer
 
         [JsonProperty("ts")]
         public int TransactionCount { get; set; }
-
-        [JsonProperty("marketCapUsd")]
-        public decimal MarketCap { get; set; }
 
         [JsonProperty("availableSupply")]
         public decimal CirculatingSupply { get; set; }

@@ -115,13 +115,13 @@ else
 
             if (symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value))
             {
-                colours.Add(FundColours.GetByFund(symbol.Value));
+                colours.Add(InvictusColours.GetByFund(symbol.Value));
 
                 config.Data.Labels.Add(UserSettings.Funds[symbol.Value].DisplayName);
             }
             else
             {
-                colours.Add(FundColours.RandomColor());
+                colours.Add(InvictusColours.RandomColor());
 
                 config.Data.Labels.Add(asset.Name);
             }

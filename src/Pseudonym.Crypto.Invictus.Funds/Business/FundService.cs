@@ -68,17 +68,28 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             return Map(fund, priceData, symbol, currencyCode);
         }
 
-        public async IAsyncEnumerable<IPerformance> ListPerformanceAsync(Symbol symbol, DateTime from, DateTime to, CurrencyCode currencyCode)
+        public async IAsyncEnumerable<IPerformance> ListPerformanceAsync(Symbol symbol, PriceMode priceMode, DateTime from, DateTime to, CurrencyCode currencyCode)
         {
+            var fundInfo = appSettings.Funds.Single(x => x.Symbol == symbol);
+
+            var priceData = fundInfo.Tradable
+                ? await ethplorerClient.GetTokenPricingAsync(new EthereumAddress(fundInfo.ContractAddress))
+                : null;
+
             await foreach (var perf in invictusClient
                 .ListPerformanceAsync(symbol, from, to)
                 .WithCancellation(scopedCancellationToken.Token))
             {
+                var marketData = priceData?.Prices?.SingleOrDefault(x => x.Date.Date == perf.Date.Date)
+                    ?? priceData?.Prices?.OrderBy(x => x.Date)?.FirstOrDefault();
+
                 yield return new BusinessPerformance()
                 {
                     Date = perf.Date,
-                    NetValue = currencyConverter.Convert(perf.NetValue.FromPythonString(), currencyCode),
-                    NetAssetValuePerToken = currencyConverter.Convert(perf.NetAssetValuePerToken.FromPythonString(), currencyCode),
+                    NetValue = currencyConverter.Convert(perf.NetValue, currencyCode),
+                    NetAssetValuePerToken = currencyConverter.Convert(perf.GetNav(priceMode), currencyCode),
+                    MarketCap = currencyConverter.Convert(marketData?.MarketCap, currencyCode),
+                    MarketAssetValuePerToken = currencyConverter.Convert(marketData?.GetMarketPrice(priceMode), currencyCode),
                 };
             }
         }
@@ -104,9 +115,20 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 CirculatingSupply = fund.CirculatingSupply.FromPythonString(),
                 NetValue = currencyConverter.Convert(netVal, currencyCode),
                 NetAssetValuePerToken = currencyConverter.Convert(fund.NetAssetValuePerToken.FromPythonString(), currencyCode),
-                MarketValuePerToken = marketVal.HasValue
-                    ? currencyConverter.Convert(marketVal.Value, currencyCode)
-                    : default(decimal?),
+                Market = new BusinessMarket()
+                {
+                    IsTradable = priceData != null,
+                    Cap = priceData?.MarketCap ?? 0,
+                    Total = currencyConverter.Convert(priceData?.MarketValue, currencyCode),
+                    PricePerToken = currencyConverter.Convert(priceData?.MarketValuePerToken, currencyCode),
+                    DiffDaily = priceData?.DiffDaily ?? 0,
+                    DiffWeekly = priceData?.DiffWeekly ?? 0,
+                    DiffMonthly = priceData?.DiffMonthly ?? 0,
+                    Volume = currencyConverter.Convert(priceData?.MarketValuePerToken, currencyCode),
+                    VolumeDiffDaily = priceData?.VolumeDiffDaily ?? 0,
+                    VolumeDiffWeekly = priceData?.VolumeDiffWeekly ?? 0,
+                    VolumeDiffMonthly = priceData?.VolumeDiffMonthly ?? 0
+                },
                 Assets = fund.Assets
                     .Select(a => new BusinessAsset()
                     {

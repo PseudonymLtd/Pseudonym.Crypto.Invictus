@@ -1,68 +1,5 @@
 ﻿@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
-.iba {
-    color: white;
-    background-color: #f67a06;
-}
-
-    .iba:hover {
-        color: white !important
-    }
-
-.igp {
-    color: white;
-    background-color: #c7822a;
-}
-
-    .igp:hover {
-        color: white !important
-    }
-
-.ihf {
-    color: white;
-    background-color: #133775;
-}
-
-    .ihf:hover {
-        color: white !important
-    }
-
-.iml {
-    color: white;
-    background-color: #0494d0;
-}
-
-    .iml:hover {
-        color: white !important
-    }
-
-.ems {
-    color: white;
-    background-color: #fbad18;
-}
-
-    .ems:hover {
-        color: white !important
-    }
-
-.c10 {
-    color: white;
-    background-color: #0e6cac;
-}
-
-    .c10:hover {
-        color: white !important
-    }
-
-.c20 {
-    color: white;
-    background-color: #0c3b59;
-}
-
-    .c20:hover {
-        color: white !important
-    }
-
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
@@ -85,7 +22,11 @@ a, .btn-link {
 .date-picker {
     width: 170px;
     margin-left: -9px;
-    margin-bottom: -10px;
+    margin-bottom: calc(-1.5em + -0.5rem - 2px);
+}
+
+.price-mode {
+    justify-content: flex-end !important;
 }
 
 .dev-header {
@@ -282,6 +223,14 @@ app {
         visibility: visible;
     }
 
+@media (max-width: 450px) {
+    .price-mode {
+        margin-top: calc(1.5em + 0.5rem + 8px);
+        margin-left: -9px;
+        justify-content: flex-start !important;
+    }
+}
+
 @media (max-width: 767.98px) {
     .display-1 {
         text-align: center;
@@ -374,6 +323,7 @@ app {
 
     .sidebar {
         width: 250px;
+        min-width: 250px;
         height: 100vh;
         position: sticky;
         top: 0;

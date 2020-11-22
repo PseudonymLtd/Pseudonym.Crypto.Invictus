@@ -5,5 +5,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
     public interface ICurrencyConverter
     {
         decimal Convert(decimal amount, CurrencyCode currencyCode);
+
+        decimal Convert(decimal? amount, CurrencyCode currencyCode);
     }
 }

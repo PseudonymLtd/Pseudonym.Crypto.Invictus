@@ -43,13 +43,13 @@
                 <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
                     <small style="font-weight: bold;">Market Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                     <div>
-                        <Money Value="Fund.MarketValue ?? 0" CurrencyCode="UserSettings.CurrencyCode" />
+                        <Money Value="Fund.Market.Total" CurrencyCode="UserSettings.CurrencyCode" />
                     </div>
                 </div>
                 <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
                     <small style="font-weight: bold;">Price (@UserSettings.CurrencyCode.GetSymbol())</small>
                     <div>
-                        <Money Value="Fund.MarketValuePerToken ?? 0" CurrencyCode="UserSettings.CurrencyCode" />
+                        <Money Value="Fund.Market.PricePerToken" CurrencyCode="UserSettings.CurrencyCode" />
                     </div>
                 </div>
                 </div>

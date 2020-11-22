@@ -10,5 +10,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
         public decimal NetAssetValuePerToken { get; set; }
 
         public decimal NetValue { get; set; }
+
+        public decimal? MarketAssetValuePerToken { get; set; }
+
+        public decimal? MarketCap { get; set; }
     }
 }

@@ -96,7 +96,7 @@ else
         }
 
         var colours = Investments
-            .Select(i => FundColours.GetByFund(i.Fund.Token.Symbol))
+            .Select(i => InvictusColours.GetByFund(i.Fund.Token.Symbol))
             .ToList();
 
         var compiledColours = colours

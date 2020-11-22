@@ -23,10 +23,6 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         public ApiToken Token { get; set; }
 
         [Required]
-        [JsonProperty("tradable")]
-        public bool IsTradeable { get; set; }
-
-        [Required]
         [JsonProperty("circulating_supply")]
         public decimal CirculatingSupply { get; set; }
 
@@ -35,16 +31,11 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         public decimal NetAssetValue { get; set; }
 
         [Required]
-        [JsonProperty("market_value")]
-        public decimal? MarketValue { get; set; }
-
-        [Required]
         [JsonProperty("nav_per_token")]
         public decimal NetAssetValuePerToken { get; set; }
 
-        [Required]
-        [JsonProperty("market_value_per_token")]
-        public decimal? MarketValuePerToken { get; set; }
+        [JsonProperty("market")]
+        public ApiMarket Market { get; set; }
 
         [JsonProperty("assets")]
         public List<ApiAsset> Assets { get; set; }

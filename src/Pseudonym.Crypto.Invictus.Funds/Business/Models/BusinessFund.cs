@@ -28,19 +28,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 
         public IToken Token { get; set; }
 
-        public bool IsTradeable => MarketValuePerToken.HasValue;
-
         public decimal CirculatingSupply { get; set; }
 
         public decimal NetValue { get; set; }
 
         public decimal NetAssetValuePerToken { get; set; }
 
-        public decimal? MarketValue => MarketValuePerToken.HasValue
-            ? MarketValuePerToken * CirculatingSupply
-            : default;
-
-        public decimal? MarketValuePerToken { get; set; }
+        public IMarket Market { get; set; }
 
         public IReadOnlyList<IAsset> Assets { get; set; } = new List<IAsset>();
     }

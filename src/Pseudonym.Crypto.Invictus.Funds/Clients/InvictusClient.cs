@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
+using Pseudonym.Crypto.Invictus.Funds.Clients.Models;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
@@ -40,17 +41,31 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             }
         }
 
-        public async IAsyncEnumerable<InvictusPerformance> ListPerformanceAsync(Symbol symbol, DateTime from, DateTime to)
+        public async IAsyncEnumerable<InvictusPerformanceSummary> ListPerformanceAsync(Symbol symbol, DateTime from, DateTime to)
         {
             var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
-
             if (fundInfo != null)
             {
                 var response = await GetAsync<ListPerformanceResponse>($"/v2/funds/{fundInfo.FundName}/history?start={from}&end={to}");
 
-                foreach (var item in response.Performance)
+                foreach (var itemGroup in response.Performance.GroupBy(x => x.Date.Date))
                 {
-                    yield return item;
+                    var values = itemGroup.Select(x => new
+                    {
+                        x.Date,
+                        Nav = x.NetAssetValuePerToken.FromPythonString(),
+                    });
+
+                    yield return new InvictusPerformanceSummary()
+                    {
+                        Date = itemGroup.Key,
+                        NetValue = itemGroup.Average(x => x.NetValue.FromPythonString()),
+                        Average = values.Average(x => x.Nav),
+                        Open = values.OrderBy(x => x.Date).First().Nav,
+                        Close = values.OrderBy(x => x.Date).Last().Nav,
+                        High = values.Select(x => x.Nav).Max(),
+                        Low = values.Select(x => x.Nav).Min()
+                    };
                 }
             }
             else

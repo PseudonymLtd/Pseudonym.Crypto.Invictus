@@ -62,17 +62,20 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [Route("{symbol}/performance")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(ApiFund), StatusCodes.Status200OK)]
-        public async IAsyncEnumerable<ApiPerformance> ListPerformance([Required, FromRoute] Symbol symbol, [FromQuery] ApiPerformanceQueryFilter queryFilter)
+        public async IAsyncEnumerable<ApiPerformance> ListPerformance(
+            [Required, FromRoute] Symbol symbol, [FromQuery] ApiPerformanceQueryFilter queryFilter)
         {
             await foreach (var perf in fundService
-                .ListPerformanceAsync(symbol, queryFilter.FromDate, queryFilter.ToDate, queryFilter.CurrencyCode)
+                .ListPerformanceAsync(symbol, queryFilter.Mode, queryFilter.FromDate, queryFilter.ToDate, queryFilter.CurrencyCode)
                 .WithCancellation(scopedCancellationToken.Token))
             {
                 yield return new ApiPerformance()
                 {
                     Date = perf.Date,
-                    NetValue = perf.NetValue,
-                    NetAssetValuePerToken = perf.NetAssetValuePerToken
+                    NetAssetValue = perf.NetValue,
+                    NetAssetValuePerToken = perf.NetAssetValuePerToken,
+                    MarketCap = perf.MarketCap,
+                    MarketValuePerToken = perf.MarketAssetValuePerToken
                 };
             }
         }
