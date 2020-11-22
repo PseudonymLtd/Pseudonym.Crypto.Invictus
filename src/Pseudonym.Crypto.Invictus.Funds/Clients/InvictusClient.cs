@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
-using Pseudonym.Crypto.Invictus.Funds.Clients.Models;
+using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
-using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Exceptions;
@@ -18,18 +17,15 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
     internal sealed class InvictusClient : IInvictusClient
     {
         private readonly AppSettings appSettings;
-        private readonly IScopedCorrelation scopedCorrelation;
         private readonly IScopedCancellationToken scopedCancellationToken;
         private readonly IHttpClientFactory httpClientFactory;
 
         public InvictusClient(
             IOptions<AppSettings> appSettings,
-            IScopedCorrelation scopedCorrelation,
             IScopedCancellationToken scopedCancellationToken,
             IHttpClientFactory httpClientFactory)
         {
             this.appSettings = appSettings.Value;
-            this.scopedCorrelation = scopedCorrelation;
             this.scopedCancellationToken = scopedCancellationToken;
             this.httpClientFactory = httpClientFactory;
         }
@@ -84,8 +80,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             try
             {
                 using var client = httpClientFactory.CreateClient(nameof(InvictusClient));
-
-                client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.CorrelationId, scopedCorrelation.CorrelationId);
 
                 var response = await client.GetAsync(new Uri(url, UriKind.Relative), scopedCancellationToken.Token);
 

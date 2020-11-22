@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models;
-using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 
@@ -13,26 +12,24 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
 {
     internal sealed class CurrencyClient : ICurrencyClient
     {
-        private readonly IScopedCorrelation scopedCorrelation;
+        private readonly IScopedCancellationToken scopedCancellationToken;
         private readonly IHttpClientFactory httpClientFactory;
 
         public CurrencyClient(
-            IScopedCorrelation scopedCorrelation,
+            IScopedCancellationToken scopedCancellationToken,
             IHttpClientFactory httpClientFactory)
         {
-            this.scopedCorrelation = scopedCorrelation;
+            this.scopedCancellationToken = scopedCancellationToken;
             this.httpClientFactory = httpClientFactory;
         }
 
-        public async Task<CurrencyRates> GetRatesAsync(CancellationToken cancellationToken)
+        public async Task<CurrencyRates> GetRatesAsync()
         {
             try
             {
                 using var client = httpClientFactory.CreateClient(nameof(CurrencyClient));
 
-                client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.CorrelationId, scopedCorrelation.CorrelationId);
-
-                var response = await client.GetAsync(new Uri("/v6/latest", UriKind.Relative), cancellationToken);
+                var response = await client.GetAsync(new Uri("/v6/latest", UriKind.Relative), scopedCancellationToken.Token);
 
                 response.EnsureSuccessStatusCode();
 

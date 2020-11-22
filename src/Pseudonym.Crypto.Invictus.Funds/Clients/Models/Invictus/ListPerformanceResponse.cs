@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models
+namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus
 {
     public sealed class ListPerformanceResponse
     {

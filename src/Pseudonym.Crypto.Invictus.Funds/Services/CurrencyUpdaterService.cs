@@ -22,12 +22,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             {
                 try
                 {
-                    using var scope = serviceProvider.CreateScope();
+                    using var scope = serviceProvider.CreateScope(cancellationToken);
 
                     var client = scope.ServiceProvider.GetRequiredService<ICurrencyClient>();
                     var converter = scope.ServiceProvider.GetRequiredService<CurrencyConverter>();
 
-                    var rates = await client.GetRatesAsync(cancellationToken);
+                    var rates = await client.GetRatesAsync();
 
                     converter.UpdateRates(rates);
 

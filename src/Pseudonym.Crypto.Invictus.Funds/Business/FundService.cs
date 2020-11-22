@@ -7,6 +7,8 @@ using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business.Models;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models;
+using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Ethplorer;
+using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
@@ -18,36 +20,52 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
     {
         private readonly AppSettings appSettings;
         private readonly IInvictusClient invictusClient;
+        private readonly IEthplorerClient ethplorerClient;
         private readonly ICurrencyConverter currencyConverter;
         private readonly IScopedCancellationToken scopedCancellationToken;
 
         public FundService(
             IOptions<AppSettings> appSettings,
             IInvictusClient invictusClient,
+            IEthplorerClient ethplorerClient,
             ICurrencyConverter currencyConverter,
             IScopedCancellationToken scopedCancellationToken)
         {
             this.appSettings = appSettings.Value;
             this.invictusClient = invictusClient;
+            this.ethplorerClient = ethplorerClient;
             this.currencyConverter = currencyConverter;
             this.scopedCancellationToken = scopedCancellationToken;
         }
 
         public async IAsyncEnumerable<IFund> ListFundsAsync(CurrencyCode currencyCode)
         {
-            foreach (var fundInfo in appSettings.Funds)
+            await foreach (var fund in invictusClient.ListFundsAsync())
             {
-                var fund = await GetFundAsync(fundInfo.Symbol, currencyCode);
+                if (Enum.TryParse(fund.Symbol, out Symbol symbol))
+                {
+                    var fundInfo = appSettings.Funds.Single(x => x.Symbol == symbol);
 
-                yield return fund;
+                    var priceData = fundInfo.Tradable
+                        ? await ethplorerClient.GetTokenInfoAsync(new EthereumAddress(fundInfo.ContractAddress))
+                        : null;
+
+                    yield return Map(fund, priceData, symbol, currencyCode);
+                }
             }
         }
 
         public async Task<IFund> GetFundAsync(Symbol symbol, CurrencyCode currencyCode)
         {
+            var fundInfo = appSettings.Funds.Single(x => x.Symbol == symbol);
+
             var fund = await invictusClient.GetFundAsync(symbol);
 
-            return Map(fund, symbol, currencyCode);
+            var priceData = fundInfo.Tradable
+                ? await ethplorerClient.GetTokenInfoAsync(new EthereumAddress(fundInfo.ContractAddress))
+                : null;
+
+            return Map(fund, priceData, symbol, currencyCode);
         }
 
         public async IAsyncEnumerable<IPerformance> ListPerformanceAsync(Symbol symbol, DateTime from, DateTime to, CurrencyCode currencyCode)
@@ -65,10 +83,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             }
         }
 
-        private IFund Map(InvictusFund fund, Symbol symbol, CurrencyCode currencyCode)
+        private IFund Map(InvictusFund fund, EthplorerPriceSummary priceData, Symbol symbol, CurrencyCode currencyCode)
         {
             var netVal = fund.NetValue.FromPythonString();
-            var marketVal = fund.MarketValuePerToken.FromOptionalPythonString();
+            var marketVal = priceData?.MarketValuePerToken;
             var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
 
             return new BusinessFund()

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models
+namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus
 {
     public sealed class InvictusFund
     {
@@ -19,9 +19,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models
 
         [JsonProperty("nav_per_token")]
         public string NetAssetValuePerToken { get; set; }
-
-        [JsonProperty("price")]
-        public string MarketValuePerToken { get; set; }
 
         [JsonProperty("assets")]
         public IReadOnlyList<InvictusAsset> Assets { get; set; } = new List<InvictusAsset>();

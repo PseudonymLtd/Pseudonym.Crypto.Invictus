@@ -217,6 +217,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
 
             // Clients
             container
+                .AddEthplorerClient()
                 .AddInfuriaClient()
                 .AddInvictusClient()
                 .AddExchangeRateClient();

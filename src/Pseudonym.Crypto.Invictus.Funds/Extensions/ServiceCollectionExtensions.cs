@@ -44,6 +44,14 @@ namespace Microsoft.Extensions.DependencyInjection
             return container;
         }
 
+        public static IServiceCollection AddEthplorerClient(this IServiceCollection container)
+        {
+            container.AddScoped<IEthplorerClient, EthplorerClient>()
+                .AddHttpClient(nameof(EthplorerClient), (sp, client) => ConfigureHttpClient(sp, client, d => d.Ethplorer));
+
+            return container;
+        }
+
         private static Dependency<TSettings> ConfigureHttpClient<TSettings>(
             IServiceProvider serviceProvider, HttpClient client, Func<Dependencies, Dependency<TSettings>> selector)
             where TSettings : DependencySettings, new()

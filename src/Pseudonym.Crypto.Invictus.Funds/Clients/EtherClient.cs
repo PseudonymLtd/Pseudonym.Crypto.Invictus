@@ -10,22 +10,16 @@ using Pseudonym.Crypto.Invictus.Funds.Clients.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum.Events;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum.Functions;
-using Pseudonym.Crypto.Invictus.Shared;
-using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Clients
 {
     internal sealed class EtherClient : IEtherClient
     {
-        private readonly IScopedCorrelation scopedCorrelation;
         private readonly IHttpClientFactory httpClientFactory;
 
-        public EtherClient(
-            IScopedCorrelation scopedCorrelation,
-            IHttpClientFactory httpClientFactory)
+        public EtherClient(IHttpClientFactory httpClientFactory)
         {
-            this.scopedCorrelation = scopedCorrelation;
             this.httpClientFactory = httpClientFactory;
         }
 
@@ -83,8 +77,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             try
             {
                 using var client = httpClientFactory.CreateClient(nameof(EtherClient));
-
-                client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.CorrelationId, scopedCorrelation.CorrelationId);
 
                 var web3 = new Web3(new RpcClient(client.BaseAddress, client, client.DefaultRequestHeaders.Authorization));
 
