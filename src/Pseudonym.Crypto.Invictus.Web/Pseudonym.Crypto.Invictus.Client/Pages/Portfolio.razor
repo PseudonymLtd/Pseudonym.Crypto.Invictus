@@ -3,7 +3,12 @@
 @inject IApiClient Client
 @inject IAppState AppState
 
-<h1 class="display-3">Portfolio Overview</h1>
+<div style="text-align: center;">
+    <h1 class="display-1">Portfolio</h1>
+    <p class="lead">
+        Below shows the snapshot of your portfolio value, you have invested in @investments.Count funds.
+    </p>
+</div>
 @if (!UserSettings.HasValidAddress())
 {
     <WalletEntry />
@@ -14,18 +19,11 @@ else if (!investments.Any())
 }
 else
 {
-    <h2 class="portfolio-address">
+    <div style="text-align: center;">
         <EthAddress Address="@UserSettings.WalletAddress" FontSize="28" />
-        <small class="text-muted text-align-mob-center">(@investments.Count) Funds</small>
-    </h2>
-    <div class="alert alert-secondary mt-4" role="alert">
-        <span class="oi oi-info mr-2" aria-hidden="true"></span>
-        <span class="text-wrap">
-            Below shows the snapshot of your portfolio performance as of right now.
-        </span>
     </div>
-    <div class="container-fluid" style="max-width: none">
-        <div class="row">
+    <div class="container-fluid" style="max-width: none;">
+        <div class="row justify-content-center">
             <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
                 <small style="font-weight: bold;">Total Net Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                 <div>
@@ -40,11 +38,10 @@ else
             </div>
         </div>
     </div>
-    <h2 class="display-4">Portfolio Distribution</h2>
+    <h2 class="display-4" style="text-align: center;">Portfolio Distribution</h2>
 
     <PortfolioDistributionChart Investments="investments" IsHollow="false" />
 
-    <h2 class="display-4">Invested Funds</h2>
     <div class="container" style="display: contents;">
         @foreach (var investment in investments.OrderBy(x => x.RealValue))
         {

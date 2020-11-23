@@ -114,7 +114,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
         {
             if (item.Symbol.Equals(Symbol.C10.ToString(), StringComparison.OrdinalIgnoreCase))
             {
-                item.Name += "Hedged";
+                item.Name += " Hedged";
             }
 
             return item;

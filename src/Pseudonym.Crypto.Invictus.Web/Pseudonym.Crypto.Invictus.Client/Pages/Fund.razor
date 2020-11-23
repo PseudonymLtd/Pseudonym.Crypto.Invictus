@@ -14,64 +14,67 @@ else
     <FundPerformanceChart Fund="fund" />
     <h2 class="display-4" style="text-align: center;">Fund Assets</h2>
     <FundAssetDistributionChart Assets="fund.Assets" IsHollow="true" />
-    <div style="margin-left: auto; margin-right: auto; display: table; padding-left: 50px;">
-        <div class="container-fluid">
-            @foreach (var asset in fund.Assets)
-            {
-                var symbol = Enum.IsDefined(typeof(Symbol), asset.Symbol)
-                    ? Enum.Parse<Symbol>(asset.Symbol)
-                    : default(Symbol?);
+    <div class="container-fluid">
+        @foreach (var asset in fund.Assets)
+        {
+            var symbol = Enum.IsDefined(typeof(Symbol), asset.Symbol)
+                ? Enum.Parse<Symbol>(asset.Symbol)
+                : default(Symbol?);
 
-                <div style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;"
-                     class="@(symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value) ? "clickable-row row" : "row")"
-                     @onclick="@((e) =>
-                            {
-                                if (symbol.HasValue)
-                                {
-                                    NavigationManager.NavigateTo($"funds/{symbol.Value}", true);
-                                }
-                            })">
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                        <small style="font-weight: bold;">Asset Name</small>
-                        <div>
-                            @if (symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value))
-                            {
-                                <FundLink DisplayName="@UserSettings.Funds[symbol.Value].DisplayName" Name="@UserSettings.Funds[symbol.Value].Name" />
-                            }
-                            else
-                            {
-                                @asset.Name
-                            }
-                        </div>
-                    </div>
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                        <small style="font-weight: bold;">Token</small>
-                        <div>
-                            @if (symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value))
-                            {
-                                <Token Symbol="@asset.Symbol" ContractAddress="@UserSettings.Funds[symbol.Value].ContractAddress" />
-                            }
-                            else
-                            {
-                                @asset.Symbol
-                            }
-                        </div>
-                    </div>
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                        <small style="font-weight: bold;">Value (@UserSettings.CurrencyCode.GetSymbol())</small>
-                        <div>
-                            <Money Value="@asset.Value" CurrencyCode="UserSettings.CurrencyCode" />
-                        </div>
-                    </div>
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                        <small style="font-weight: bold;">Share</small>
-                        <div>
-                            <LargeNumber Value="asset.Share" Decimals="2" Suffix="PercentageSymbol" />
-                        </div>
-                    </div>
+        <div class="row justify-content-center" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
+            <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                <small style="font-weight: bold;">Asset Name</small>
+                <div>
+                    @if (symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value))
+                    {
+                        <FundLink DisplayName="@UserSettings.Funds[symbol.Value].DisplayName" Name="@UserSettings.Funds[symbol.Value].Name" />
+                    }
+                    else
+                    {
+                        @asset.Name
+                    }
                 </div>
-            }
+            </div>
+            <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                <small style="font-weight: bold;">Token</small>
+                <div>
+                    @if (symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value))
+                    {
+                        <Token Symbol="@asset.Symbol" ContractAddress="@UserSettings.Funds[symbol.Value].ContractAddress" />
+                    }
+                    else
+                    {
+                        @asset.Symbol
+                    }
+                </div>
+            </div>
+            <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                <small style="font-weight: bold;">Value (@UserSettings.CurrencyCode.GetSymbol())</small>
+                <div>
+                    <Money Value="@asset.Value" CurrencyCode="UserSettings.CurrencyCode" />
+                </div>
+            </div>
+            <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                <small style="font-weight: bold;">Share</small>
+                <div>
+                    <LargeNumber Value="asset.Share" Decimals="2" Suffix="PercentageSymbol" />
+                </div>
+            </div>
+            <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                <small style="font-weight: bold;">Explore</small>
+                <div>
+                    @if (symbol.HasValue)
+                    {
+                        <a @onclick="async (e) => { Symbol = asset.Symbol; await DrawAsync(false); }" href="funds/@symbol.Value" class="btn btn-primary btn-sm @symbol.Value.ToString().ToLower()" role="button">View Details</a>
+                    }
+                    else
+                    {
+                        <a href="https://coinmarketcap.com/currencies/@asset.Name.Replace(" ", "-").ToLower()" target="_blank" class="btn btn-danger btn-sm" role="button">External</a>
+                    }
+                </div>
+            </div>
         </div>
+        }
     </div>
 }
 

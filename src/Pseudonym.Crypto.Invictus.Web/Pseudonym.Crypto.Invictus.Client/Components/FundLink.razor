@@ -11,5 +11,5 @@
         ? "text-mob-md"
         : string.Empty;
 
-    internal string Link => $"https://invictuscapital.com/{Name.ToLower()}";
+    internal string Link => $"https://invictuscapital.com/{Name.Replace(" ", string.Empty).ToLower()}";
 }
