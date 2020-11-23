@@ -13,5 +13,8 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
 
         [JsonIgnore]
         public Uri Fact => this[nameof(Fact)];
+
+        [JsonIgnore]
+        public Uri External => this[nameof(External)];
     }
 }

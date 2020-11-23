@@ -37,6 +37,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
             public decimal Value { get; set; }
 
             public decimal Share { get; set; }
+
+            public Uri Link { get; set; }
         }
 
         public sealed class FundLinks
@@ -44,6 +46,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
             public Uri Lite { get; set; }
 
             public Uri Fact { get; set; }
+
+            public Uri External { get; set; }
         }
     }
 }

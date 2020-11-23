@@ -53,7 +53,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                         Name = a.Name,
                         Symbol = a.Symbol ?? "-",
                         Value = a.Value,
-                        Share = a.Share
+                        Share = a.Share,
+                        Link = a.Link
                     })
                     .ToList(),
                 Links = new ApiLinks()
@@ -61,6 +62,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                     [nameof(ApiLinks.Self)] = new Uri(AppSettings.HostUrl.OriginalString.TrimEnd('/') + $"/api/v1/funds/{fund.Token.Symbol}", UriKind.Absolute),
                     [nameof(ApiLinks.Lite)] = fund.LitepaperUri,
                     [nameof(ApiLinks.Fact)] = fund.FactSheetUri,
+                    [nameof(ApiLinks.External)] = fund.InvictusUri
                 }
             };
         }

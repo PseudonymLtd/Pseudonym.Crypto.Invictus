@@ -1,4 +1,5 @@
-﻿using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
+﻿using System;
+using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 {
@@ -11,5 +12,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
         public decimal Value { get; set; }
 
         public decimal Share { get; set; }
+
+        public Uri Link { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Models
@@ -20,5 +21,9 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [Required]
         [JsonProperty("share")]
         public decimal Share { get; set; }
+
+        [Required]
+        [JsonProperty("link")]
+        public Uri Link { get; set; }
     }
 }

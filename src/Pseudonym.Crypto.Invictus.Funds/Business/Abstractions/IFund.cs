@@ -11,6 +11,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         string Description { get; }
 
+        Uri InvictusUri { get; }
+
         Uri FactSheetUri { get; }
 
         Uri LitepaperUri { get; }

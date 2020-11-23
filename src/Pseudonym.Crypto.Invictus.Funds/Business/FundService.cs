@@ -106,6 +106,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 Description = fundInfo.Description,
                 FactSheetUri = fundInfo.Links.Fact,
                 LitepaperUri = fundInfo.Links.Lite,
+                InvictusUri = fundInfo.Links.External,
                 Token = new BusinessToken()
                 {
                     Symbol = fundInfo.Symbol,
@@ -135,7 +136,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                         Symbol = a.Symbol,
                         Name = a.Name,
                         Value = currencyConverter.Convert(a.Value.FromPythonString(), currencyCode),
-                        Share = currencyConverter.Convert(a.Value.FromPythonString() / netVal * 100, currencyCode)
+                        Share = currencyConverter.Convert(a.Value.FromPythonString() / netVal * 100, currencyCode),
+                        Link = Enum.TryParse(a.Symbol, out Symbol symbol)
+                            ? appSettings.Funds.Single(x => x.Symbol == symbol).Links.External
+                            : new Uri($"https://coinmarketcap.com/currencies/{a.Name.Replace(" ", "-").ToLower().Trim()}", UriKind.Absolute)
                     })
                     .Where(x => x.Value > 0)
                     .Union(fundInfo.Assets
@@ -144,7 +148,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                             Symbol = a.Symbol,
                             Name = a.Name,
                             Value = currencyConverter.Convert(a.Value, currencyCode),
-                            Share = a.Share
+                            Share = a.Share,
+                            Link = a.Link
                         }))
                     .ToList()
             };

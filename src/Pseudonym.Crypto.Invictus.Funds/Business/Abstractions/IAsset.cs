@@ -1,4 +1,6 @@
-﻿namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
+﻿using System;
+
+namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 {
     public interface IAsset
     {
@@ -9,5 +11,7 @@
         decimal Value { get; }
 
         decimal Share { get; }
+
+        Uri Link { get; }
     }
 }

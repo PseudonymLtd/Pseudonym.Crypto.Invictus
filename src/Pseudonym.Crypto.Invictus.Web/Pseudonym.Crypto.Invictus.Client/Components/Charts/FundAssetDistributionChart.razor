@@ -3,6 +3,7 @@
 @inject IUserSettings UserSettings
 @inject IAppState AppState
 @inject NavigationManager NavigationManager
+@inject IJSRuntime Runtime
 
 @if (!config.Data.Datasets.Any())
 {
@@ -43,7 +44,7 @@ else
     public bool IsHollow { get; set; }
 
     [Parameter]
-    public List<ApiAsset> Assets { get; set; }
+    public ApiFund Fund { get; set; }
 
     [JSInvokable]
     public void InstanceClickHandler(object sender, object args)
@@ -58,6 +59,17 @@ else
         {
             NavigationManager.NavigateTo($"/funds/{fund.Key}", true);
         }
+        else
+        {
+            var asset = Fund.Assets.SingleOrDefault(a => a.Name.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
+            if (asset != null)
+            {
+                Runtime.InvokeAsync<object>("open", asset.Link.OriginalString, "_blank")
+                    .GetAwaiter()
+                    .GetResult();
+            }
+        }
+
     }
 
     protected override void OnInitialized()
@@ -110,7 +122,7 @@ else
             Weight = 1
         };
 
-        foreach (var asset in Assets)
+        foreach (var asset in Fund.Assets)
         {
             dataSet.Data.Add((double)Math.Round(asset.Value, 2));
 

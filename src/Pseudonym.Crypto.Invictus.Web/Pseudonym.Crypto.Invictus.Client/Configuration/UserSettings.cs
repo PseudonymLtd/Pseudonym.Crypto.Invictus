@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
@@ -61,5 +62,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Configuration
         public int Decimals { get; set; }
 
         public string ContractAddress { get; set; }
+
+        public Uri FundLink { get; set; }
     }
 }
