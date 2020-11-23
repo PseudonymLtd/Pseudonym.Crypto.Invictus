@@ -3,14 +3,12 @@
 @inject IApiClient Client
 @inject IAppState AppState
 
-<h1 class="display-3">Funds Overview</h1>
-
-<div class="alert alert-secondary mt-4" role="alert">
-    <span class="oi oi-info mr-2" aria-hidden="true"></span>
-    <span class="text-wrap">
+<div style="text-align: center;">
+    <h1 class="display-1">Funds</h1>
+    <p class="lead">
         Below shows the summary of funds provided by <a href="https://invictuscapital.com/" target="_blank">Invictus Capital</a>.
         There are currently @(funds?.Count ?? 0) available funds.
-    </span>
+    </p>
 </div>
 
 @if (!funds.Any())

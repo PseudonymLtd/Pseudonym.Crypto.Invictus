@@ -10,7 +10,12 @@
 }
 else
 {
-    <div style="max-width: @($"{Width}px"); max-height: @($"{Height}px"); margin-bottom: 40px;">
+    <div style="
+        max-width: @($"{Width}px");
+        max-height: @($"{Height}px");
+        margin-bottom: 40px;
+        margin-left: auto;
+        margin-right: auto;">
         <ChartJsPieChart Config="config" Width="Width" Height="Height" @ref="chart" />
     </div>
 }

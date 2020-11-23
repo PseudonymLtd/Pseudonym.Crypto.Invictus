@@ -314,6 +314,10 @@ app {
             margin-right: auto;
             width: fit-content;
         }
+
+    .sidebar .top-row {
+        border-bottom: none;
+    }
 }
 
 @media (min-width: 768px) {
@@ -346,5 +350,11 @@ app {
     .sidebar .collapse {
         /* Never collapse the sidebar for wide screens */
         display: block;
+    }
+}
+
+@media (min-width: 1440px) {
+    .container, .container-lg, .container-md, .container-sm, .container-xl {
+        max-width: 1380px;
     }
 }

@@ -9,9 +9,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Ethplorer
         [JsonProperty("marketCapUsd")]
         public decimal MarketCap { get; set; }
 
-        [JsonIgnore]
-        public decimal MarketValue => MarketValuePerToken * CirculatingSupply;
-
         [JsonProperty("rate")]
         public decimal MarketValuePerToken { get; set; }
 

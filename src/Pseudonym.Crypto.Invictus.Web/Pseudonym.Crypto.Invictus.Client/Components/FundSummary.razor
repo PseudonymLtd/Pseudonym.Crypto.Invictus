@@ -2,58 +2,67 @@
 @inject IAppState AppState
 @inject NavigationManager NavigationManager
 
-<div class="@Classes" @onclick="OnClick" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
-    <img src="images/funds/@FundImageName" class="mr-3" alt="@Fund.DisplayName">
-    <div class="media-body">
-        <h5 class="mt-0">
-            <FundLink DisplayName="@Fund.DisplayName" Name="@Fund.Name" />
+<div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        <div class="media" style="margin-top: auto; margin-bottom: auto; padding-bottom: 6px;">
+            <img src="images/funds/@FundImageName" class="mr-3" alt="@Fund.DisplayName">
+            <h1 class="display-4">@Fund.DisplayName</h1>
             <a class="badge badge-secondary" href="@Fund.Links.Lite" style="float: right; margin-left: 5px;" target="_blank">Lite</a>
             <a class="badge @Fund.Token.Symbol.ToString().ToLower()" href="@Fund.Links.Fact" style="float: right; margin-left: 5px;" target="_blank">Fact</a>
-        </h5>
-        <span class="text-wrap" style="font-size: small">
-            @Fund.Description
-        </span>
-        <hr />
-        <div class="container-fluid" style="max-width: none">
-            <div class="row">
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                    <small style="font-weight: bold;">Token</small>
-                    <div>
-                        <Token Symbol="@Fund.Token.Symbol.ToString()" ContractAddress="@Fund.Token.Address" />
-                    </div>
-                </div>
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                    <small style="font-weight: bold;">Circ. Supply</small>
-                    <div>
-                        <LargeNumber Value="Fund.CirculatingSupply" Decimals="2" />
-                    </div>
-                </div>
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                    <small style="font-weight: bold;">Net Value (@UserSettings.CurrencyCode.GetSymbol())</small>
-                    <div>
-                        <Money Value="@Fund.NetAssetValue" CurrencyCode="UserSettings.CurrencyCode" />
-                    </div>
-                </div>
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                    <small style="font-weight: bold;">Nav (@UserSettings.CurrencyCode.GetSymbol())</small>
-                    <div>
-                        <Money Value="@Fund.NetAssetValuePerToken" CurrencyCode="UserSettings.CurrencyCode" />
-                    </div>
-                </div>
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                    <small style="font-weight: bold;">Market Value (@UserSettings.CurrencyCode.GetSymbol())</small>
-                    <div>
-                        <Money Value="Fund.Market.Total" CurrencyCode="UserSettings.CurrencyCode" />
-                    </div>
-                </div>
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                    <small style="font-weight: bold;">Price (@UserSettings.CurrencyCode.GetSymbol())</small>
-                    <div>
-                        <Money Value="Fund.Market.PricePerToken" CurrencyCode="UserSettings.CurrencyCode" />
-                    </div>
-                </div>
-                </div>
         </div>
+        <p class="lead">@Fund.Description</p>
+        <div class="media" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
+            <div class="container-fluid" style="max-width: none">
+                <div class="row">
+                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                        <small style="font-weight: bold;">Token</small>
+                        <div>
+                            <Token Symbol="@Fund.Token.Symbol.ToString()" ContractAddress="@Fund.Token.Address" />
+                        </div>
+                    </div>
+                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                        <small style="font-weight: bold;">Circ. Supply</small>
+                        <div>
+                            <LargeNumber Value="Fund.CirculatingSupply" Decimals="2" />
+                        </div>
+                    </div>
+                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                        <small style="font-weight: bold;">Net Value (@UserSettings.CurrencyCode.GetSymbol())</small>
+                        <div>
+                            <Money Value="@Fund.NetAssetValue" CurrencyCode="UserSettings.CurrencyCode" />
+                        </div>
+                    </div>
+                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                        <small style="font-weight: bold;">Nav (@UserSettings.CurrencyCode.GetSymbol())</small>
+                        <div>
+                            <Money Value="@Fund.NetAssetValuePerToken" CurrencyCode="UserSettings.CurrencyCode" />
+                        </div>
+                    </div>
+                    @if (Fund.Market.IsTradeable)
+                    {
+                        <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                            <small style="font-weight: bold;">Market Value (@UserSettings.CurrencyCode.GetSymbol())</small>
+                            <div>
+                                <Money Value="Fund.Market.Total" CurrencyCode="UserSettings.CurrencyCode" />
+                            </div>
+                        </div>
+                        <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                            <small style="font-weight: bold;">Price (@UserSettings.CurrencyCode.GetSymbol())</small>
+                            <div>
+                                <Money Value="Fund.Market.PricePerToken" CurrencyCode="UserSettings.CurrencyCode" />
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        @if (Clickable)
+        {
+            <a href="funds/@Fund.Token.Symbol" 
+               class="btn btn-primary btn-lg @Fund.Token.Symbol.ToString().ToLower()" 
+               role="button" 
+               style="margin-left: auto; margin-right: 0; display: block; max-width: 150px;">Explore</a>
+        }
     </div>
 </div>
 
@@ -66,21 +75,8 @@
 
     public string FundImageName => $"{Fund.Token.Symbol}.png";
 
-    public string Classes => $"media " +
-        (Clickable
-            ? "clickable-row"
-            : string.Empty);
-
     protected override void OnInitialized()
     {
         AppState.Assign(StateHasChanged);
-    }
-
-    protected void OnClick()
-    {
-        if (Clickable)
-        {
-            NavigationManager.NavigateTo($"/funds/{Fund.Token.Symbol}");
-        }
     }
 }

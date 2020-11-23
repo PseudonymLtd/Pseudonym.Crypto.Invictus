@@ -97,7 +97,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
         private IFund Map(InvictusFund fund, EthplorerPriceSummary priceData, Symbol symbol, CurrencyCode currencyCode)
         {
             var netVal = fund.NetValue.FromPythonString();
-            var marketVal = priceData?.MarketValuePerToken;
+            var circulatingSupply = fund.CirculatingSupply.FromPythonString();
             var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
 
             return new BusinessFund()
@@ -112,19 +112,19 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     ContractAddress = new EthereumAddress(fundInfo.ContractAddress),
                     Decimals = fundInfo.Decimals
                 },
-                CirculatingSupply = fund.CirculatingSupply.FromPythonString(),
+                CirculatingSupply = circulatingSupply,
                 NetValue = currencyConverter.Convert(netVal, currencyCode),
                 NetAssetValuePerToken = currencyConverter.Convert(fund.NetAssetValuePerToken.FromPythonString(), currencyCode),
                 Market = new BusinessMarket()
                 {
                     IsTradable = priceData != null,
                     Cap = priceData?.MarketCap ?? 0,
-                    Total = currencyConverter.Convert(priceData?.MarketValue, currencyCode),
+                    Total = currencyConverter.Convert(priceData?.MarketValuePerToken * circulatingSupply, currencyCode),
                     PricePerToken = currencyConverter.Convert(priceData?.MarketValuePerToken, currencyCode),
                     DiffDaily = priceData?.DiffDaily ?? 0,
                     DiffWeekly = priceData?.DiffWeekly ?? 0,
                     DiffMonthly = priceData?.DiffMonthly ?? 0,
-                    Volume = currencyConverter.Convert(priceData?.MarketValuePerToken, currencyCode),
+                    Volume = currencyConverter.Convert(priceData?.Volume, currencyCode),
                     VolumeDiffDaily = priceData?.VolumeDiffDaily ?? 0,
                     VolumeDiffWeekly = priceData?.VolumeDiffWeekly ?? 0,
                     VolumeDiffMonthly = priceData?.VolumeDiffMonthly ?? 0
