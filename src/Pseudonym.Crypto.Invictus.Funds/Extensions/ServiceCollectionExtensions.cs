@@ -12,12 +12,12 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddInfuriaClient(this IServiceCollection container)
+        public static IServiceCollection AddInfuraClient(this IServiceCollection container)
         {
             container.AddScoped<IEtherClient, EtherClient>()
                 .AddHttpClient(nameof(EtherClient), (sp, client) =>
                 {
-                    var dependency = ConfigureHttpClient(sp, client, d => d.Infuria);
+                    var dependency = ConfigureHttpClient(sp, client, d => d.Infura);
 
                     var byteArray = Encoding.ASCII.GetBytes($":{dependency.Settings.ProjectSecret}");
 
@@ -48,6 +48,14 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             container.AddScoped<IEthplorerClient, EthplorerClient>()
                 .AddHttpClient(nameof(EthplorerClient), (sp, client) => ConfigureHttpClient(sp, client, d => d.Ethplorer));
+
+            return container;
+        }
+
+        public static IServiceCollection AddBlockCypherClient(this IServiceCollection container)
+        {
+            container.AddScoped<IBlockCypherClient, BlockCypherClient>()
+                .AddHttpClient(nameof(BlockCypherClient), (sp, client) => ConfigureHttpClient(sp, client, d => d.BlockCypher));
 
             return container;
         }

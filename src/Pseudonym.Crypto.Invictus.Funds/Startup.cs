@@ -5,6 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Amazon;
+using Amazon.DynamoDBv2;
+using Amazon.Extensions.NETCore.Setup;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -15,6 +18,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
@@ -44,6 +48,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
 
         public void ConfigureServices(IServiceCollection container)
         {
+            container.Configure<AwsSettings>(Configuration.GetSection("Aws"));
             container.Configure<AppSettings>(Configuration.GetSection(nameof(AppSettings)));
             container.Configure<Dependencies>(Configuration.GetSection(nameof(Dependencies)));
 
@@ -217,8 +222,9 @@ namespace Pseudonym.Crypto.Invictus.Funds
 
             // Clients
             container
+                .AddBlockCypherClient()
                 .AddEthplorerClient()
-                .AddInfuriaClient()
+                .AddInfuraClient()
                 .AddInvictusClient()
                 .AddExchangeRateClient();
 
@@ -226,7 +232,28 @@ namespace Pseudonym.Crypto.Invictus.Funds
             container.AddTransient<IAddressService, AddressService>();
             container.AddTransient<IFundService, FundService>();
 
+            container.AddScoped<ITransactionService, TransactionService>();
+            container.AddScoped<IOperationService, OperationService>();
+
+            container.AddDefaultAWSOptions(Configuration.GetAWSOptions());
+            container.AddScoped<IAmazonDynamoDB>(sp =>
+            {
+                var awsSettings = sp.GetRequiredService<IOptions<AwsSettings>>();
+                if (awsSettings.Value.UseConfiguredSecurity())
+                {
+                    return new AmazonDynamoDBClient(
+                        awsSettings.Value.AccessKey,
+                        awsSettings.Value.SecretAccessKey,
+                        RegionEndpoint.GetBySystemName(awsSettings.Value.Region));
+                }
+                else
+                {
+                    return new AmazonDynamoDBClient(RegionEndpoint.GetBySystemName(awsSettings.Value.Region));
+                }
+            });
+
             container
+                .AddHostedService<TransactionCachingService>()
                 .AddHostedService<CurrencyUpdaterService>()
                 .AddSingleton<CurrencyConverter>()
                 .AddTransient<ICurrencyConverter>(sp => sp.GetRequiredService<CurrencyConverter>());

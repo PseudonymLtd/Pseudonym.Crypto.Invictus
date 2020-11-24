@@ -3,7 +3,7 @@ using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 {
-    internal class BusinessAsset : IAsset
+    internal class BusinessFundAsset : IFundAsset
     {
         public string Name { get; set; }
 

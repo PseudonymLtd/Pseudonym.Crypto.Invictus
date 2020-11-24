@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
@@ -34,9 +35,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
 
         public async Task<EthplorerPriceSummary> GetTokenInfoAsync(EthereumAddress contractAddress)
         {
-            var response = await GetAsync<EthplorerTokenInfoResponse>($"/getTokenInfo/{contractAddress}");
+            var response = await GetAsync<EthplorerTokenInfo>($"/getTokenInfo/{contractAddress}");
 
-            return response.Summary;
+            return response.Price;
         }
 
         public async Task<EthplorerPriceData> GetTokenPricingAsync(EthereumAddress contractAddress)
@@ -46,7 +47,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             return response.Data;
         }
 
-        private async Task<TResponse> GetAsync<TResponse>(string url)
+        public Task<EthplorerTransaction> GetTransactionAsync(EthereumTransactionHash hash)
+        {
+            return GetAsync<EthplorerTransaction>($"/getTxInfo/{hash}", true);
+        }
+
+        private async Task<TResponse> GetAsync<TResponse>(string url, bool ignore404 = false)
             where TResponse : class, new()
         {
             try
@@ -56,6 +62,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
                 var pathAndQuery = QueryHelpers.AddQueryString(url, "apiKey", dependencies.Ethplorer.Settings.ApiKey);
 
                 var response = await client.GetAsync(new Uri(pathAndQuery, UriKind.Relative), scopedCancellationToken.Token);
+
+                if (ignore404 &&
+                    response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return default;
+                }
 
                 response.EnsureSuccessStatusCode();
 

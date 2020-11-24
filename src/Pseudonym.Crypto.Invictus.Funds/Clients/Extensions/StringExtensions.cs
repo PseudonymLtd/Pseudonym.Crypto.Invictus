@@ -1,11 +1,26 @@
-﻿using System;
+﻿using System.Numerics;
 using System.Text.RegularExpressions;
+using Nethereum.Web3;
 
-namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models
+namespace System
 {
     public static class StringExtensions
     {
         private static readonly Regex ExponentRegex = new Regex(@"^([\d.]+)[e|E]-([\d]+)$");
+
+        public static decimal FromBigInteger(this string s)
+        {
+            if (string.IsNullOrWhiteSpace(s))
+            {
+                return 0;
+            }
+            else
+            {
+                var bigInt = BigInteger.Parse(s);
+
+                return Web3.Convert.FromWei(bigInt);
+            }
+        }
 
         public static decimal FromPythonString(this string s)
         {

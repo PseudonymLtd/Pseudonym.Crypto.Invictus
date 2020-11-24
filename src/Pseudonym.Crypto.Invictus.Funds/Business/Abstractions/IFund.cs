@@ -27,6 +27,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         IMarket Market { get; }
 
-        IReadOnlyList<IAsset> Assets { get; }
+        IReadOnlyList<IFundAsset> Assets { get; }
     }
 }

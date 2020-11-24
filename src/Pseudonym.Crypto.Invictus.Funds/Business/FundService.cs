@@ -6,7 +6,6 @@ using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business.Models;
-using Pseudonym.Crypto.Invictus.Funds.Clients.Models;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Ethplorer;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
@@ -131,7 +130,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     VolumeDiffMonthly = priceData?.VolumeDiffMonthly ?? 0
                 },
                 Assets = fund.Assets
-                    .Select(a => new BusinessAsset()
+                    .Select(a => new BusinessFundAsset()
                     {
                         Symbol = a.Symbol,
                         Name = a.Name,
@@ -143,7 +142,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     })
                     .Where(x => x.Value > 0)
                     .Union(fundInfo.Assets
-                        .Select(a => new BusinessAsset()
+                        .Select(a => new BusinessFundAsset()
                         {
                             Symbol = a.Symbol,
                             Name = a.Name,

@@ -1,8 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+using System.Runtime.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Ethplorer
 {
-    public sealed class EthplorerTokenInfoResponse
+    public sealed class EthplorerTokenInfo
     {
         [JsonProperty("address")]
         public string ContractAddress { get; set; }
@@ -61,7 +64,23 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Ethplorer
         [JsonProperty("countOps")]
         public int OperationCount { get; set; }
 
-        [JsonProperty("price")]
-        public EthplorerPriceSummary Summary { get; set; }
+        [JsonIgnore]
+        public EthplorerPriceSummary Price { get; set; }
+
+        [JsonExtensionData]
+        private IDictionary<string, JToken> Extensions { get; set; } = new Dictionary<string, JToken>();
+
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext context)
+        {
+            if (Extensions.ContainsKey(nameof(Price).ToLower()))
+            {
+                var opToken = Extensions[nameof(Price).ToLower()];
+                if (opToken is JObject jObj)
+                {
+                    Price = jObj.ToObject<EthplorerPriceSummary>();
+                }
+            }
+        }
     }
 }

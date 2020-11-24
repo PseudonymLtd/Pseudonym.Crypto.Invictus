@@ -38,6 +38,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
+
+                    await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
                 }
             }
         }

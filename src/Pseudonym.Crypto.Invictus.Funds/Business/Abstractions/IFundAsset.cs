@@ -2,7 +2,7 @@
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 {
-    public interface IAsset
+    public interface IFundAsset
     {
         string Name { get; }
 

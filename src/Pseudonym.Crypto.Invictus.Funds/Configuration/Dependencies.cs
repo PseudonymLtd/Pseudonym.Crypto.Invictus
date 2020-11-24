@@ -2,11 +2,13 @@
 {
     public class Dependencies
     {
-        public Dependency<EthplorerDependencySettings> Ethplorer { get; set; }
+        public Dependency<ApiKeyDependencySettings> BlockCypher { get; set; }
+
+        public Dependency<ApiKeyDependencySettings> Ethplorer { get; set; }
 
         public Dependency<DependencySettings> Invictus { get; set; }
 
-        public Dependency<InfuriaDependencySettings> Infuria { get; set; }
+        public Dependency<InfuraDependencySettings> Infura { get; set; }
 
         public Dependency<DependencySettings> ExchangeRate { get; set; }
     }

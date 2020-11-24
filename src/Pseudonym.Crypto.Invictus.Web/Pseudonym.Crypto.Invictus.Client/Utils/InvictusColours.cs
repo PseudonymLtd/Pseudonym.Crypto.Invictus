@@ -24,25 +24,17 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Utils
 
         public static Color GetByFund(Symbol symbol)
         {
-            switch (symbol)
+            return symbol switch
             {
-                case Symbol.C10:
-                    return C10;
-                case Symbol.C20:
-                    return C20;
-                case Symbol.IBA:
-                    return IBA;
-                case Symbol.IML:
-                    return IML;
-                case Symbol.IHF:
-                    return IHF;
-                case Symbol.IGP:
-                    return IGP;
-                case Symbol.EMS:
-                    return EMS;
-                default:
-                    return Color.Black;
-            }
+                Symbol.C10 => C10,
+                Symbol.C20 => C20,
+                Symbol.IBA => IBA,
+                Symbol.IML => IML,
+                Symbol.IHF => IHF,
+                Symbol.IGP => IGP,
+                Symbol.EMS => EMS,
+                _ => InvictusRed,
+            };
         }
 
         public static Color RandomColor()

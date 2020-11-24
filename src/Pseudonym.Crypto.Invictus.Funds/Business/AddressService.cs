@@ -13,15 +13,18 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
     {
         private readonly IFundService fundService;
         private readonly IEtherClient etherClient;
+        private readonly ITransactionService transactionService;
         private readonly IScopedCancellationToken scopedCancellationToken;
 
         public AddressService(
             IFundService fundService,
             IEtherClient etherClient,
+            ITransactionService transactionService,
             IScopedCancellationToken scopedCancellationToken)
         {
             this.fundService = fundService;
             this.etherClient = etherClient;
+            this.transactionService = transactionService;
             this.scopedCancellationToken = scopedCancellationToken;
         }
 
@@ -55,19 +58,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             };
         }
 
-        public async IAsyncEnumerable<ITransaction> ListTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address, CurrencyCode currencyCode)
+        public IReadOnlyList<ITransaction> ListTransactions(EthereumAddress contractAddress, EthereumAddress address)
         {
-            await foreach (var transaction in etherClient
-                .ListContractTransactionsAsync(contractAddress, address)
-                .WithCancellation(scopedCancellationToken.Token))
-            {
-                yield return new BusinessTransaction()
-                {
-                    Sender = transaction.Sender,
-                    Recipient = transaction.Recipient,
-                    Amount = transaction.Amount
-                };
-            }
+            return transactionService.GetAddressTransactions(contractAddress, address);
         }
     }
 }

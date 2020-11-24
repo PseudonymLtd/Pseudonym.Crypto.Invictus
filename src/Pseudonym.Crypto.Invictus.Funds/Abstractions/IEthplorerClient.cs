@@ -9,5 +9,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
         Task<EthplorerPriceSummary> GetTokenInfoAsync(EthereumAddress contractAddress);
 
         Task<EthplorerPriceData> GetTokenPricingAsync(EthereumAddress contractAddress);
+
+        Task<EthplorerTransaction> GetTransactionAsync(EthereumTransactionHash hash);
     }
 }

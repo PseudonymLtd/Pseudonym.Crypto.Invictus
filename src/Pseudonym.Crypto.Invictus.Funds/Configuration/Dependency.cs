@@ -17,12 +17,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
         public TimeSpan Timeout { get; set; }
     }
 
-    public class EthplorerDependencySettings : DependencySettings
+    public class ApiKeyDependencySettings : DependencySettings
     {
         public string ApiKey { get; set; }
     }
 
-    public class InfuriaDependencySettings : DependencySettings
+    public class InfuraDependencySettings : DependencySettings
     {
         public string ProjectId { get; set; }
 

@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Numerics;
 using System.Threading.Tasks;
 using Nethereum.JsonRpc.Client;
+using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Web3;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
-using Pseudonym.Crypto.Invictus.Funds.Clients.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
-using Pseudonym.Crypto.Invictus.Funds.Ethereum.Events;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum.Functions;
 using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 
@@ -21,6 +19,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
         public EtherClient(IHttpClientFactory httpClientFactory)
         {
             this.httpClientFactory = httpClientFactory;
+        }
+
+        public async Task<long> GetCurrentBlockNumberAsync()
+        {
+            var block = await ExecuteAsync(web3 =>
+            {
+                return web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
+            });
+
+            return long.Parse(block.Value.ToString());
         }
 
         public async Task<decimal> GetEthBalanceAsync(EthereumAddress address)
@@ -50,26 +58,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             return Web3.Convert.FromWei(balance);
         }
 
-        public async IAsyncEnumerable<EtherTransaction> ListContractTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address)
+        public Task<TransactionReceipt> GetTransactionAsync(EthereumTransactionHash hash)
         {
-            var transactions = await ExecuteAsync(web3 =>
+            return ExecuteAsync(web3 =>
             {
-                var transferEventHandler = web3.Eth.GetEvent<TransferEvent>(contractAddress);
-
-                var filter = transferEventHandler.CreateFilterInput(null, new[] { address.Address });
-
-                return transferEventHandler.GetAllChanges(filter);
+                return web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(hash.Hash);
             });
-
-            foreach (var transaction in transactions)
-            {
-                yield return new EtherTransaction()
-                {
-                    Sender = new EthereumAddress(transaction.Event.From),
-                    Recipient = new EthereumAddress(transaction.Event.To),
-                    Amount = Web3.Convert.FromWei(transaction.Event.Value)
-                };
-            }
         }
 
         private async Task<TResponse> ExecuteAsync<TResponse>(Func<IWeb3, Task<TResponse>> func)

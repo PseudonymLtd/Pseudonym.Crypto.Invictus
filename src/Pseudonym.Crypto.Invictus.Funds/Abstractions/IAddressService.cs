@@ -12,6 +12,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
 
         Task<IInvestment> GetInvestmentAsync(EthereumAddress address, Symbol symbol, CurrencyCode currencyCode);
 
-        IAsyncEnumerable<ITransaction> ListTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address, CurrencyCode currencyCode);
+        IReadOnlyList<ITransaction> ListTransactions(EthereumAddress contractAddress, EthereumAddress address);
     }
 }

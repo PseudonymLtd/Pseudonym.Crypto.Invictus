@@ -86,20 +86,24 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [Route("{address}/investments/{symbol}/transactions")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(List<ApiTransaction>), StatusCodes.Status200OK)]
-        public async IAsyncEnumerable<ApiTransaction> GetTransactions(
-            [Required, FromRoute] string address, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        public IEnumerable<ApiTransaction> GetTransactions(
+            [Required, FromRoute] string address, [Required, FromRoute] Symbol symbol)
         {
+            var addr = GetAddress(address);
             var fundInfo = AppSettings.Funds.Single(x => x.Symbol == symbol);
 
-            await foreach (var transaction in addressService
-                .ListTransactionsAsync(new EthereumAddress(fundInfo.ContractAddress), GetAddress(address), queryFilter.CurrencyCode)
-                .WithCancellation(scopedCancellationToken.Token))
+            foreach (var transaction in addressService.ListTransactions(new EthereumAddress(fundInfo.ContractAddress), addr))
             {
                 yield return new ApiTransaction()
                 {
+                    Hash = transaction.Hash,
+                    MinedAt = transaction.ConfirmedAt,
                     Sender = transaction.Sender,
                     Recipient = transaction.Recipient,
-                    Amount = transaction.Amount
+                    Type = transaction.Sender == addr
+                        ? TransferType.OUT
+                        : TransferType.IN,
+                    Amount = transaction.EthValue
                 };
             }
         }

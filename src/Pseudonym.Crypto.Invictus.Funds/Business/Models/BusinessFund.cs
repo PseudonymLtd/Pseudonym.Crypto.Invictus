@@ -38,6 +38,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 
         public IMarket Market { get; set; }
 
-        public IReadOnlyList<IAsset> Assets { get; set; } = new List<IAsset>();
+        public IReadOnlyList<IFundAsset> Assets { get; set; } = new List<IFundAsset>();
     }
 }
