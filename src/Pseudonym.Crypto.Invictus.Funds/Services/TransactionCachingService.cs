@@ -72,7 +72,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                 }
                 finally
                 {
-                    await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
+                    await Task.Delay(TimeSpan.FromHours(1), cancellationToken);
                 }
             }
         }

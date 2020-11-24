@@ -194,6 +194,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Utils
                     BOOL = b,
                 };
             }
+            else if (value is DateTime d)
+            {
+                return new AttributeValue(d.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ssZ"));
+            }
             else if (NumberTypes.Contains(type))
             {
                 return new AttributeValue()
@@ -203,10 +207,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Utils
             }
             else
             {
-                return new AttributeValue()
-                {
-                    S = value.ToString()
-                };
+                return new AttributeValue(value.ToString());
             }
         }
     }
