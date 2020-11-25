@@ -26,6 +26,7 @@ using Newtonsoft.Json.Converters;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
+using Pseudonym.Crypto.Invictus.Funds.Data;
 using Pseudonym.Crypto.Invictus.Funds.Hosting;
 using Pseudonym.Crypto.Invictus.Funds.Services;
 using Pseudonym.Crypto.Invictus.Shared;
@@ -232,8 +233,8 @@ namespace Pseudonym.Crypto.Invictus.Funds
             container.AddTransient<IAddressService, AddressService>();
             container.AddTransient<IFundService, FundService>();
 
-            container.AddScoped<ITransactionService, TransactionService>();
-            container.AddScoped<IOperationService, OperationService>();
+            container.AddScoped<ITransactionRepository, TransactionRepository>();
+            container.AddScoped<IOperationRepository, OperationRepository>();
 
             container.AddDefaultAWSOptions(Configuration.GetAWSOptions());
             container.AddScoped<IAmazonDynamoDB>(sp =>
@@ -253,10 +254,14 @@ namespace Pseudonym.Crypto.Invictus.Funds
             });
 
             container
-                .AddHostedService<TransactionCachingService>()
                 .AddHostedService<CurrencyUpdaterService>()
                 .AddSingleton<CurrencyConverter>()
                 .AddTransient<ICurrencyConverter>(sp => sp.GetRequiredService<CurrencyConverter>());
+
+            if (appSettings.CachingEnabled)
+            {
+                container.AddHostedService<TransactionCachingService>();
+            }
         }
 
         public void Configure(IApplicationBuilder applicationBuilder)

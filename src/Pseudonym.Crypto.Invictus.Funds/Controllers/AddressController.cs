@@ -68,8 +68,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         public async Task<ApiInvestment> GetInvestment(
             [Required, FromRoute] string address, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
-            var fundInfo = AppSettings.Funds.Single(x => x.Symbol == symbol);
-
             var investment = await addressService.GetInvestmentAsync(GetAddress(address), symbol, queryFilter.CurrencyCode);
 
             return new ApiInvestment()
@@ -86,24 +84,56 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [Route("{address}/investments/{symbol}/transactions")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(List<ApiTransaction>), StatusCodes.Status200OK)]
-        public IEnumerable<ApiTransaction> GetTransactions(
-            [Required, FromRoute] string address, [Required, FromRoute] Symbol symbol)
+        public async IAsyncEnumerable<ApiTransactionSet> GetTransactions(
+            [Required, FromRoute] string address, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
             var addr = GetAddress(address);
-            var fundInfo = AppSettings.Funds.Single(x => x.Symbol == symbol);
 
-            foreach (var transaction in addressService.ListTransactions(new EthereumAddress(fundInfo.ContractAddress), addr))
+            await foreach (var transaction in addressService.ListTransactionsAsync(addr, symbol, queryFilter.CurrencyCode))
             {
-                yield return new ApiTransaction()
+                yield return new ApiTransactionSet()
                 {
                     Hash = transaction.Hash,
-                    MinedAt = transaction.ConfirmedAt,
+                    ConfirmedAt = transaction.ConfirmedAt,
                     Sender = transaction.Sender,
                     Recipient = transaction.Recipient,
-                    Type = transaction.Sender == addr
-                        ? TransferType.OUT
-                        : TransferType.IN,
-                    Amount = transaction.EthValue
+                    Eth = transaction.Eth,
+                    Success = transaction.Success,
+                    BlockNumber = transaction.BlockNumber,
+                    Confirmations = transaction.Confirmations,
+                    Gas = transaction.Gas,
+                    GasUsed = transaction.GasUsed,
+                    GasLimit = transaction.GasLimit,
+                    Input = transaction.Input,
+                    Operations = transaction.Operations
+                        .Select(o => new ApiOperation()
+                        {
+                            Address = o.Address?.Address,
+                            Sender = o.Sender?.Address,
+                            Recipient = o.Recipient?.Address,
+                            IsEth = o.IsEth,
+                            PricePerToken = o.PricePerToken,
+                            Type = o.Type,
+                            Direction = o.Type == OperationTypes.Transfer && o.Sender.HasValue
+                                ? o.Sender.Value == addr
+                                    ? Direction.OUT
+                                    : Direction.IN
+                                : default(Direction?),
+                            Priority = o.Priority,
+                            Value = o.Value,
+                            Quantity = o.Quantity,
+                            Contract = new ApiContract()
+                            {
+                                Address = o.ContractAddress.Address,
+                                Symbol = o.ContractSymbol,
+                                Decimals = o.ContractDecimals,
+                                Holders = o.ContractHolders,
+                                Issuances = o.ContractIssuances,
+                                Link = o.ContractLink?.OriginalString,
+                                Name = o.ContractName
+                            }
+                        })
+                        .ToList()
                 };
             }
         }
@@ -112,7 +142,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         {
             var ethAddress = new EthereumAddress(address);
 
-            httpContextAccessor.HttpContext.Response.Headers.TryAdd(Headers.Address, ethAddress.Address);
+            if (httpContextAccessor.HttpContext.Response.Headers.ContainsKey(Headers.Address))
+            {
+                httpContextAccessor.HttpContext.Response.Headers[Headers.Address] = ethAddress.Address;
+            }
+            else
+            {
+                httpContextAccessor.HttpContext.Response.Headers.TryAdd(Headers.Address, ethAddress.Address);
+            }
 
             return ethAddress;
         }

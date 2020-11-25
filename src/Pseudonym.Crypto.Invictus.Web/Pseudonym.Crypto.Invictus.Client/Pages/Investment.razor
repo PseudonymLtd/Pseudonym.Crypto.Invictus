@@ -24,7 +24,7 @@ else
         <div class="container-fluid" style="max-width: none">
             @foreach (var transaction in transactions)
             {
-                <div style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;" class="row">
+                @*<div style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;" class="row">
                     <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 23%; padding-bottom: 15px;">
                         <small style="font-weight: bold;">Sender</small>
                         <div>
@@ -40,7 +40,7 @@ else
                     <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
                         <small style="font-weight: bold;">Amount</small>
                         <div>
-                            <LargeNumber Value="transaction.Amount" Decimals="2" />
+                            <LargeNumber Value="transaction.Eth" Decimals="2" />
                         </div>
                     </div>
                     <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
@@ -49,7 +49,7 @@ else
                             <Money Value="@(transaction.Amount * investment.Fund.NetAssetValuePerToken)" CurrencyCode="UserSettings.CurrencyCode" />
                         </div>
                     </div>
-                </div>
+                </div>*@
             }
         </div>
     }

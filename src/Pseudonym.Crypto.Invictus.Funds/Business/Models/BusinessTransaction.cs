@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
-using Pseudonym.Crypto.Invictus.Funds.Utils;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 {
-    internal sealed class BusinessTransaction : ITransaction
+    internal class BusinessTransaction : ITransaction
     {
         public EthereumAddress Address { get; set; }
 
@@ -22,18 +20,17 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 
         public EthereumAddress Recipient { get; set; }
 
-        public decimal EthValue { get; set; }
+        public decimal Eth { get; set; }
+
+        public long Gas { get; set; }
 
         public long GasLimit { get; set; }
 
-        public long GasUsed { get; set; }
+        public decimal GasUsed => ((decimal)Gas) / GasLimit * 100;
 
         public bool Success { get; set; }
 
         public string Input { get; set; }
-
-        [DynamoDbIgnore]
-        public IReadOnlyList<IOperation> Operations { get; set; }
 
         public override bool Equals(object obj)
         {

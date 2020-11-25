@@ -40,11 +40,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Utils
 
             foreach (var property in type.GetProperties())
             {
-                if (property.GetCustomAttribute<DynamoDbIgnoreAttribute>(true) != null)
-                {
-                    continue;
-                }
-
                 attributes.Add(
                     property.Name,
                     SerializeItem(
@@ -71,10 +66,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Utils
             else if (value is Uri uri)
             {
                 return new AttributeValue(uri.OriginalString);
-            }
-            else if (type.GetCustomAttribute<DynamoDbStringAttribute>() != null)
-            {
-                return new AttributeValue(value.ToString());
             }
             else if (type.IsValueType)
             {
@@ -116,17 +107,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Utils
                     collection
                         .Cast<string>()
                         .ToList());
-            }
-            else if (type.GetCustomAttribute<DynamoDbStringAttribute>() != null)
-            {
-                var stringList = new List<string>();
-
-                foreach (var child in collection)
-                {
-                    stringList.Add(child.ToString());
-                }
-
-                return new AttributeValue(stringList);
             }
             else if (type == typeof(byte))
             {

@@ -3,7 +3,7 @@ using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 {
-    public class BusinessPerformance : IPerformance
+    internal sealed class BusinessPerformance : IPerformance
     {
         public DateTime Date { get; set; }
 

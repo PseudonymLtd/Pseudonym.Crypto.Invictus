@@ -2,7 +2,7 @@
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 {
-    public sealed class BusinessMarket : IMarket
+    internal sealed class BusinessMarket : IMarket
     {
         public bool IsTradable { get; set; }
 

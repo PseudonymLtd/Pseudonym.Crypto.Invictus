@@ -15,26 +15,23 @@ using Pseudonym.Crypto.Invictus.Shared.Enums;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business
 {
-    internal sealed class FundService : IFundService
+    internal sealed class FundService : AbstractService, IFundService
     {
-        private readonly AppSettings appSettings;
         private readonly IInvictusClient invictusClient;
         private readonly IEthplorerClient ethplorerClient;
-        private readonly ICurrencyConverter currencyConverter;
-        private readonly IScopedCancellationToken scopedCancellationToken;
 
         public FundService(
             IOptions<AppSettings> appSettings,
             IInvictusClient invictusClient,
             IEthplorerClient ethplorerClient,
             ICurrencyConverter currencyConverter,
+            ITransactionRepository transactionRepository,
+            IOperationRepository operationRepository,
             IScopedCancellationToken scopedCancellationToken)
+            : base(appSettings, currencyConverter, transactionRepository, operationRepository, scopedCancellationToken)
         {
-            this.appSettings = appSettings.Value;
             this.invictusClient = invictusClient;
             this.ethplorerClient = ethplorerClient;
-            this.currencyConverter = currencyConverter;
-            this.scopedCancellationToken = scopedCancellationToken;
         }
 
         public async IAsyncEnumerable<IFund> ListFundsAsync(CurrencyCode currencyCode)
@@ -43,41 +40,41 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             {
                 if (Enum.TryParse(fund.Symbol, out Symbol symbol))
                 {
-                    var fundInfo = appSettings.Funds.Single(x => x.Symbol == symbol);
+                    var fundInfo = GetFundInfo(symbol);
 
                     var priceData = fundInfo.Tradable
-                        ? await ethplorerClient.GetTokenInfoAsync(new EthereumAddress(fundInfo.ContractAddress))
+                        ? await ethplorerClient.GetTokenInfoAsync(fundInfo.Address)
                         : null;
 
-                    yield return Map(fund, priceData, symbol, currencyCode);
+                    yield return MapFund(fund, priceData, symbol, currencyCode);
                 }
             }
         }
 
         public async Task<IFund> GetFundAsync(Symbol symbol, CurrencyCode currencyCode)
         {
-            var fundInfo = appSettings.Funds.Single(x => x.Symbol == symbol);
+            var fundInfo = GetFundInfo(symbol);
 
             var fund = await invictusClient.GetFundAsync(symbol);
 
             var priceData = fundInfo.Tradable
-                ? await ethplorerClient.GetTokenInfoAsync(new EthereumAddress(fundInfo.ContractAddress))
+                ? await ethplorerClient.GetTokenInfoAsync(fundInfo.Address)
                 : null;
 
-            return Map(fund, priceData, symbol, currencyCode);
+            return MapFund(fund, priceData, symbol, currencyCode);
         }
 
         public async IAsyncEnumerable<IPerformance> ListPerformanceAsync(Symbol symbol, PriceMode priceMode, DateTime from, DateTime to, CurrencyCode currencyCode)
         {
-            var fundInfo = appSettings.Funds.Single(x => x.Symbol == symbol);
+            var fundInfo = GetFundInfo(symbol);
 
             var priceData = fundInfo.Tradable
-                ? await ethplorerClient.GetTokenPricingAsync(new EthereumAddress(fundInfo.ContractAddress))
+                ? await ethplorerClient.GetTokenPricingAsync(fundInfo.Address)
                 : null;
 
             await foreach (var perf in invictusClient
                 .ListPerformanceAsync(symbol, from, to)
-                .WithCancellation(scopedCancellationToken.Token))
+                .WithCancellation(CancellationToken))
             {
                 var marketData = priceData?.Prices?.SingleOrDefault(x => x.Date.Date == perf.Date.Date)
                     ?? priceData?.Prices?.OrderBy(x => x.Date)?.FirstOrDefault();
@@ -85,19 +82,31 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 yield return new BusinessPerformance()
                 {
                     Date = perf.Date,
-                    NetValue = currencyConverter.Convert(perf.NetValue, currencyCode),
-                    NetAssetValuePerToken = currencyConverter.Convert(perf.GetNav(priceMode), currencyCode),
-                    MarketCap = currencyConverter.Convert(marketData?.MarketCap, currencyCode),
-                    MarketAssetValuePerToken = currencyConverter.Convert(marketData?.GetMarketPrice(priceMode), currencyCode),
+                    NetValue = CurrencyConverter.Convert(perf.NetValue, currencyCode),
+                    NetAssetValuePerToken = CurrencyConverter.Convert(perf.GetNav(priceMode), currencyCode),
+                    MarketCap = CurrencyConverter.Convert(marketData?.MarketCap, currencyCode),
+                    MarketAssetValuePerToken = CurrencyConverter.Convert(marketData?.GetMarketPrice(priceMode), currencyCode),
                 };
             }
         }
 
-        private IFund Map(InvictusFund fund, EthplorerPriceSummary priceData, Symbol symbol, CurrencyCode currencyCode)
+        public async IAsyncEnumerable<ITransaction> ListTransactionsAsync(Symbol symbol, CurrencyCode currencyCode)
+        {
+            var fundInfo = GetFundInfo(symbol);
+
+            await foreach (var transaction in Transactions
+                .ListTransactionsAsync(fundInfo.Address)
+                .WithCancellation(CancellationToken))
+            {
+                yield return MapTransaction<BusinessTransaction>(transaction);
+            }
+        }
+
+        private IFund MapFund(InvictusFund fund, EthplorerPriceSummary priceData, Symbol symbol, CurrencyCode currencyCode)
         {
             var netVal = fund.NetValue.FromPythonString();
             var circulatingSupply = fund.CirculatingSupply.FromPythonString();
-            var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
+            var fundInfo = GetFundInfo(symbol);
 
             return new BusinessFund()
             {
@@ -113,18 +122,18 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     Decimals = fundInfo.Decimals
                 },
                 CirculatingSupply = circulatingSupply,
-                NetValue = currencyConverter.Convert(netVal, currencyCode),
-                NetAssetValuePerToken = currencyConverter.Convert(fund.NetAssetValuePerToken.FromPythonString(), currencyCode),
+                NetValue = CurrencyConverter.Convert(netVal, currencyCode),
+                NetAssetValuePerToken = CurrencyConverter.Convert(fund.NetAssetValuePerToken.FromPythonString(), currencyCode),
                 Market = new BusinessMarket()
                 {
                     IsTradable = priceData != null,
                     Cap = priceData?.MarketCap ?? 0,
-                    Total = currencyConverter.Convert(priceData?.MarketValuePerToken * circulatingSupply, currencyCode),
-                    PricePerToken = currencyConverter.Convert(priceData?.MarketValuePerToken, currencyCode),
+                    Total = CurrencyConverter.Convert(priceData?.MarketValuePerToken * circulatingSupply, currencyCode),
+                    PricePerToken = CurrencyConverter.Convert(priceData?.MarketValuePerToken, currencyCode),
                     DiffDaily = priceData?.DiffDaily ?? 0,
                     DiffWeekly = priceData?.DiffWeekly ?? 0,
                     DiffMonthly = priceData?.DiffMonthly ?? 0,
-                    Volume = currencyConverter.Convert(priceData?.Volume, currencyCode),
+                    Volume = CurrencyConverter.Convert(priceData?.Volume, currencyCode),
                     VolumeDiffDaily = priceData?.VolumeDiffDaily ?? 0,
                     VolumeDiffWeekly = priceData?.VolumeDiffWeekly ?? 0,
                     VolumeDiffMonthly = priceData?.VolumeDiffMonthly ?? 0
@@ -134,10 +143,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     {
                         Symbol = a.Symbol,
                         Name = a.Name,
-                        Value = currencyConverter.Convert(a.Value.FromPythonString(), currencyCode),
-                        Share = currencyConverter.Convert(a.Value.FromPythonString() / netVal * 100, currencyCode),
+                        Value = CurrencyConverter.Convert(a.Value.FromPythonString(), currencyCode),
+                        Share = CurrencyConverter.Convert(a.Value.FromPythonString() / netVal * 100, currencyCode),
                         Link = Enum.TryParse(a.Symbol, out Symbol symbol)
-                            ? appSettings.Funds.Single(x => x.Symbol == symbol).Links.External
+                            ? GetFundInfo(symbol).Links.External
                             : new Uri($"https://coinmarketcap.com/currencies/{a.Name.Replace(" ", "-").ToLower().Trim()}", UriKind.Absolute)
                     })
                     .Where(x => x.Value > 0)
@@ -146,7 +155,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                         {
                             Symbol = a.Symbol,
                             Name = a.Name,
-                            Value = currencyConverter.Convert(a.Value, currencyCode),
+                            Value = CurrencyConverter.Convert(a.Value, currencyCode),
                             Share = a.Share,
                             Link = a.Link
                         }))

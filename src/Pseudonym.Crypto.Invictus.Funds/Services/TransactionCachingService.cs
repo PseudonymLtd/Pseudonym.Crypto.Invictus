@@ -6,10 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
-using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
-using Pseudonym.Crypto.Invictus.Funds.Business.Models;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Ethplorer;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
+using Pseudonym.Crypto.Invictus.Funds.Data.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Services
@@ -38,26 +37,36 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                     var cypherClient = scope.ServiceProvider.GetRequiredService<IBlockCypherClient>();
                     var ethplorerClient = scope.ServiceProvider.GetRequiredService<IEthplorerClient>();
                     var etherClient = scope.ServiceProvider.GetRequiredService<IEtherClient>();
-                    var transactionService = scope.ServiceProvider.GetRequiredService<ITransactionService>();
-                    var operationService = scope.ServiceProvider.GetRequiredService<IOperationService>();
+                    var transactionService = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
+                    var operationService = scope.ServiceProvider.GetRequiredService<IOperationRepository>();
 
                     foreach (var fund in appSettings.Value.Funds)
                     {
                         try
                         {
-                            var contractAddress = new EthereumAddress(fund.ContractAddress);
                             var blockNumber = await etherClient.GetCurrentBlockNumberAsync();
-                            var lastblockNumber = await GetStopBlockAsync(transactionService, contractAddress);
+                            var latestBlockNumber = await GetStopBlockAsync(transactionService, fund.Address);
+                            var lowestBlockNumber = await GetLowestBlockAsync(transactionService, fund.Address);
 
                             await UpdateTransactionAsync(
                                 ethplorerClient,
                                 cypherClient,
                                 transactionService,
                                 operationService,
-                                contractAddress,
+                                fund.Address,
                                 fund.Decimals,
                                 blockNumber,
-                                lastblockNumber);
+                                latestBlockNumber);
+
+                            await UpdateTransactionAsync(
+                                ethplorerClient,
+                                cypherClient,
+                                transactionService,
+                                operationService,
+                                fund.Address,
+                                fund.Decimals,
+                                lowestBlockNumber,
+                                0);
                         }
                         catch (Exception e)
                         {
@@ -80,8 +89,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
         private async Task UpdateTransactionAsync(
             IEthplorerClient ethplorerClient,
             IBlockCypherClient cypherClient,
-            ITransactionService transactionService,
-            IOperationService operationService,
+            ITransactionRepository transactionService,
+            IOperationRepository operationService,
             EthereumAddress contractAddress,
             int decimals,
             long beforeBlock,
@@ -90,6 +99,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             var response = await cypherClient.GetAddressInformationAsync(contractAddress, beforeBlock, afterBlock);
             if (response.Transactions.Any())
             {
+                Console.WriteLine($"[{contractAddress}] Processing Batch ({response.Transactions.Count}) Range: {beforeBlock} -> {afterBlock}");
+
                 foreach (var transactionSummary in response.Transactions)
                 {
                     var hash = new EthereumTransactionHash(transactionSummary.Hash);
@@ -97,13 +108,17 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                     var transaction = await ethplorerClient.GetTransactionAsync(hash);
                     if (transaction != null)
                     {
-                        var businessTransaction = MapTransaction(hash, contractAddress, transactionSummary.ConfirmedAt, transaction);
+                        Console.WriteLine($"[{contractAddress}] Discovering Hash {hash} with ({transaction.Operations.Count}) operations.");
 
-                        await transactionService.UploadTransactionAsync(businessTransaction);
+                        var dynamoTransaction = MapTransaction(hash, contractAddress, transactionSummary.ConfirmedAt, transaction);
 
-                        foreach (var operation in businessTransaction.Operations)
+                        await transactionService.UploadTransactionAsync(dynamoTransaction);
+
+                        for (var i = 0; i < transaction.Operations.Count; i++)
                         {
-                            await operationService.UploadOperationAsync(operation);
+                            var dynamoOperation = MapOperation(hash, transaction.Operations[i], i);
+
+                            await operationService.UploadOperationAsync(dynamoOperation);
                         }
                     }
                 }
@@ -122,82 +137,80 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                         minBlock,
                         afterBlock);
                 }
+                else
+                {
+                    Console.WriteLine($"[{contractAddress}] Finished Processing.");
+                }
             }
         }
 
-        private ITransaction MapTransaction(
+        private DataTransaction MapTransaction(
             EthereumTransactionHash hash,
             EthereumAddress address,
             DateTime confirmedAt,
             EthplorerTransaction transaction)
         {
-            return new BusinessTransaction()
+            return new DataTransaction()
             {
                 Address = address,
                 BlockNumber = transaction.BlockNumber,
                 Confirmations = transaction.Confirmations,
                 Hash = hash,
                 ConfirmedAt = confirmedAt,
-                Sender = string.IsNullOrWhiteSpace(transaction.From)
-                    ? EthereumAddress.Empty
-                    : new EthereumAddress(transaction.From),
-                Recipient = string.IsNullOrWhiteSpace(transaction.To)
-                    ? EthereumAddress.Empty
-                    : new EthereumAddress(transaction.To),
+                Sender = transaction.From,
+                Recipient = transaction.To,
                 GasUsed = transaction.GasUsed,
                 GasLimit = transaction.GasLimit,
-                EthValue = transaction.Value,
+                Eth = transaction.Value,
                 Success = transaction.Success,
-                Input = transaction.Input,
-                Operations = transaction.Operations
-                    .Select(o => new BusinessOperation()
-                    {
-                        Hash = hash,
-                        Type = o.Type.ToUpper(),
-                        Address = string.IsNullOrEmpty(o.Address)
-                            ? EthereumAddress.Empty
-                            : new EthereumAddress(o.Address),
-                        Sender = string.IsNullOrEmpty(o.From)
-                            ? EthereumAddress.Empty
-                            : new EthereumAddress(o.From),
-                        Recipient = string.IsNullOrEmpty(o.To)
-                            ? EthereumAddress.Empty
-                            : new EthereumAddress(o.To),
-                        Addresses = o.Addresses
-                            .Select(a => new EthereumAddress(a))
-                            .ToList(),
-                        Value = o.Value,
-                        Price = o.Price,
-                        IsEth = o.IsEth,
-                        Priority = o.Priority,
-                        ContractAddress = new EthereumAddress(o.TokenInfo.ContractAddress),
-                        ContractName = o.TokenInfo.Name,
-                        ContractSymbol = o.TokenInfo.Symbol,
-                        ContractDecimals = int.Parse(o.TokenInfo.Decimals),
-                        ContractHolders = o.TokenInfo.HolderCount,
-                        ContractIssuances = o.TokenInfo.IssuanceCount,
-                        ContractLink = string.IsNullOrEmpty(o.TokenInfo.WebsiteUri)
-                                ? null
-                                : new Uri(o.TokenInfo.WebsiteUri, UriKind.Absolute)
-                    })
-                    .ToList()
+                Input = transaction.Input
             };
         }
 
-        private async Task<long> GetStopBlockAsync(ITransactionService transactionService, EthereumAddress address)
+        private DataOperation MapOperation(EthereumTransactionHash hash, EthplorerOperation operation, int order)
         {
-            return 0;
-
-            var lastblockNumber = await transactionService.GetLastBlockNumberAsync(address);
-
-            lastblockNumber = lastblockNumber - 10000;
-
-            if (lastblockNumber < 0)
+            return new DataOperation()
             {
-                lastblockNumber = 0;
+                Hash = hash,
+                Order = order,
+                Type = operation.Type.ToUpper(),
+                Address = operation.Address,
+                Sender = operation.From,
+                Recipient = operation.To,
+                Addresses = operation.Addresses,
+                Value = operation.Value,
+                Price = operation.Price,
+                IsEth = operation.IsEth,
+                Priority = operation.Priority,
+                ContractAddress = operation.TokenInfo.ContractAddress,
+                ContractName = operation.TokenInfo.Name,
+                ContractSymbol = operation.TokenInfo.Symbol,
+                ContractDecimals = int.Parse(operation.TokenInfo.Decimals),
+                ContractHolders = operation.TokenInfo.HolderCount,
+                ContractIssuances = operation.TokenInfo.IssuanceCount,
+                ContractLink = operation.TokenInfo.WebsiteUri
+            };
+        }
+
+        private async Task<long> GetStopBlockAsync(ITransactionRepository transactionService, EthereumAddress address)
+        {
+            var latestBlockNumber = await transactionService.GetLatestBlockNumberAsync(address);
+
+            latestBlockNumber = latestBlockNumber - 10000;
+
+            if (latestBlockNumber < 0)
+            {
+                latestBlockNumber = 0;
             }
 
-            return lastblockNumber;
+            return latestBlockNumber;
+        }
+
+        private async Task<long> GetLowestBlockAsync(ITransactionRepository transactionService, EthereumAddress address)
+        {
+            var lowestblockNumber = await transactionService.GetLowestBlockNumberAsync(address);
+
+            return lowestblockNumber + 1;
         }
     }
 }

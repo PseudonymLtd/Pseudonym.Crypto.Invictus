@@ -8,9 +8,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
     {
         EthereumTransactionHash Hash { get; }
 
+        int Order { get; }
+
         string Value { get; }
 
-        decimal Price { get; }
+        decimal PricePerToken { get; }
+
+        decimal Quantity { get; }
 
         string Type { get; }
 
@@ -18,11 +22,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         int Priority { get; }
 
-        EthereumAddress Sender { get; }
+        EthereumAddress? Sender { get; }
 
-        EthereumAddress Recipient { get; }
+        EthereumAddress? Recipient { get; }
 
-        EthereumAddress Address { get; }
+        EthereumAddress? Address { get; }
 
         EthereumAddress ContractAddress { get; }
 

@@ -1,9 +1,10 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 {
-    public sealed class BusinessLogin
+    internal sealed class BusinessLogin : ILogin
     {
         [Required]
         public string AccessToken { get; set; }

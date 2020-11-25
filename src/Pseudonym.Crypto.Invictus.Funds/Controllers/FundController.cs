@@ -79,5 +79,34 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 };
             }
         }
+
+        [HttpGet]
+        [Route("{symbol}/transactions")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(ApiFund), StatusCodes.Status200OK)]
+        public async IAsyncEnumerable<ApiTransaction> ListTransactions(
+            [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        {
+            await foreach (var transaction in fundService
+                .ListTransactionsAsync(symbol, queryFilter.CurrencyCode)
+                .WithCancellation(scopedCancellationToken.Token))
+            {
+                yield return new ApiTransaction()
+                {
+                    Hash = transaction.Hash,
+                    ConfirmedAt = transaction.ConfirmedAt,
+                    Sender = transaction.Sender,
+                    Recipient = transaction.Recipient,
+                    Eth = transaction.Eth,
+                    Success = transaction.Success,
+                    BlockNumber = transaction.BlockNumber,
+                    Confirmations = transaction.Confirmations,
+                    Gas = transaction.Gas,
+                    GasUsed = transaction.GasUsed,
+                    GasLimit = transaction.GasLimit,
+                    Input = transaction.Input
+                };
+            }
+        }
     }
 }

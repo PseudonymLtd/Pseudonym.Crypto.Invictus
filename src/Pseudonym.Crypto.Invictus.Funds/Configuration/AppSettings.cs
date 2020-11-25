@@ -9,6 +9,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 
         public string ServiceName { get; set; }
 
+        public bool CachingEnabled { get; set; }
+
         public Version Version { get; set; }
 
         public Uri HostUrl { get; set; }

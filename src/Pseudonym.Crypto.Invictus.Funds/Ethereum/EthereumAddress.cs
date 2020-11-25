@@ -2,12 +2,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
-using Pseudonym.Crypto.Invictus.Funds.Utils;
 using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Ethereum
 {
-    [DynamoDbString]
     public readonly struct EthereumAddress : IEquatable<EthereumAddress>
     {
         private static readonly string EmptyHex = string.Empty.PadLeft(40, '0');
