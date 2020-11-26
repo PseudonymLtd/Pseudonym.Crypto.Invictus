@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
+using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Models;
@@ -61,7 +62,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [HttpGet]
         [Route("{symbol}/performance")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(ApiFund), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ApiPerformance>), StatusCodes.Status200OK)]
         public async IAsyncEnumerable<ApiPerformance> ListPerformance(
             [Required, FromRoute] Symbol symbol, [FromQuery] ApiPerformanceQueryFilter queryFilter)
         {
@@ -83,7 +84,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [HttpGet]
         [Route("{symbol}/transactions")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(ApiFund), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ApiTransaction>), StatusCodes.Status200OK)]
         public async IAsyncEnumerable<ApiTransaction> ListTransactions(
             [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
@@ -91,22 +92,20 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 .ListTransactionsAsync(symbol, queryFilter.CurrencyCode)
                 .WithCancellation(scopedCancellationToken.Token))
             {
-                yield return new ApiTransaction()
-                {
-                    Hash = transaction.Hash,
-                    ConfirmedAt = transaction.ConfirmedAt,
-                    Sender = transaction.Sender,
-                    Recipient = transaction.Recipient,
-                    Eth = transaction.Eth,
-                    Success = transaction.Success,
-                    BlockNumber = transaction.BlockNumber,
-                    Confirmations = transaction.Confirmations,
-                    Gas = transaction.Gas,
-                    GasUsed = transaction.GasUsed,
-                    GasLimit = transaction.GasLimit,
-                    Input = transaction.Input
-                };
+                yield return MapTransaction(transaction);
             }
+        }
+
+        [HttpGet]
+        [Route("{symbol}/transactions/{hash}")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(ApiTransactionSet), StatusCodes.Status200OK)]
+        public async Task<ApiTransactionSet> GetTransaction(
+            [Required, FromRoute] Symbol symbol, [Required, FromRoute] string hash, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        {
+            var transactionSet = await fundService.GetTransactionAsync(symbol, new EthereumTransactionHash(hash), queryFilter.CurrencyCode);
+
+            return MapTransactionSet(transactionSet);
         }
     }
 }

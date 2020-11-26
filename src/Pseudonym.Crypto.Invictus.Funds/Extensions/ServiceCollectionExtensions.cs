@@ -52,10 +52,10 @@ namespace Microsoft.Extensions.DependencyInjection
             return container;
         }
 
-        public static IServiceCollection AddBlockCypherClient(this IServiceCollection container)
+        public static IServiceCollection AddEtherscanClient(this IServiceCollection container)
         {
-            container.AddScoped<IBlockCypherClient, BlockCypherClient>()
-                .AddHttpClient(nameof(BlockCypherClient), (sp, client) => ConfigureHttpClient(sp, client, d => d.BlockCypher));
+            container.AddScoped<IEtherscanClient, EtherscanClient>()
+                .AddHttpClient(nameof(EtherscanClient), (sp, client) => ConfigureHttpClient(sp, client, d => d.Etherscan));
 
             return container;
         }

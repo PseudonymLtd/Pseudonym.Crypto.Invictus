@@ -10,6 +10,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 
         public EthereumTransactionHash Hash { get; set; }
 
+        public EthereumTransactionHash BlockHash { get; set; }
+
+        public long Nonce { get; set; }
+
         public long BlockNumber { get; set; }
 
         public long Confirmations { get; set; }
@@ -25,6 +29,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
         public long Gas { get; set; }
 
         public long GasLimit { get; set; }
+
+        public decimal GasPrice { get; set; }
 
         public decimal GasUsed => ((decimal)Gas) / GasLimit * 100;
 

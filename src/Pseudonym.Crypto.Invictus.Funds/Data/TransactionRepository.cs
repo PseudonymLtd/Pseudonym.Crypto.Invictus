@@ -46,7 +46,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                 throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
             }
 
-            return Map(response.Item);
+            if (response.Item.Any())
+            {
+                return Map(response.Item);
+            }
+
+            return null;
         }
 
         public async IAsyncEnumerable<DataTransaction> ListTransactionsAsync(EthereumAddress contractAddress)
@@ -148,6 +153,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             {
                 Address = attributes[nameof(DataTransaction.Address)].S,
                 Hash = attributes[nameof(DataTransaction.Hash)].S,
+                BlockHash = attributes[nameof(DataTransaction.BlockHash)].S,
+                Nonce = long.Parse(attributes[nameof(DataTransaction.Nonce)].N),
                 Success = attributes[nameof(DataTransaction.Success)].BOOL,
                 BlockNumber = long.Parse(attributes[nameof(DataTransaction.BlockNumber)].N),
                 Sender = attributes[nameof(DataTransaction.Sender)].S,
@@ -155,8 +162,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                 ConfirmedAt = DateTime.Parse(attributes[nameof(DataTransaction.ConfirmedAt)].S),
                 Confirmations = long.Parse(attributes[nameof(DataTransaction.Confirmations)].N),
                 Eth = decimal.Parse(attributes[nameof(DataTransaction.Eth)].N),
+                GasPrice = long.Parse(attributes[nameof(DataTransaction.GasPrice)].N),
                 GasLimit = long.Parse(attributes[nameof(DataTransaction.GasLimit)].N),
-                GasUsed = long.Parse(attributes[nameof(DataTransaction.GasUsed)].N),
+                Gas = long.Parse(attributes[nameof(DataTransaction.Gas)].N),
                 Input = attributes[nameof(DataTransaction.Input)].S
             };
         }

@@ -12,6 +12,7 @@ using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
+using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business
 {
@@ -88,6 +89,27 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     MarketAssetValuePerToken = CurrencyConverter.Convert(marketData?.GetMarketPrice(priceMode), currencyCode),
                 };
             }
+        }
+
+        public async Task<ITransactionSet> GetTransactionAsync(Symbol symbol, EthereumTransactionHash hash, CurrencyCode currencyCode)
+        {
+            var fundInfo = GetFundInfo(symbol);
+            var transaction = await Transactions.GetTransactionsAsync(fundInfo.Address, hash)
+                ?? throw new PermanentException($"Transaction not found {hash}");
+
+            var operations = new List<IOperation>();
+            var transactionSet = MapTransaction<BusinessTransactionSet>(transaction);
+
+            await foreach (var operation in Operations
+                .ListOperationsAsync(hash)
+                .WithCancellation(CancellationToken))
+            {
+                operations.Add(MapOperation(operation, currencyCode));
+            }
+
+            transactionSet.Operations = operations;
+
+            return transactionSet;
         }
 
         public async IAsyncEnumerable<ITransaction> ListTransactionsAsync(Symbol symbol, CurrencyCode currencyCode)

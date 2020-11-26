@@ -11,8 +11,16 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         public string Hash { get; set; }
 
         [Required]
+        [JsonProperty("nonce")]
+        public long Nonce { get; set; }
+
+        [Required]
         [JsonProperty("block_number")]
         public long BlockNumber { get; set; }
+
+        [Required]
+        [JsonProperty("block_hash")]
+        public string BlockHash { get; set; }
 
         [Required]
         [JsonProperty("success")]
@@ -53,5 +61,9 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [Required]
         [JsonProperty("gas_used")]
         public decimal GasUsed { get; set; }
+
+        [Required]
+        [JsonProperty("gas_price")]
+        public decimal GasPrice { get; set; }
     }
 }

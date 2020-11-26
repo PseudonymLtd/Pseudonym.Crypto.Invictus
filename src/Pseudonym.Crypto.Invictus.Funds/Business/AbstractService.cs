@@ -55,6 +55,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             {
                 Address = new EthereumAddress(transaction.Address),
                 Hash = new EthereumTransactionHash(transaction.Hash),
+                BlockHash = new EthereumTransactionHash(transaction.BlockHash),
+                Nonce = transaction.Nonce,
                 Success = transaction.Success,
                 BlockNumber = transaction.BlockNumber,
                 Sender = new EthereumAddress(transaction.Sender),
@@ -62,7 +64,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 ConfirmedAt = transaction.ConfirmedAt,
                 Confirmations = transaction.Confirmations,
                 Eth = transaction.Eth,
-                Gas = transaction.GasUsed,
+                Gas = transaction.Gas,
+                GasPrice = transaction.GasPrice,
                 GasLimit = transaction.GasLimit,
                 Input = transaction.Input
             };

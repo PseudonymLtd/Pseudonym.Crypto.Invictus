@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
+using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Shared.Models;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Controllers
@@ -64,6 +65,76 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                     [nameof(ApiLinks.Fact)] = fund.FactSheetUri,
                     [nameof(ApiLinks.External)] = fund.InvictusUri
                 }
+            };
+        }
+
+        protected ApiTransaction MapTransaction(ITransaction transaction)
+        {
+            return new ApiTransaction()
+            {
+                Hash = transaction.Hash,
+                BlockHash = transaction.BlockHash,
+                Nonce = transaction.Nonce,
+                ConfirmedAt = transaction.ConfirmedAt,
+                Sender = transaction.Sender,
+                Recipient = transaction.Recipient,
+                Eth = transaction.Eth,
+                Success = transaction.Success,
+                BlockNumber = transaction.BlockNumber,
+                Confirmations = transaction.Confirmations,
+                Gas = transaction.Gas,
+                GasUsed = transaction.GasUsed,
+                GasLimit = transaction.GasLimit,
+                GasPrice = transaction.GasPrice,
+                Input = transaction.Input
+            };
+        }
+
+        protected ApiTransactionSet MapTransactionSet(ITransactionSet transactionSet, EthereumAddress? address = null)
+        {
+            return new ApiTransactionSet()
+            {
+                Hash = transactionSet.Hash,
+                ConfirmedAt = transactionSet.ConfirmedAt,
+                Sender = transactionSet.Sender,
+                Recipient = transactionSet.Recipient,
+                Eth = transactionSet.Eth,
+                Success = transactionSet.Success,
+                BlockNumber = transactionSet.BlockNumber,
+                Confirmations = transactionSet.Confirmations,
+                Gas = transactionSet.Gas,
+                GasUsed = transactionSet.GasUsed,
+                GasLimit = transactionSet.GasLimit,
+                Input = transactionSet.Input,
+                Operations = transactionSet.Operations
+                    .Select(o => new ApiOperation()
+                    {
+                        Address = o.Address?.Address,
+                        Sender = o.Sender?.Address,
+                        Recipient = o.Recipient?.Address,
+                        IsEth = o.IsEth,
+                        PricePerToken = o.PricePerToken,
+                        Type = o.Type,
+                        Direction = o.Type == OperationTypes.Transfer && o.Sender.HasValue && address.HasValue
+                            ? o.Sender.Value == address.Value
+                                ? Direction.OUT
+                                : Direction.IN
+                            : default(Direction?),
+                        Priority = o.Priority,
+                        Value = o.Value,
+                        Quantity = o.Quantity,
+                        Contract = new ApiContract()
+                        {
+                            Address = o.ContractAddress.Address,
+                            Symbol = o.ContractSymbol,
+                            Decimals = o.ContractDecimals,
+                            Holders = o.ContractHolders,
+                            Issuances = o.ContractIssuances,
+                            Link = o.ContractLink?.OriginalString,
+                            Name = o.ContractName
+                        }
+                    })
+                    .ToList()
             };
         }
     }

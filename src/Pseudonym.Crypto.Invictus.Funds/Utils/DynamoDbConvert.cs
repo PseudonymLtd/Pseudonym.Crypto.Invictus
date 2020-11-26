@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Amazon.DynamoDBv2.Model;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Utils
@@ -61,7 +60,17 @@ namespace Pseudonym.Crypto.Invictus.Funds.Utils
             }
             else if (value is string s)
             {
-                return new AttributeValue(s);
+                if (!string.IsNullOrWhiteSpace(s))
+                {
+                    return new AttributeValue(s);
+                }
+                else
+                {
+                    return new AttributeValue()
+                    {
+                        NULL = true
+                    };
+                }
             }
             else if (value is Uri uri)
             {
@@ -187,7 +196,18 @@ namespace Pseudonym.Crypto.Invictus.Funds.Utils
             }
             else
             {
-                return new AttributeValue(value.ToString());
+                var stringValue = value.ToString();
+                if (!string.IsNullOrWhiteSpace(stringValue))
+                {
+                    return new AttributeValue(stringValue);
+                }
+                else
+                {
+                    return new AttributeValue()
+                    {
+                        NULL = true
+                    };
+                }
             }
         }
     }
