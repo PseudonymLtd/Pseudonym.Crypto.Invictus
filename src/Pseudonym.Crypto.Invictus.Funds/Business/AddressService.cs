@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business.Models;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
+using Pseudonym.Crypto.Invictus.Funds.Data.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
@@ -25,8 +27,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             ICurrencyConverter currencyConverter,
             ITransactionRepository transactionRepository,
             IOperationRepository operationRepository,
+            IHttpContextAccessor httpContextAccessor,
             IScopedCancellationToken scopedCancellationToken)
-            : base(appSettings, currencyConverter, transactionRepository, operationRepository, scopedCancellationToken)
+            : base(appSettings, currencyConverter, transactionRepository, operationRepository, httpContextAccessor, scopedCancellationToken)
         {
             this.fundService = fundService;
             this.etherClient = etherClient;
@@ -52,8 +55,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
         public async Task<IInvestment> GetInvestmentAsync(EthereumAddress address, Symbol symbol, CurrencyCode currencyCode)
         {
+            var fundInfo = GetFundInfo(symbol);
             var fund = await fundService.GetFundAsync(symbol, currencyCode);
-            var tokenCount = await etherClient.GetContractBalanceAsync(fund.Token.ContractAddress, address);
+            var tokenCount = await etherClient.GetContractBalanceAsync(fundInfo.Address, address);
 
             return new BusinessInvestment()
             {
@@ -67,16 +71,31 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             var fundInfo = GetFundInfo(symbol);
 
             var transactionHashes = new List<EthereumTransactionHash>();
+            var transactions = new List<DataTransaction>();
+
+            await foreach (var transaction in Transactions
+                .ListInboundTransactionsAsync(fundInfo.Address, address)
+                .WithCancellation(CancellationToken))
+            {
+                transactions.Add(transaction);
+            }
+
+            await foreach (var transaction in Transactions
+                .ListOutboundTransactionsAsync(fundInfo.Address, address)
+                .WithCancellation(CancellationToken))
+            {
+                transactions.Add(transaction);
+            }
 
             await foreach (var hash in Operations
-                .ListInboundHashesAsync(fundInfo.Address, address, OperationTypes.Transfer)
+                .ListInboundHashesAsync(address, OperationTypes.Transfer)
                 .WithCancellation(CancellationToken))
             {
                 transactionHashes.Add(hash);
             }
 
             await foreach (var hash in Operations
-                .ListOutboundHashesAsync(fundInfo.Address, address, OperationTypes.Transfer)
+                .ListOutboundHashesAsync(address, OperationTypes.Transfer)
                 .WithCancellation(CancellationToken))
             {
                 transactionHashes.Add(hash);
@@ -84,21 +103,28 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
             foreach (var hash in transactionHashes.Distinct())
             {
-                var transaction = await Transactions.GetTransactionsAsync(fundInfo.Address, hash);
-                var businessTransaction = MapTransaction<BusinessTransactionSet>(transaction);
+                var transaction = transactions
+                    .SingleOrDefault(t => t.Address == address && t.Hash == hash)
+                        ?? await Transactions.GetTransactionAsync(fundInfo.Address, hash);
 
-                var operations = new List<IOperation>();
-
-                await foreach (var operation in Operations
-                    .ListOperationsAsync(hash)
-                    .WithCancellation(CancellationToken))
+                if (transaction != null &&
+                    transaction.Address == fundInfo.Address)
                 {
-                    operations.Add(MapOperation(operation, currencyCode));
+                    var businessTransaction = MapTransaction<BusinessTransactionSet>(transaction);
+
+                    var operations = new List<IOperation>();
+
+                    await foreach (var operation in Operations
+                        .ListOperationsAsync(hash)
+                        .WithCancellation(CancellationToken))
+                    {
+                        operations.Add(MapOperation(operation, currencyCode));
+                    }
+
+                    businessTransaction.Operations = operations;
+
+                    yield return businessTransaction;
                 }
-
-                businessTransaction.Operations = operations;
-
-                yield return businessTransaction;
             }
         }
     }

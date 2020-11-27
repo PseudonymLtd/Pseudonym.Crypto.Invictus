@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
@@ -28,8 +29,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             ICurrencyConverter currencyConverter,
             ITransactionRepository transactionRepository,
             IOperationRepository operationRepository,
+            IHttpContextAccessor httpContextAccessor,
             IScopedCancellationToken scopedCancellationToken)
-            : base(appSettings, currencyConverter, transactionRepository, operationRepository, scopedCancellationToken)
+            : base(appSettings, currencyConverter, transactionRepository, operationRepository, httpContextAccessor, scopedCancellationToken)
         {
             this.invictusClient = invictusClient;
             this.ethplorerClient = ethplorerClient;
@@ -94,7 +96,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
         public async Task<ITransactionSet> GetTransactionAsync(Symbol symbol, EthereumTransactionHash hash, CurrencyCode currencyCode)
         {
             var fundInfo = GetFundInfo(symbol);
-            var transaction = await Transactions.GetTransactionsAsync(fundInfo.Address, hash)
+            var transaction = await Transactions.GetTransactionAsync(fundInfo.Address, hash)
                 ?? throw new PermanentException($"Transaction not found {hash}");
 
             var operations = new List<IOperation>();
@@ -112,12 +114,18 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             return transactionSet;
         }
 
-        public async IAsyncEnumerable<ITransaction> ListTransactionsAsync(Symbol symbol, CurrencyCode currencyCode)
+        public async IAsyncEnumerable<ITransaction> ListTransactionsAsync(
+            Symbol symbol,
+            EthereumTransactionHash? startHash,
+            DateTime? offset,
+            DateTime from,
+            DateTime to,
+            CurrencyCode currencyCode)
         {
             var fundInfo = GetFundInfo(symbol);
 
             await foreach (var transaction in Transactions
-                .ListTransactionsAsync(fundInfo.Address)
+                .ListTransactionsAsync(fundInfo.Address, startHash, offset, from, to)
                 .WithCancellation(CancellationToken))
             {
                 yield return MapTransaction<BusinessTransaction>(transaction);

@@ -10,8 +10,6 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
-using Pseudonym.Crypto.Invictus.Funds.Ethereum;
-using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Models;
@@ -25,18 +23,15 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
     public class AddressController : AbstractController
     {
         private readonly IAddressService addressService;
-        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IScopedCancellationToken scopedCancellationToken;
 
         public AddressController(
             IOptions<AppSettings> appSettings,
             IAddressService addressService,
-            IHttpContextAccessor httpContextAccessor,
             IScopedCancellationToken scopedCancellationToken)
             : base(appSettings)
         {
             this.addressService = addressService;
-            this.httpContextAccessor = httpContextAccessor;
             this.scopedCancellationToken = scopedCancellationToken;
         }
 
@@ -44,7 +39,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [Route("{address}/investments")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(List<ApiInvestment>), StatusCodes.Status200OK)]
-        public async IAsyncEnumerable<ApiInvestment> ListInvestments([Required, FromRoute] string address, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        public async IAsyncEnumerable<ApiInvestment> ListInvestments(
+            [Required, FromRoute, EthereumAddress] string address, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
             await foreach (var investment in addressService
                 .ListInvestmentsAsync(GetAddress(address), queryFilter.CurrencyCode)
@@ -66,7 +62,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(ApiInvestment), StatusCodes.Status200OK)]
         public async Task<ApiInvestment> GetInvestment(
-            [Required, FromRoute] string address, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+            [Required, FromRoute, EthereumAddress] string address, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
             var investment = await addressService.GetInvestmentAsync(GetAddress(address), symbol, queryFilter.CurrencyCode);
 
@@ -83,9 +79,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [HttpGet]
         [Route("{address}/investments/{symbol}/transactions")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(List<ApiTransaction>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ApiTransactionSet>), StatusCodes.Status200OK)]
         public async IAsyncEnumerable<ApiTransactionSet> GetTransactions(
-            [Required, FromRoute] string address, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+            [Required, FromRoute, EthereumAddress] string address, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
             var addr = GetAddress(address);
 
@@ -136,22 +132,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                         .ToList()
                 };
             }
-        }
-
-        private EthereumAddress GetAddress(string address)
-        {
-            var ethAddress = new EthereumAddress(address);
-
-            if (httpContextAccessor.HttpContext.Response.Headers.ContainsKey(Headers.Address))
-            {
-                httpContextAccessor.HttpContext.Response.Headers[Headers.Address] = ethAddress.Address;
-            }
-            else
-            {
-                httpContextAccessor.HttpContext.Response.Headers.TryAdd(Headers.Address, ethAddress.Address);
-            }
-
-            return ethAddress;
         }
     }
 }

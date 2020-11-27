@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Pseudonym.Crypto.Invictus.Funds.Data.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
@@ -7,9 +8,18 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
 {
     public interface ITransactionRepository
     {
-        Task<DataTransaction> GetTransactionsAsync(EthereumAddress contractAddress, EthereumTransactionHash hash);
+        Task<DataTransaction> GetTransactionAsync(EthereumAddress contractAddress, EthereumTransactionHash hash);
 
-        IAsyncEnumerable<DataTransaction> ListTransactionsAsync(EthereumAddress contractAddress);
+        IAsyncEnumerable<DataTransaction> ListTransactionsAsync(
+            EthereumAddress contractAddress,
+            EthereumTransactionHash? startHash,
+            DateTime? offset,
+            DateTime from,
+            DateTime to);
+
+        IAsyncEnumerable<DataTransaction> ListInboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address);
+
+        IAsyncEnumerable<DataTransaction> ListOutboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address);
 
         Task UploadTransactionAsync(DataTransaction transaction);
 

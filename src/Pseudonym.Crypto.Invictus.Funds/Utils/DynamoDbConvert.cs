@@ -185,7 +185,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Utils
             }
             else if (value is DateTime d)
             {
-                return new AttributeValue(d.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ssZ"));
+                return new AttributeValue(d.ToISO8601String());
             }
             else if (NumberTypes.Contains(type))
             {

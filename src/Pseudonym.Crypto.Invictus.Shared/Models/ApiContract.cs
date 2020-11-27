@@ -6,6 +6,7 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
     public sealed class ApiContract
     {
         [Required]
+        [EthereumAddress]
         [JsonProperty("address")]
         public string Address { get; set; }
 

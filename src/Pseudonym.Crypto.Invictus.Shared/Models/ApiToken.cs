@@ -15,6 +15,7 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         public int Decimals { get; set; }
 
         [Required]
+        [EthereumAddress]
         [JsonProperty("address")]
         public string Address { get; set; }
     }

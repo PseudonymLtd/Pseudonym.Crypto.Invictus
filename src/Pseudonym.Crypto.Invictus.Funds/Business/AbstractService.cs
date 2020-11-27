@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Nethereum.Web3;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
@@ -9,6 +11,7 @@ using Pseudonym.Crypto.Invictus.Funds.Business.Models;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Data.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
+using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Models;
@@ -18,6 +21,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
     internal abstract class AbstractService
     {
         private readonly AppSettings appSettings;
+        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IScopedCancellationToken scopedCancellationToken;
 
         public AbstractService(
@@ -25,9 +29,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             ICurrencyConverter currencyConverter,
             ITransactionRepository transactionRepository,
             IOperationRepository operationRepository,
+            IHttpContextAccessor httpContextAccessor,
             IScopedCancellationToken scopedCancellationToken)
         {
             this.appSettings = appSettings.Value;
+            this.httpContextAccessor = httpContextAccessor;
             this.scopedCancellationToken = scopedCancellationToken;
 
             CurrencyConverter = currencyConverter;
@@ -45,7 +51,18 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
         protected FundSettings GetFundInfo(Symbol symbol)
         {
-            return appSettings.Funds.Single(x => x.Symbol == symbol);
+            var fundSettings = appSettings.Funds.Single(x => x.Symbol == symbol);
+
+            if (httpContextAccessor.HttpContext.Response.Headers.ContainsKey(Headers.Contract))
+            {
+                httpContextAccessor.HttpContext.Response.Headers[Headers.Contract] = fundSettings.ContractAddress;
+            }
+            else
+            {
+                httpContextAccessor.HttpContext.Response.Headers.Add(Headers.Contract, fundSettings.ContractAddress);
+            }
+
+            return fundSettings;
         }
 
         protected TBusinessTransaction MapTransaction<TBusinessTransaction>(DataTransaction transaction)

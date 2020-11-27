@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net.Mime;
@@ -86,10 +87,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(List<ApiTransaction>), StatusCodes.Status200OK)]
         public async IAsyncEnumerable<ApiTransaction> ListTransactions(
-            [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+            [Required, FromRoute] Symbol symbol, [FromQuery] ApiTransactionQueryFilter queryFilter)
         {
+            var startHash = string.IsNullOrEmpty(queryFilter.PaginationId)
+                ? default(EthereumTransactionHash?)
+                : new EthereumTransactionHash(queryFilter.PaginationId);
+
             await foreach (var transaction in fundService
-                .ListTransactionsAsync(symbol, queryFilter.CurrencyCode)
+                .ListTransactionsAsync(symbol, startHash, queryFilter.Offset, queryFilter.FromDate, queryFilter.ToDate, queryFilter.CurrencyCode)
                 .WithCancellation(scopedCancellationToken.Token))
             {
                 yield return MapTransaction(transaction);
@@ -101,7 +106,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(ApiTransactionSet), StatusCodes.Status200OK)]
         public async Task<ApiTransactionSet> GetTransaction(
-            [Required, FromRoute] Symbol symbol, [Required, FromRoute] string hash, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+            [Required, FromRoute] Symbol symbol, [Required, FromRoute, TransactionHash] string hash, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
             var transactionSet = await fundService.GetTransactionAsync(symbol, new EthereumTransactionHash(hash), queryFilter.CurrencyCode);
 

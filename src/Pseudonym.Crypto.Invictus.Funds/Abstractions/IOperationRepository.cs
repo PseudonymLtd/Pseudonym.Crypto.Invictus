@@ -7,11 +7,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
 {
     public interface IOperationRepository
     {
+        Task<DataOperation> GetOperationAsync(EthereumTransactionHash hash, int order);
+
         IAsyncEnumerable<DataOperation> ListOperationsAsync(EthereumTransactionHash hash);
 
-        IAsyncEnumerable<EthereumTransactionHash> ListInboundHashesAsync(EthereumAddress contractAddress, EthereumAddress address, string type);
+        IAsyncEnumerable<EthereumTransactionHash> ListInboundHashesAsync(EthereumAddress address, string type);
 
-        IAsyncEnumerable<EthereumTransactionHash> ListOutboundHashesAsync(EthereumAddress contractAddress, EthereumAddress address, string type);
+        IAsyncEnumerable<EthereumTransactionHash> ListOutboundHashesAsync(EthereumAddress address, string type);
 
         Task UploadOperationAsync(DataOperation operation);
     }

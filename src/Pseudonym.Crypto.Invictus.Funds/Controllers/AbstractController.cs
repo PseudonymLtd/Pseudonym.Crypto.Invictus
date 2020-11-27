@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
+using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Models;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Controllers
@@ -17,6 +20,22 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         }
 
         protected AppSettings AppSettings { get; }
+
+        protected EthereumAddress GetAddress(string address)
+        {
+            var ethAddress = new EthereumAddress(address);
+
+            if (HttpContext.Response.Headers.ContainsKey(Headers.Address))
+            {
+                HttpContext.Response.Headers[Headers.Address] = ethAddress.Address;
+            }
+            else
+            {
+                HttpContext.Response.Headers.TryAdd(Headers.Address, ethAddress.Address);
+            }
+
+            return ethAddress;
+        }
 
         protected ApiFund MapFund(IFund fund)
         {

@@ -7,6 +7,7 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
     public class ApiTransaction
     {
         [Required]
+        [TransactionHash]
         [JsonProperty("hash")]
         public string Hash { get; set; }
 
@@ -19,6 +20,7 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         public long BlockNumber { get; set; }
 
         [Required]
+        [TransactionHash]
         [JsonProperty("block_hash")]
         public string BlockHash { get; set; }
 
@@ -35,10 +37,12 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         public long Confirmations { get; set; }
 
         [Required]
+        [EthereumAddress]
         [JsonProperty("sender")]
         public string Sender { get; set; }
 
         [Required]
+        [EthereumAddress]
         [JsonProperty("recipient")]
         public string Recipient { get; set; }
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -29,32 +30,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             this.scopedCancellationToken = scopedCancellationToken;
         }
 
-        public IAsyncEnumerable<EthereumTransactionHash> ListInboundHashesAsync(EthereumAddress contractAddress, EthereumAddress address, string type)
+        public async Task<DataOperation> GetOperationAsync(EthereumTransactionHash hash, int order)
         {
-            return ListAddressHashesAsync(contractAddress, address, type, InboundIndexName, nameof(DataOperation.Recipient));
-        }
-
-        public IAsyncEnumerable<EthereumTransactionHash> ListOutboundHashesAsync(EthereumAddress contractAddress, EthereumAddress address, string type)
-        {
-            return ListAddressHashesAsync(contractAddress, address, type, OutboundIndexName, nameof(DataOperation.Sender));
-        }
-
-        public async IAsyncEnumerable<DataOperation> ListOperationsAsync(EthereumTransactionHash hash)
-        {
-            var response = await amazonDynamoDB.QueryAsync(
-                new QueryRequest()
+            var response = await amazonDynamoDB.GetItemAsync(
+                TableName,
+                new Dictionary<string, AttributeValue>()
                 {
-                    TableName = TableName,
-                    Select = Select.ALL_ATTRIBUTES,
-                    KeyConditionExpression = string.Format("#{0} = :{0}Val", nameof(DataOperation.Hash)),
-                    ExpressionAttributeNames = new Dictionary<string, string>()
-                    {
-                        [$"#{nameof(DataOperation.Hash)}"] = nameof(DataOperation.Hash),
-                    },
-                    ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
-                    {
-                        [$":{nameof(DataOperation.Hash)}Val"] = new AttributeValue { S = hash.Hash },
-                    }
+                    [nameof(DataOperation.Hash)] = new AttributeValue(hash),
+                    [nameof(DataOperation.Order)] = new AttributeValue() { N = order.ToString() }
                 },
                 scopedCancellationToken.Token);
 
@@ -63,9 +46,58 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                 throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
             }
 
-            foreach (var attributes in response.Items)
+            if (response.Item.Any())
             {
-                yield return Map(attributes);
+                return Map(response.Item);
+            }
+
+            return null;
+        }
+
+        public async IAsyncEnumerable<DataOperation> ListOperationsAsync(EthereumTransactionHash hash)
+        {
+            var lastEvaluatedKey = new Dictionary<string, AttributeValue>();
+
+            while (!scopedCancellationToken.Token.IsCancellationRequested)
+            {
+                var response = await amazonDynamoDB.QueryAsync(
+                    new QueryRequest()
+                    {
+                        TableName = TableName,
+                        Select = Select.ALL_ATTRIBUTES,
+                        KeyConditionExpression = string.Format("#{0} = :{0}Val", nameof(DataOperation.Hash)),
+                        ExpressionAttributeNames = new Dictionary<string, string>()
+                        {
+                            [$"#{nameof(DataOperation.Hash)}"] = nameof(DataOperation.Hash),
+                        },
+                        ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
+                        {
+                            [$":{nameof(DataOperation.Hash)}Val"] = new AttributeValue { S = hash },
+                        },
+                        ExclusiveStartKey = lastEvaluatedKey.Any()
+                            ? lastEvaluatedKey
+                            : null
+                    },
+                    scopedCancellationToken.Token);
+
+                if (response.HttpStatusCode != HttpStatusCode.OK)
+                {
+                    throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
+                }
+                else
+                {
+                    lastEvaluatedKey = response.LastEvaluatedKey;
+                }
+
+                foreach (var attributes in response.Items)
+                {
+                    yield return Map(attributes);
+                }
+
+                if (!lastEvaluatedKey.Any())
+                {
+                    break;
+                }
             }
         }
 
@@ -84,49 +116,72 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             }
         }
 
+        public IAsyncEnumerable<EthereumTransactionHash> ListInboundHashesAsync(EthereumAddress address, string type)
+        {
+            return ListAddressHashesAsync(address, type, InboundIndexName, nameof(DataOperation.Recipient));
+        }
+
+        public IAsyncEnumerable<EthereumTransactionHash> ListOutboundHashesAsync(EthereumAddress address, string type)
+        {
+            return ListAddressHashesAsync(address, type, OutboundIndexName, nameof(DataOperation.Sender));
+        }
+
         private async IAsyncEnumerable<EthereumTransactionHash> ListAddressHashesAsync(
-            EthereumAddress contractAddress,
             EthereumAddress address,
             string type,
             string indexName,
             string attributeName)
         {
-            var response = await amazonDynamoDB.QueryAsync(
-                new QueryRequest()
-                {
-                    TableName = TableName,
-                    IndexName = indexName,
-                    Select = Select.ALL_PROJECTED_ATTRIBUTES,
-                    KeyConditionExpression = string.Format(
-                        "#{0} = :{0}Val AND #{1} = :{1}Val",
-                        attributeName,
-                        nameof(DataOperation.ContractAddress)),
-                    ExpressionAttributeNames = new Dictionary<string, string>()
-                    {
-                        [$"#{attributeName}"] = attributeName,
-                        [$"#{nameof(DataOperation.Type)}"] = nameof(DataOperation.Type),
-                        [$"#{nameof(DataOperation.ContractAddress)}"] = nameof(DataOperation.ContractAddress),
-                    },
-                    ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
-                    {
-                        [$":{attributeName}Val"] = new AttributeValue { S = address.Address },
-                        [$":{nameof(DataOperation.Type)}Val"] = new AttributeValue { S = type },
-                        [$":{nameof(DataOperation.ContractAddress)}Val"] = new AttributeValue { S = contractAddress }
-                    },
-                    FilterExpression = string.Format("#{0} = :{0}Val", nameof(DataOperation.Type)),
-                },
-                scopedCancellationToken.Token);
+            var lastEvaluatedKey = new Dictionary<string, AttributeValue>();
 
-            if (response.HttpStatusCode != HttpStatusCode.OK)
+            while (!scopedCancellationToken.Token.IsCancellationRequested)
             {
-                throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
-            }
+                var response = await amazonDynamoDB.QueryAsync(
+                    new QueryRequest()
+                    {
+                        TableName = TableName,
+                        IndexName = indexName,
+                        Select = Select.ALL_PROJECTED_ATTRIBUTES,
+                        KeyConditionExpression = string.Format(
+                            "#{0} = :{0}Val AND #{1} = :{1}Val",
+                            attributeName,
+                            nameof(DataOperation.Type)),
+                        ExpressionAttributeNames = new Dictionary<string, string>()
+                        {
+                            [$"#{attributeName}"] = attributeName,
+                            [$"#{nameof(DataOperation.Type)}"] = nameof(DataOperation.Type)
+                        },
+                        ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
+                        {
+                            [$":{attributeName}Val"] = new AttributeValue { S = address },
+                            [$":{nameof(DataOperation.Type)}Val"] = new AttributeValue { S = type }
+                        },
+                        ExclusiveStartKey = lastEvaluatedKey.Any()
+                            ? lastEvaluatedKey
+                            : null
+                    },
+                    scopedCancellationToken.Token);
 
-            foreach (var attributes in response.Items)
-            {
-                if (attributes.ContainsKey(nameof(DataOperation.Hash)))
+                if (response.HttpStatusCode != HttpStatusCode.OK)
                 {
-                    yield return new EthereumTransactionHash(attributes[nameof(DataOperation.Hash)].S);
+                    throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
+                }
+                else
+                {
+                    lastEvaluatedKey = response.LastEvaluatedKey;
+                }
+
+                foreach (var attributes in response.Items)
+                {
+                    if (attributes.ContainsKey(nameof(DataOperation.Hash)))
+                    {
+                        yield return new EthereumTransactionHash(attributes[nameof(DataOperation.Hash)].S);
+                    }
+                }
+
+                if (!lastEvaluatedKey.Any())
+                {
+                    break;
                 }
             }
         }

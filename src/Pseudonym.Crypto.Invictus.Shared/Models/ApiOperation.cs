@@ -34,12 +34,15 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [JsonProperty("priority")]
         public int Priority { get; set; }
 
+        [EthereumAddress]
         [JsonProperty("sender")]
         public string Sender { get; set; }
 
+        [EthereumAddress]
         [JsonProperty("recipient")]
         public string Recipient { get; set; }
 
+        [EthereumAddress]
         [JsonProperty("address")]
         public string Address { get; set; }
 

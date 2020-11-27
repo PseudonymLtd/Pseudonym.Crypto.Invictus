@@ -49,10 +49,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
 
         public Task<EthplorerTransaction> GetTransactionAsync(EthereumTransactionHash hash)
         {
-            return GetAsync<EthplorerTransaction>($"/getTxInfo/{hash}", true);
+            return GetAsync<EthplorerTransaction>($"/getTxInfo/{hash}");
         }
 
-        private async Task<TResponse> GetAsync<TResponse>(string url, bool ignore404 = false)
+        private async Task<TResponse> GetAsync<TResponse>(string url)
             where TResponse : class, new()
         {
             try
@@ -62,12 +62,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
                 var pathAndQuery = QueryHelpers.AddQueryString(url, "apiKey", dependencies.Ethplorer.Settings.ApiKey);
 
                 var response = await client.GetAsync(new Uri(pathAndQuery, UriKind.Relative), scopedCancellationToken.Token);
-
-                if (ignore404 &&
-                    response.StatusCode == HttpStatusCode.NotFound)
-                {
-                    return default;
-                }
 
                 response.EnsureSuccessStatusCode();
 
