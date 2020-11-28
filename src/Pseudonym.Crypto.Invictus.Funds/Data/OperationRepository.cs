@@ -15,6 +15,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
 {
     internal sealed class OperationRepository : IOperationRepository
     {
+        private const int MaxBatchWrites = 25;
         private const string TableName = "Pseudonym-Crypto-Invictus-Operations";
         private const string InboundIndexName = "Inbound";
         private const string OutboundIndexName = "Outbound";
@@ -101,18 +102,45 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             }
         }
 
-        public async Task UploadOperationAsync(DataOperation operation)
+        public async Task UploadOperationsAsync(params DataOperation[] operations)
         {
-            var attributes = DynamoDbConvert.Serialize(operation);
-
-            var response = await amazonDynamoDB.PutItemAsync(
-                TableName,
-                attributes,
-                scopedCancellationToken.Token);
-
-            if (response.HttpStatusCode != HttpStatusCode.OK)
+            if (operations.Length == 1)
             {
-                throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
+                var attributes = DynamoDbConvert.Serialize(operations.Single());
+
+                var response = await amazonDynamoDB.PutItemAsync(
+                    TableName,
+                    attributes,
+                    scopedCancellationToken.Token);
+
+                if (response.HttpStatusCode != HttpStatusCode.OK)
+                {
+                    throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
+                }
+            }
+            else
+            {
+                for (int skip = 0; skip < operations.Length; skip += MaxBatchWrites)
+                {
+                    var items = operations
+                        .Skip(skip)
+                        .Take(MaxBatchWrites)
+                        .Select(DynamoDbConvert.Serialize);
+
+                    var response = await amazonDynamoDB.BatchWriteItemAsync(
+                        new Dictionary<string, List<WriteRequest>>()
+                        {
+                            [TableName] = items
+                                .Select(attributes => new WriteRequest(new PutRequest(attributes)))
+                                .ToList()
+                        },
+                        scopedCancellationToken.Token);
+
+                    if (response.HttpStatusCode != HttpStatusCode.OK)
+                    {
+                        throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
+                    }
+                }
             }
         }
 

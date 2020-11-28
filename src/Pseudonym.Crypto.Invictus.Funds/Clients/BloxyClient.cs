@@ -42,14 +42,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
                 var transactions = await GetAsync<List<BloxyTokenTransfer>>(
                     $"/token/transfers?token={contractAddress}&limit={PageSize}&offset={page++ * PageSize}&from_time={startDate.ToISO8601String()}&till_time={endDate.ToISO8601String()}");
 
-                if (transactions.Any())
+                foreach (var transaction in transactions.Distinct())
                 {
-                    foreach (var transaction in transactions.Distinct())
-                    {
-                        yield return transaction;
-                    }
+                    yield return transaction;
                 }
-                else
+
+                if (transactions.Count < PageSize)
                 {
                     break;
                 }

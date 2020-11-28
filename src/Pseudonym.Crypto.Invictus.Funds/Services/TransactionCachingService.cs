@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -96,27 +97,26 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             DateTime startDate,
             DateTime endDate)
         {
+            Console.WriteLine($"[{contractAddress}] Processing Batch: {startDate} -> {endDate}");
+
             await foreach (var transactionSummary in bloxyClient.ListTransactionsAsync(contractAddress, startDate, endDate))
             {
-                Console.WriteLine($"[{contractAddress}] Processing Batch: {startDate} -> {endDate}");
-
                 var hash = new EthereumTransactionHash(transactionSummary.Hash);
 
                 var transaction = await ethplorerClient.GetTransactionAsync(hash);
                 if (transaction != null)
                 {
-                    Console.WriteLine($"[{contractAddress}] Discovering Hash {hash}  with ({transaction.Operations.Count}) operations.");
+                    Console.WriteLine($"[{contractAddress}] Discovering Hash {hash} with ({transaction.Operations.Count}) operations.");
 
                     var dynamoTransaction = MapTransaction(hash, contractAddress, transactionSummary, transaction);
 
                     await transactionService.UploadTransactionAsync(dynamoTransaction);
 
-                    for (var i = 0; i < transaction.Operations.Count; i++)
-                    {
-                        var dynamoOperation = MapOperation(hash, transaction.Operations[i], i);
+                    var dynamoOperations = Enumerable.Range(0, transaction.Operations.Count)
+                        .Select(i => MapOperation(hash, transaction.Operations[i], i))
+                        .ToArray();
 
-                        await operationService.UploadOperationAsync(dynamoOperation);
-                    }
+                    await operationService.UploadOperationsAsync(dynamoOperations);
                 }
             }
 
@@ -157,8 +157,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                 Order = order,
                 Type = operation.Type.ToUpper(),
                 Address = operation.Address,
-                Sender = operation.From,
-                Recipient = operation.To,
+                Sender = string.IsNullOrWhiteSpace(operation.From)
+                    ? EthereumAddress.Empty.Address
+                    : operation.From,
+                Recipient = string.IsNullOrWhiteSpace(operation.To)
+                    ? EthereumAddress.Empty.Address
+                    : operation.To,
                 Addresses = operation.Addresses,
                 Value = operation.Value,
                 Price = operation.Price,
