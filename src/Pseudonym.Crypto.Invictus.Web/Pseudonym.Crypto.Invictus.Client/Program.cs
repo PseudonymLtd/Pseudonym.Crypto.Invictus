@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -19,6 +20,9 @@ namespace Pseudonym.Crypto.Invictus.Web.Client
     {
         public static async Task Main(string[] args)
         {
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.CurrentCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.CurrentCulture;
+
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
 

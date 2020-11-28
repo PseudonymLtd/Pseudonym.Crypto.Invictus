@@ -120,6 +120,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 Gas = transactionSet.Gas,
                 GasUsed = transactionSet.GasUsed,
                 GasLimit = transactionSet.GasLimit,
+                TransferAction = GetTransferAction(transactionSet.Sender, transactionSet.Recipient),
                 Operations = transactionSet.Operations
                     .Select(o => new ApiOperation()
                     {
@@ -129,7 +130,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                         IsEth = o.IsEth,
                         PricePerToken = o.PricePerToken,
                         Type = o.Type,
-                        TransferAction = GetTransferAction(o),
+                        TransferAction = GetOperationTransferAction(o),
                         Priority = o.Priority,
                         Value = o.Value,
                         Quantity = o.Quantity,
@@ -147,18 +148,24 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                     .ToList()
             };
 
-            TransferAction GetTransferAction(IOperation operation)
+            TransferAction GetOperationTransferAction(IOperation operation)
             {
-                if (operation.Type == OperationTypes.Transfer &&
-                    operation.Sender.HasValue &&
-                    operation.Recipient.HasValue &&
+                return operation.Type == OperationTypes.Transfer
+                    ? GetTransferAction(operation.Sender, operation.Recipient)
+                    : TransferAction.None;
+            }
+
+            TransferAction GetTransferAction(EthereumAddress? sender, EthereumAddress? recipient)
+            {
+                if (sender.HasValue &&
+                    recipient.HasValue &&
                     address.HasValue)
                 {
-                    if (operation.Sender == address)
+                    if (sender == address)
                     {
                         return TransferAction.Outbound;
                     }
-                    else if (operation.Recipient == address)
+                    else if (recipient == address)
                     {
                         return TransferAction.Inbound;
                     }

@@ -1,0 +1,55 @@
+﻿@inject IAppState AppState
+@inject IUserSettings UserSettings
+
+<div class="container-fluid" style="max-width: none; padding-left: 0px; padding-right: 0px">
+    <div class="row justify-content-center row-cols-1 row-cols-sm-2 row-cols-md-4">
+        <div class="col py-1 col-2">
+            <small style="font-weight: bold;">Token</small>
+            <div>
+                <TransferType Type="@Operation.TransferAction" />
+                <Token Symbol="@Operation.Contract.Symbol" ContractAddress="@Operation.Contract.Address" />
+            </div>
+        </div>
+        <div class="col py-1 col-8">
+            <small style="font-weight: bold;">@Operation.Type</small>
+            <div>
+                @if (string.IsNullOrWhiteSpace(Operation.Address))
+                {
+                    <EthAddress Address="@Operation.Sender" />
+                    <EthAddress Address="@Operation.Recipient" />
+                }
+                else
+                {
+                    <EthAddress Address="@Operation.Address" />
+                }
+            </div>
+        </div>
+        <div class="col py-1 col-2">
+            <small style="font-weight: bold;">Quantity</small>
+            <div>
+                <LargeNumber Value="Operation.Quantity" Decimals="2" />
+            </div>
+        </div>
+        <div class="col py-1 col-2">
+            <small style="font-weight: bold;">Value (@UserSettings.CurrencyCode.GetSymbol())</small>
+            <div>
+                <Money Value="@(Operation.PricePerToken * Operation.Quantity)" CurrencyCode="UserSettings.CurrencyCode" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public ApiOperation Operation { get; set; }
+
+    [Parameter]
+    public bool Clickable { get; set; }
+
+    //public string FundImageName => $"{Investment.Fund.Token.Symbol}.png";
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+    }
+}

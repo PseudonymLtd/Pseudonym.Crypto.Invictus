@@ -70,15 +70,15 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
             return GetAsync<ApiInvestment>($"/api/v1/addresses/{userSettings.WalletAddress}/investments/{symbol}");
         }
 
-        public IAsyncEnumerable<ApiTransaction> ListInvestmentTransactionsAsync(Symbol symbol)
+        public IAsyncEnumerable<ApiTransactionSet> ListInvestmentTransactionsAsync(Symbol symbol)
         {
             if (userSettings.HasValidAddress())
             {
-                return ListAsync<ApiTransaction>($"/api/v1/addresses/{userSettings.WalletAddress}/investments/{symbol}/transactions");
+                return ListAsync<ApiTransactionSet>($"/api/v1/addresses/{userSettings.WalletAddress}/investments/{symbol}/transactions");
             }
             else
             {
-                return new EmptyAsyncEnumerable<ApiTransaction>();
+                return new EmptyAsyncEnumerable<ApiTransactionSet>();
             }
         }
 

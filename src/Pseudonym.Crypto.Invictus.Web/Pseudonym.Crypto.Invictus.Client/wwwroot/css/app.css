@@ -19,6 +19,12 @@ a, .btn-link {
     box-shadow: 0 0 0 0.2rem rgba(33, 37, 41, 0.25);
 }
 
+.address-owned {
+    font-weight: bold;
+    color: #cf2127;
+    border-bottom: 1px dashed black;
+}
+
 .date-picker {
     width: 170px;
     margin-left: -9px;
@@ -204,7 +210,6 @@ app {
 .tooltip-container {
     position: relative;
     display: inline-block;
-    border-bottom: 2px dotted #cf2127;
 }
 
     .tooltip-container .tooltip-text {

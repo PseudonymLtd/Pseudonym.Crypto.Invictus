@@ -1,0 +1,15 @@
+﻿@if (!string.IsNullOrWhiteSpace(Hash))
+{
+    <Link DisplayText="@Hash" CaptionText="View on etherscan" Url="@Link" FontSize="@FontSize" TextClasses="address-mob" LinkClasses="address-mob" />
+}
+
+@code {
+
+    [Parameter]
+    public string Hash { get; set; }
+
+    [Parameter]
+    public int FontSize { get; set; } = 12;
+
+    internal string Link => $"https://etherscan.io/tx/{Hash}";
+}

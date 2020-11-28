@@ -1,6 +1,8 @@
-﻿@if (!string.IsNullOrWhiteSpace(Address))
+﻿@inject IUserSettings UserSettings
+
+@if (!string.IsNullOrWhiteSpace(Address))
 {
-    <Link DisplayText="@Address" CaptionText="View on etherscan" Url="@Link" FontSize="@FontSize" Classes="address-mob" />
+    <Link DisplayText="@Address" CaptionText="View on etherscan" Url="@Link" FontSize="@FontSize" TextClasses="@Classes" LinkClasses="address-mob" />
 }
 
 @code {
@@ -12,4 +14,8 @@
     public int FontSize { get; set; } = 12;
 
     internal string Link => $"https://etherscan.io/address/{Address}";
+
+    internal string Classes => UserSettings.WalletAddress == Address
+        ? "address-owned address-mob"
+        : "address-mob";
 }

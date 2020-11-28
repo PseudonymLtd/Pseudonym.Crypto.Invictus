@@ -12,7 +12,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Abstractions
 
         Task<ApiInvestment> GetInvestmentAsync(Symbol symbol);
 
-        IAsyncEnumerable<ApiTransaction> ListInvestmentTransactionsAsync(Symbol symbol);
+        IAsyncEnumerable<ApiTransactionSet> ListInvestmentTransactionsAsync(Symbol symbol);
 
         IAsyncEnumerable<ApiFund> ListFundsAsync();
 

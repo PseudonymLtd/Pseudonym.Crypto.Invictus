@@ -1,0 +1,18 @@
+﻿@switch (Type)
+{
+    case TransferAction.Inbound:
+        <span class="oi oi-arrow-circle-right" style="color: green"></span>
+        break;
+    case TransferAction.Outbound:
+        <span class="oi oi-arrow-circle-left" style="color: red"></span>
+        break;
+    default:
+        <span class="oi oi-play-circle" style="color: orange"></span>
+        break;
+}
+
+@code {
+
+    [Parameter]
+    public TransferAction Type { get; set; }
+}

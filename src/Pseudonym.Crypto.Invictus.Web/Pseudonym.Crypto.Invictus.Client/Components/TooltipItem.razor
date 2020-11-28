@@ -1,0 +1,26 @@
+﻿<div class="tooltip-container">
+    <span style="@TextStyle">@DisplayText</span>
+    <span style="@TooltipStyle" class="tooltip-text">@CaptionText</span>
+</div>
+
+@code {
+    [Parameter]
+    public string DisplayText { get; set; }
+
+    [Parameter]
+    public string CaptionText { get; set; }
+
+    [Parameter]
+    public int? FontSize { get; set; }
+
+    [Parameter]
+    public int? ToolTipFontSize { get; set; }
+
+    internal string TextStyle => FontSize.HasValue
+        ? $"font-size: {FontSize}px;"
+        : string.Empty;
+
+    internal string TooltipStyle => ToolTipFontSize.HasValue
+        ? $"font-size: {ToolTipFontSize}px;"
+        : string.Empty;
+}

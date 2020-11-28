@@ -1,0 +1,12 @@
+﻿<Link DisplayText="@($"#{Number}")" CaptionText="View on etherscan" Url="@Link" FontSize="@FontSize" />
+
+@code {
+
+    [Parameter]
+    public long Number { get; set; }
+
+    [Parameter]
+    public int FontSize { get; set; }
+
+    internal string Link => $"https://etherscan.io/block/{Number}";
+}

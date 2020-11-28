@@ -14,42 +14,16 @@ else if (investment == null)
 else
 {
     <InvestmentSummary Investment="investment" CurrencyCode="UserSettings.CurrencyCode" Clickable="false" />
-    <h2 class="display-4">Transactions</h2>
     if (!transactions.Any())
     {
         <Loading />
     }
     else
     {
-        <div class="container-fluid" style="max-width: none">
-            @foreach (var transaction in transactions)
+        <div>
+            @foreach (var transaction in transactions.OrderByDescending(x => x.ConfirmedAt))
             {
-                @*<div style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;" class="row">
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 23%; padding-bottom: 15px;">
-                        <small style="font-weight: bold;">Sender</small>
-                        <div>
-                            <EthAddress Address="@transaction.Sender" FontSize="16" />
-                        </div>
-                    </div>
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 23%; padding-bottom: 15px;">
-                        <small style="font-weight: bold;">Recipient</small>
-                        <div>
-                            <EthAddress Address="@transaction.Recipient" FontSize="16" />
-                        </div>
-                    </div>
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                        <small style="font-weight: bold;">Amount</small>
-                        <div>
-                            <LargeNumber Value="transaction.Eth" Decimals="2" />
-                        </div>
-                    </div>
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                        <small style="font-weight: bold;">Value (@UserSettings.CurrencyCode.GetSymbol())</small>
-                        <div>
-                            <Money Value="@(transaction.Amount * investment.Fund.NetAssetValuePerToken)" CurrencyCode="UserSettings.CurrencyCode" />
-                        </div>
-                    </div>
-                </div>*@
+                <TransactionSummary Transaction="transaction" />
             }
         </div>
     }
@@ -57,12 +31,12 @@ else
 
 @code {
 
-    private readonly List<ApiTransaction> transactions;
+    private readonly List<ApiTransactionSet> transactions;
     private ApiInvestment investment;
 
     public Investment()
     {
-        transactions = new List<ApiTransaction>();
+        transactions = new List<ApiTransactionSet>();
     }
 
     [Parameter]

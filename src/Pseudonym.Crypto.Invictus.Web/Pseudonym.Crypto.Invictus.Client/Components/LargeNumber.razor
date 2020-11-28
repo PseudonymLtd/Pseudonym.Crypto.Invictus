@@ -6,15 +6,12 @@
 }
 else if (GetRoundedNumber().Length < GetFullNumber().Length)
 {
-<div class="tooltip-container">
-    @GetRoundedNumber()@Suffix
-    <span class="tooltip-text">@GetFullNumber()@Suffix</span>
-</div>
+    <TooltipItem DisplayText="@(GetRoundedNumber() + Suffix)" CaptionText="@(GetFullNumber() +Suffix)" FontSize="FontSize" ToolTipFontSize="ToolTipFontSize" />
 }
 else
 {
     <div style="display: inline-block; position: relative;">
-        @GetFullNumber()@Suffix
+        <span style="@TextStyle">@GetFullNumber()@Suffix</span>
     </div>
 }
 
@@ -26,7 +23,21 @@ else
     public int Decimals { get; set; } = 0;
 
     [Parameter]
-    public char Suffix { get; set; } = ' ';
+    public string Suffix { get; set; }
+
+    [Parameter]
+    public int? FontSize { get; set; }
+
+    [Parameter]
+    public int? ToolTipFontSize { get; set; }
+
+    internal string TextStyle => FontSize.HasValue
+        ? $"font-size: {FontSize}px;"
+        : string.Empty;
+
+    internal string TooltipStyle => ToolTipFontSize.HasValue
+        ? $"font-size: {ToolTipFontSize}px;"
+        : string.Empty;
 
     protected override void OnInitialized()
     {

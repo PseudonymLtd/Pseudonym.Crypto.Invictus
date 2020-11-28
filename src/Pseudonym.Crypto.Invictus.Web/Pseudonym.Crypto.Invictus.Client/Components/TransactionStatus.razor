@@ -1,0 +1,21 @@
+﻿<div class="tooltip-container">
+    @if (Success)
+    {
+        <span class="oi oi-circle-check" style="color: green"></span>
+    }
+    else
+    {
+        <span class="oi oi-circle-x" style="color: red"></span>
+    }
+    <span class="tooltip-text" style="font-size: 10px; min-width: 100px"><LargeNumber Value="Confirmations" Decimals="0" Suffix=" Confirmations" /></span>
+</div>
+
+
+@code {
+
+    [Parameter]
+    public bool Success { get; set; }
+
+    [Parameter]
+    public long Confirmations { get; set; }
+}

@@ -47,6 +47,7 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [JsonProperty("address")]
         public string Address { get; set; }
 
+        [Required]
         [JsonProperty("transfer_action")]
         public TransferAction TransferAction { get; set; }
 

@@ -3,14 +3,14 @@
 @if (Value == Decimal.Zero)
 {
     <span>
-        <LargeNumber Value="@Value" Decimals="@Decimals" />
+        <LargeNumber Value="@Value" Decimals="@Decimals" FontSize="FontSize" ToolTipFontSize="ToolTipFontSize" />
     </span>
 }
 else
 {
     <span>
         @CurrencyCode.GetSymbol()
-        <LargeNumber Value="@Value" Decimals="@Decimals" />
+        <LargeNumber Value="@Value" Decimals="@Decimals" FontSize="FontSize" ToolTipFontSize="ToolTipFontSize" />
     </span>
 }
 
@@ -20,6 +20,12 @@ else
 
     [Parameter]
     public int Decimals { get; set; } = 2;
+
+    [Parameter]
+    public int? FontSize { get; set; }
+
+    [Parameter]
+    public int? ToolTipFontSize { get; set; }
 
     [Parameter]
     public CurrencyCode CurrencyCode { get; set; } = CurrencyCode.USD;

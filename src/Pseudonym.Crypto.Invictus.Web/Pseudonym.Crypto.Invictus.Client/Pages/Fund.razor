@@ -21,8 +21,8 @@ else
                 ? Enum.Parse<Symbol>(asset.Symbol)
                 : default(Symbol?);
 
-        <div class="row justify-content-center" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
-            <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+        <div class="row justify-content-center row-cols-1 row-cols-sm-2 row-cols-md-5" style="border: 1px solid transparent;">
+            <div class="col-2 py-1">
                 <small style="font-weight: bold;">Asset Name</small>
                 <div>
                     @if (symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value))
@@ -35,7 +35,7 @@ else
                     }
                 </div>
             </div>
-            <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+            <div class="col-1 py-1">
                 <small style="font-weight: bold;">Token</small>
                 <div>
                     @if (symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value))
@@ -48,19 +48,19 @@ else
                     }
                 </div>
             </div>
-            <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+            <div class="col-4 py-1">
                 <small style="font-weight: bold;">Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                 <div>
                     <Money Value="@asset.Value" CurrencyCode="UserSettings.CurrencyCode" />
                 </div>
             </div>
-            <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+            <div class="col-1 py-1">
                 <small style="font-weight: bold;">Share</small>
                 <div>
                     <LargeNumber Value="asset.Share" Decimals="2" Suffix="PercentageSymbol" />
                 </div>
             </div>
-            <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+            <div class="col-2 py-1">
                 <small style="font-weight: bold;">Explore</small>
                 <div>
                     @if (symbol.HasValue)

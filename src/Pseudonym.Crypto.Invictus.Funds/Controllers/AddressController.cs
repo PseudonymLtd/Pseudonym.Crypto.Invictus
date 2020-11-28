@@ -91,7 +91,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
 
             foreach (var transaction in transactions.OrderByDescending(x => x.ConfirmedAt))
             {
-                yield return MapTransactionSet(transaction);
+                yield return MapTransactionSet(transaction, addr);
             }
         }
     }

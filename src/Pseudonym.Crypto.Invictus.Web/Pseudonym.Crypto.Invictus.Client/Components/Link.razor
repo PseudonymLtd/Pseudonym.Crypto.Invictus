@@ -1,5 +1,5 @@
 ﻿<div class="tooltip-container">
-    <span class="@Classes" style="@TextStyle">@DisplayText</span> <a href="@Url" target="_blank"><span class="oi oi-external-link @Classes" style="@LinkStyle"></span></a>
+    <span class="@TextClasses" style="@TextStyle">@DisplayText</span> <a href="@Url" target="_blank"><span class="oi oi-external-link @LinkClasses" style="@LinkStyle"></span></a>
     <span class="tooltip-text" style="font-size: 12px; width: 120px">@CaptionText</span>
 </div>
 
@@ -14,7 +14,10 @@
     public int FontSize { get; set; } = 16;
 
     [Parameter]
-    public string Classes { get; set; }
+    public string TextClasses { get; set; }
+
+    [Parameter]
+    public string LinkClasses { get; set; }
 
     [Parameter]
     public string Url { get; set; }
