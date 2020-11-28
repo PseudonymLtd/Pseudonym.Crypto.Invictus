@@ -87,50 +87,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
 
             await foreach (var transaction in addressService.ListTransactionsAsync(addr, symbol, queryFilter.CurrencyCode))
             {
-                yield return new ApiTransactionSet()
-                {
-                    Hash = transaction.Hash,
-                    ConfirmedAt = transaction.ConfirmedAt,
-                    Sender = transaction.Sender,
-                    Recipient = transaction.Recipient,
-                    Eth = transaction.Eth,
-                    Success = transaction.Success,
-                    BlockNumber = transaction.BlockNumber,
-                    Confirmations = transaction.Confirmations,
-                    Gas = transaction.Gas,
-                    GasUsed = transaction.GasUsed,
-                    GasLimit = transaction.GasLimit,
-                    Input = transaction.Input,
-                    Operations = transaction.Operations
-                        .Select(o => new ApiOperation()
-                        {
-                            Address = o.Address?.Address,
-                            Sender = o.Sender?.Address,
-                            Recipient = o.Recipient?.Address,
-                            IsEth = o.IsEth,
-                            PricePerToken = o.PricePerToken,
-                            Type = o.Type,
-                            Direction = o.Type == OperationTypes.Transfer && o.Sender.HasValue
-                                ? o.Sender.Value == addr
-                                    ? Direction.OUT
-                                    : Direction.IN
-                                : default(Direction?),
-                            Priority = o.Priority,
-                            Value = o.Value,
-                            Quantity = o.Quantity,
-                            Contract = new ApiContract()
-                            {
-                                Address = o.ContractAddress.Address,
-                                Symbol = o.ContractSymbol,
-                                Decimals = o.ContractDecimals,
-                                Holders = o.ContractHolders,
-                                Issuances = o.ContractIssuances,
-                                Link = o.ContractLink?.OriginalString,
-                                Name = o.ContractName
-                            }
-                        })
-                        .ToList()
-                };
+                yield return MapTransactionSet(transaction);
             }
         }
     }

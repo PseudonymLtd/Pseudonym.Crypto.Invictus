@@ -10,10 +10,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data.Models
 
         public long BlockNumber { get; set; }
 
-        public string BlockHash { get; set; }
-
-        public long Nonce { get; set; }
-
         public long Confirmations { get; set; }
 
         public DateTime ConfirmedAt { get; set; }
@@ -28,11 +24,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data.Models
 
         public long Gas { get; set; }
 
-        public decimal GasPrice { get; set; }
-
         public bool Success { get; set; }
-
-        public string Input { get; set; }
 
         public override bool Equals(object obj)
         {

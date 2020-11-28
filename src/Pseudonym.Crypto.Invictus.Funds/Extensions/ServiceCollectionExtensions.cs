@@ -52,10 +52,10 @@ namespace Microsoft.Extensions.DependencyInjection
             return container;
         }
 
-        public static IServiceCollection AddEtherscanClient(this IServiceCollection container)
+        public static IServiceCollection AddBloxyClient(this IServiceCollection container)
         {
-            container.AddScoped<IEtherscanClient, EtherscanClient>()
-                .AddHttpClient(nameof(EtherscanClient), (sp, client) => ConfigureHttpClient(sp, client, d => d.Etherscan));
+            container.AddScoped<IBloxyClient, BloxyClient>()
+                .AddHttpClient(nameof(BloxyClient), (sp, client) => ConfigureHttpClient(sp, client, d => d.Bloxy));
 
             return container;
         }

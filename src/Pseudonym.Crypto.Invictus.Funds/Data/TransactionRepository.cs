@@ -142,6 +142,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             return GetBlockNumberAsync(address, false);
         }
 
+        public Task<DateTime?> GetLatestDateAsync(EthereumAddress address)
+        {
+            return GetDateAsync(address, true);
+        }
+
+        public Task<DateTime?> GetLowestDateAsync(EthereumAddress address)
+        {
+            return GetDateAsync(address, false);
+        }
+
         public async Task UploadTransactionAsync(DataTransaction transaction)
         {
             var attributes = DynamoDbConvert.Serialize(transaction);
@@ -261,14 +271,50 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             return default;
         }
 
+        private async Task<DateTime?> GetDateAsync(EthereumAddress address, bool latest)
+        {
+            var response = await amazonDynamoDB.QueryAsync(
+                new QueryRequest()
+                {
+                    TableName = TableName,
+                    IndexName = DateIndexName,
+                    ScanIndexForward = !latest,
+                    Select = Select.SPECIFIC_ATTRIBUTES,
+                    ProjectionExpression = $"{nameof(DataTransaction.Address)},{nameof(DataTransaction.ConfirmedAt)}",
+                    KeyConditionExpression = $"#{nameof(DataTransaction.Address)} = :{nameof(DataTransaction.Address)}Val",
+                    ExpressionAttributeNames = new Dictionary<string, string>()
+                    {
+                        [$"#{nameof(DataTransaction.Address)}"] = nameof(DataTransaction.Address),
+                    },
+                    ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
+                    {
+                        [$":{nameof(DataTransaction.Address)}Val"] = new AttributeValue { S = address }
+                    },
+                    Limit = 1
+                },
+                scopedCancellationToken.Token);
+
+            if (response.HttpStatusCode != HttpStatusCode.OK)
+            {
+                throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
+            }
+
+            if (response.Items.Count == 1 &&
+                response.Items.Single().ContainsKey(nameof(DataTransaction.ConfirmedAt)) &&
+                DateTime.TryParse(response.Items.Single()[nameof(DataTransaction.ConfirmedAt)].S, out DateTime date))
+            {
+                return date;
+            }
+
+            return null;
+        }
+
         private DataTransaction Map(Dictionary<string, AttributeValue> attributes)
         {
             return new DataTransaction()
             {
                 Address = attributes[nameof(DataTransaction.Address)].S,
                 Hash = attributes[nameof(DataTransaction.Hash)].S,
-                BlockHash = attributes[nameof(DataTransaction.BlockHash)].S,
-                Nonce = long.Parse(attributes[nameof(DataTransaction.Nonce)].N),
                 Success = attributes[nameof(DataTransaction.Success)].BOOL,
                 BlockNumber = long.Parse(attributes[nameof(DataTransaction.BlockNumber)].N),
                 Sender = attributes[nameof(DataTransaction.Sender)].S,
@@ -276,10 +322,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                 ConfirmedAt = DateTime.Parse(attributes[nameof(DataTransaction.ConfirmedAt)].S),
                 Confirmations = long.Parse(attributes[nameof(DataTransaction.Confirmations)].N),
                 Eth = decimal.Parse(attributes[nameof(DataTransaction.Eth)].N),
-                GasPrice = decimal.Parse(attributes[nameof(DataTransaction.GasPrice)].N),
                 GasLimit = long.Parse(attributes[nameof(DataTransaction.GasLimit)].N),
                 Gas = long.Parse(attributes[nameof(DataTransaction.Gas)].N),
-                Input = attributes[nameof(DataTransaction.Input)].S
             };
         }
     }

@@ -223,7 +223,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
 
             // Clients
             container
-                .AddEtherscanClient()
+                .AddBloxyClient()
                 .AddEthplorerClient()
                 .AddInfuraClient()
                 .AddInvictusClient()

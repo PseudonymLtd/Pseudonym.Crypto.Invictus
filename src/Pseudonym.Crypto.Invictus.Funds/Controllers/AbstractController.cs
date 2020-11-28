@@ -92,8 +92,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
             return new ApiTransaction()
             {
                 Hash = transaction.Hash,
-                BlockHash = transaction.BlockHash,
-                Nonce = transaction.Nonce,
                 ConfirmedAt = transaction.ConfirmedAt,
                 Sender = transaction.Sender,
                 Recipient = transaction.Recipient,
@@ -103,9 +101,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 Confirmations = transaction.Confirmations,
                 Gas = transaction.Gas,
                 GasUsed = transaction.GasUsed,
-                GasLimit = transaction.GasLimit,
-                GasPrice = transaction.GasPrice,
-                Input = transaction.Input
+                GasLimit = transaction.GasLimit
             };
         }
 
@@ -124,7 +120,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 Gas = transactionSet.Gas,
                 GasUsed = transactionSet.GasUsed,
                 GasLimit = transactionSet.GasLimit,
-                Input = transactionSet.Input,
                 Operations = transactionSet.Operations
                     .Select(o => new ApiOperation()
                     {
@@ -134,11 +129,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                         IsEth = o.IsEth,
                         PricePerToken = o.PricePerToken,
                         Type = o.Type,
-                        Direction = o.Type == OperationTypes.Transfer && o.Sender.HasValue && address.HasValue
-                            ? o.Sender.Value == address.Value
-                                ? Direction.OUT
-                                : Direction.IN
-                            : default(Direction?),
+                        TransferAction = GetTransferAction(o),
                         Priority = o.Priority,
                         Value = o.Value,
                         Quantity = o.Quantity,
@@ -155,6 +146,26 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                     })
                     .ToList()
             };
+
+            TransferAction GetTransferAction(IOperation operation)
+            {
+                if (operation.Type == OperationTypes.Transfer &&
+                    operation.Sender.HasValue &&
+                    operation.Recipient.HasValue &&
+                    address.HasValue)
+                {
+                    if (operation.Sender == address)
+                    {
+                        return TransferAction.Outbound;
+                    }
+                    else if (operation.Recipient == address)
+                    {
+                        return TransferAction.Inbound;
+                    }
+                }
+
+                return TransferAction.None;
+            }
         }
     }
 }

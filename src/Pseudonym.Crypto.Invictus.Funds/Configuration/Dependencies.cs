@@ -2,7 +2,7 @@
 {
     public class Dependencies
     {
-        public Dependency<ApiKeyDependencySettings> Etherscan { get; set; }
+        public Dependency<ApiKeyDependencySettings> Bloxy { get; set; }
 
         public Dependency<ApiKeyDependencySettings> Ethplorer { get; set; }
 

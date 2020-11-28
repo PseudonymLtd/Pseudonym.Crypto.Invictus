@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
@@ -72,8 +71,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             {
                 Address = new EthereumAddress(transaction.Address),
                 Hash = new EthereumTransactionHash(transaction.Hash),
-                BlockHash = new EthereumTransactionHash(transaction.BlockHash),
-                Nonce = transaction.Nonce,
                 Success = transaction.Success,
                 BlockNumber = transaction.BlockNumber,
                 Sender = new EthereumAddress(transaction.Sender),
@@ -82,9 +79,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 Confirmations = transaction.Confirmations,
                 Eth = transaction.Eth,
                 Gas = transaction.Gas,
-                GasPrice = transaction.GasPrice,
-                GasLimit = transaction.GasLimit,
-                Input = transaction.Input
+                GasLimit = transaction.GasLimit
             };
         }
 

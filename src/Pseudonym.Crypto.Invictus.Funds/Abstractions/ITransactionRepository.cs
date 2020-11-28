@@ -26,5 +26,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
         Task<long> GetLatestBlockNumberAsync(EthereumAddress address);
 
         Task<long> GetLowestBlockNumberAsync(EthereumAddress address);
+
+        Task<DateTime?> GetLatestDateAsync(EthereumAddress address);
+
+        Task<DateTime?> GetLowestDateAsync(EthereumAddress address);
     }
 }

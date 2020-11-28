@@ -9,10 +9,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         EthereumTransactionHash Hash { get; }
 
-        EthereumTransactionHash BlockHash { get; }
-
-        long Nonce { get; }
-
         long Confirmations { get; }
 
         long BlockNumber { get; }
@@ -27,14 +23,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         long Gas { get; }
 
-        decimal GasPrice { get; set; }
-
         decimal GasUsed { get; }
 
         decimal Eth { get; }
 
         bool Success { get; }
-
-        string Input { get; }
     }
 }

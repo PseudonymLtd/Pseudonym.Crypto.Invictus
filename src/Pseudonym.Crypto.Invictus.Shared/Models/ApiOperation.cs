@@ -3,10 +3,11 @@ using Newtonsoft.Json;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Models
 {
-    public enum Direction
+    public enum TransferAction
     {
-        IN,
-        OUT
+        None = 0,
+        Inbound = 1,
+        Outbound = 2,
     }
 
     public sealed class ApiOperation
@@ -46,8 +47,8 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [JsonProperty("address")]
         public string Address { get; set; }
 
-        [JsonProperty("direction")]
-        public Direction? Direction { get; set; }
+        [JsonProperty("transfer_action")]
+        public TransferAction TransferAction { get; set; }
 
         [Required]
         [JsonProperty("contract")]
