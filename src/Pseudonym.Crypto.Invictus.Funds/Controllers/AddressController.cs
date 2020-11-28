@@ -85,7 +85,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         {
             var addr = GetAddress(address);
 
-            await foreach (var transaction in addressService.ListTransactionsAsync(addr, symbol, queryFilter.CurrencyCode))
+            var transactions = await addressService
+                .ListTransactionsAsync(addr, symbol, queryFilter.CurrencyCode)
+                .ToListAsync(scopedCancellationToken.Token);
+
+            foreach (var transaction in transactions.OrderByDescending(x => x.ConfirmedAt))
             {
                 yield return MapTransactionSet(transaction);
             }
