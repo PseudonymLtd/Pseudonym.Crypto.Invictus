@@ -25,6 +25,10 @@ a, .btn-link {
     border-bottom: 1px dashed black;
 }
 
+.wrap {
+    overflow-wrap: anywhere;
+}
+
 .date-picker {
     width: 170px;
     margin-left: -9px;
@@ -281,8 +285,12 @@ app {
     }
 
     .address-mob {
-        font-size: small !important;
+        font-size: 10px !important;
         text-align: center !important;
+    }
+
+    .invisible-mob {
+        display: none;
     }
 
     .portfolio-address .tooltip-container {

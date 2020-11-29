@@ -13,9 +13,12 @@
     [Parameter]
     public int FontSize { get; set; } = 12;
 
+    [Parameter]
+    public bool HighlightOwnership { get; set; } = true;
+
     internal string Link => $"https://etherscan.io/address/{Address}";
 
-    internal string Classes => UserSettings.WalletAddress == Address
-        ? "address-owned address-mob"
-        : "address-mob";
+    internal string Classes => HighlightOwnership && UserSettings.WalletAddress == Address
+        ? "address-owned address-mob wrap"
+        : "address-mob wrap";
 }

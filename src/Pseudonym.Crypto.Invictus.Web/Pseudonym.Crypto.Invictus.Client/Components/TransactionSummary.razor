@@ -18,21 +18,21 @@
             <div class="media" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
                 <div class="container-fluid" style="max-width: none; padding-left: 0px; padding-right: 0px">
                     <div class="row">
-                        <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                        <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto py-1">
                             <small style="font-weight: bold;">Transfer</small>
                             <div>
                                 <EthAddress Address="@Transaction.Sender" />
-                                <span>➔</span>
+                                <span class="invisible-mob">➔</span>
                                 <EthAddress Address="@Transaction.Recipient" />
                             </div>
                         </div>
-                        <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 100px; padding-bottom: 15px;">
+                        <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto py-1">
                             <small style="font-weight: bold;">Eth</small>
                             <div>
                                 <LargeNumber Value="@Transaction.Eth" Decimals="2" />
                             </div>
                         </div>
-                        <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                        <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto py-1">
                             <small style="font-weight: bold;">Gas</small>
                             <div>
                                 <TooltipItem DisplayText="@($"{Transaction.Gas} / {Transaction.GasLimit}")" CaptionText="@($"{Math.Round(Transaction.GasUsed, 2)}%")" />
