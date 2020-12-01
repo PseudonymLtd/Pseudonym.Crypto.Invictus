@@ -3,6 +3,7 @@
 @inject IApiClient Client
 @inject IAppState AppState
 @inject NavigationManager NavigationManager
+
 @if (!UserSettings.HasValidAddress())
 {
     <WalletEntry />
@@ -23,7 +24,7 @@ else
         <div>
             @foreach (var transaction in transactions.OrderByDescending(x => x.ConfirmedAt))
             {
-                <TransactionSummary Transaction="transaction" />
+                <TransactionSummary Fund="investment.Fund" Transaction="transaction" />
             }
         </div>
     }
@@ -31,12 +32,13 @@ else
 
 @code {
 
-    private readonly List<ApiTransactionSet> transactions;
+    private readonly List<BusinessTransaction> transactions;
+
     private ApiInvestment investment;
 
     public Investment()
     {
-        transactions = new List<ApiTransactionSet>();
+        transactions = new List<BusinessTransaction>();
     }
 
     [Parameter]
@@ -44,6 +46,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        Console.WriteLine("Init");
+
         AppState.Assign(async () => await DrawAsync(false));
 
         await DrawAsync(true);
@@ -51,6 +55,8 @@ else
 
     private async Task DrawAsync(bool firstRender)
     {
+        Console.WriteLine("Draw");
+
         if (Enum.TryParse(Symbol, out Symbol symbol))
         {
             if (!firstRender)
@@ -63,15 +69,55 @@ else
 
             if (UserSettings.HasValidAddress())
             {
+                var now = DateTimeOffset.UtcNow.Date;
                 investment = await Client.GetInvestmentAsync(symbol);
 
                 StateHasChanged();
 
-                await foreach (var item in Client.ListInvestmentTransactionsAsync(symbol))
+                await foreach (var transaction in Client.ListInvestmentTransactionsAsync(symbol))
                 {
-                    transactions.Add(item);
+                    transactions.Add(Map(
+                        transaction,
+                        transaction.ConfirmedAt.Date == now
+                        ? new ApiPerformance()
+                        {
+                            NetAssetValuePerToken = investment.Fund.NetAssetValuePerToken,
+                            MarketValuePerToken = investment.Fund.Market.PricePerToken
+                        }
+                        : null));
+                }
 
-                    StateHasChanged();
+                StateHasChanged();
+
+                var maxDate = transactions.Max(x => x.ConfirmedAt).AddDays(1);
+                var max = now.AddDays(-1);
+
+                await foreach (var perf in Client
+                .ListFundPerformanceAsync(
+                    symbol,
+                    PriceMode.Avg,
+                    transactions.Min(x => x.ConfirmedAt).AddDays(-1),
+                    maxDate > max
+                        ? max
+                        : maxDate))
+                {
+                    var items = transactions
+                        .Where(t => t.ConfirmedAt.Date == perf.Date.Date)
+                        .ToList();
+
+                    if (items.Any())
+                    {
+                        foreach (var item in items)
+                        {
+                            item.Price = new BusinessPrice()
+                            {
+                                NetAssetValuePerToken = perf.NetAssetValuePerToken,
+                                MarketValuePerToken = perf.MarketValuePerToken
+                            };
+                        }
+
+                        StateHasChanged();
+                    }
                 }
             }
         }
@@ -79,5 +125,58 @@ else
         {
             throw new ArgumentException($"Could not pass parameter '{Symbol}'", nameof(Symbol));
         }
+    }
+
+    private BusinessTransaction Map(ApiTransactionSet transaction, ApiPerformance performance)
+    {
+        return new BusinessTransaction()
+        {
+            Hash = transaction.Hash,
+            BlockNumber = transaction.BlockNumber,
+            Confirmations = transaction.Confirmations,
+            ConfirmedAt = transaction.ConfirmedAt,
+            Success = transaction.Success,
+            TransferAction = transaction.TransferAction,
+            Eth = transaction.Eth,
+            Gas = transaction.Gas,
+            GasLimit = transaction.GasLimit,
+            GasUsed = transaction.GasUsed,
+            Sender = transaction.Sender,
+            Recipient = transaction.Recipient,
+            Price = performance != null
+                ? new BusinessPrice()
+                {
+                    MarketValuePerToken = performance.MarketValuePerToken,
+                    NetAssetValuePerToken = performance.NetAssetValuePerToken
+                }
+                : null,
+            Operations = transaction.Operations
+                .Select(operation => new BusinessOperation()
+                {
+                    IsEth = operation.IsEth,
+                    Sender = operation.Sender,
+                    Address = operation.Address,
+                    PricePerToken = operation.PricePerToken,
+                    Priority = operation.Priority,
+                    Quantity = operation.Quantity,
+                    Type = operation.Type,
+                    Value = operation.Value,
+                    Recipient = operation.Recipient,
+                    TransferAction = operation.TransferAction,
+                    Contract = new BusinessContract()
+                    {
+                        Symbol = operation.Contract.Symbol,
+                        Address = operation.Contract.Address,
+                        Decimals = operation.Contract.Decimals,
+                        Holders = operation.Contract.Holders,
+                        Issuances = operation.Contract.Issuances,
+                        Name = operation.Contract.Name,
+                        Link = string.IsNullOrEmpty(operation.Contract.Link)
+                            ? null
+                            : new Uri(operation.Contract.Link, UriKind.Absolute)
+                    }
+                })
+                .ToList()
+        };
     }
 }

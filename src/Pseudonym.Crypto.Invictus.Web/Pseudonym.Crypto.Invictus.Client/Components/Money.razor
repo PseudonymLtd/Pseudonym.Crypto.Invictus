@@ -1,16 +1,16 @@
 ﻿@inject IAppState AppState
 
-@if (Value == Decimal.Zero)
+@if (Value == decimal.Zero)
 {
     <span>
-        <LargeNumber Value="@Value" Decimals="@Decimals" FontSize="FontSize" ToolTipFontSize="ToolTipFontSize" />
+        <LargeNumber Value="@Value" Decimals="@Decimals" FontSize="FontSize" ToolTipFontSize="ToolTipFontSize" ShowZeroValue="ShowZeroValue" />
     </span>
 }
 else
 {
     <span>
         @CurrencyCode.GetSymbol()
-        <LargeNumber Value="@Value" Decimals="@Decimals" FontSize="FontSize" ToolTipFontSize="ToolTipFontSize" />
+        <LargeNumber Value="@Value" Decimals="@Decimals" FontSize="FontSize" ToolTipFontSize="ToolTipFontSize" ShowZeroValue="ShowZeroValue" />
     </span>
 }
 
@@ -20,6 +20,9 @@ else
 
     [Parameter]
     public int Decimals { get; set; } = 2;
+
+    [Parameter]
+    public bool ShowZeroValue { get; set; }
 
     [Parameter]
     public int? FontSize { get; set; }

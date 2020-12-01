@@ -2,11 +2,13 @@
 
 @if (Value == decimal.Zero)
 {
-    <div>-</div>
+    <div style="display: inline-block; position: relative;">
+        <span style="@TextStyle">@GetZeroValue()</span>
+    </div>
 }
 else if (GetRoundedNumber().Length < GetFullNumber().Length)
 {
-    <TooltipItem DisplayText="@(GetRoundedNumber() + Suffix)" CaptionText="@(GetFullNumber() +Suffix)" FontSize="FontSize" ToolTipFontSize="ToolTipFontSize" />
+    <TooltipItem DisplayText="@(GetRoundedNumber() + Suffix)" CaptionText="@(GetFullNumber() + Suffix)" FontSize="FontSize" ToolTipFontSize="ToolTipFontSize" />
 }
 else
 {
@@ -24,6 +26,9 @@ else
 
     [Parameter]
     public string Suffix { get; set; }
+
+    [Parameter]
+    public bool ShowZeroValue { get; set; }
 
     [Parameter]
     public int? FontSize { get; set; }
@@ -44,6 +49,20 @@ else
         AppState.Assign(StateHasChanged);
     }
 
+    private string GetZeroValue()
+    {
+        if (ShowZeroValue)
+        {
+            return Decimals > 0
+                ? "0.".PadRight(Decimals + 2, '0')
+                : "0";
+        }
+        else
+        {
+            return "-";
+        }
+    }
+
     private string GetRoundedNumber()
     {
         var number = Value.ToCommaFormat(Decimals);
@@ -55,7 +74,11 @@ else
         }
         else
         {
-            return number;
+            number = Decimals > 0
+                ? number + "."
+                : number;
+
+            return number.PadRight(Decimals + number.Length, '0');
         }
     }
 

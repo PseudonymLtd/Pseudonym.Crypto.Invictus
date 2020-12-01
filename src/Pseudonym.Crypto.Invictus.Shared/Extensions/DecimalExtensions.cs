@@ -18,7 +18,7 @@ namespace System
 
             if (decimalAmount != decimal.Zero)
             {
-                moneyString = $"{moneyString}.{decimalAmount.ToString().Replace("0.", string.Empty)}";
+                moneyString = $"{moneyString}.{decimalAmount.ToString().Replace("0.", string.Empty).Replace("-", string.Empty)}";
             }
 
             return moneyString;

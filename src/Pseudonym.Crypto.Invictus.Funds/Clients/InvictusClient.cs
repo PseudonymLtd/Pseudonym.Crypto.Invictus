@@ -45,9 +45,65 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
             if (fundInfo != null)
             {
-                var response = await GetAsync<ListPerformanceResponse>($"/v2/funds/{fundInfo.FundName}/history?start={from}&end={to}");
+                var response = await GetAsync<ListPerformanceResponse>(
+                    $"/v2/funds/{fundInfo.FundName}/history?start={from:yyyy-MM-dd}&end={to:yyyy-MM-dd}T23:59:00");
 
-                foreach (var itemGroup in response.Performance.GroupBy(x => x.Date.Date))
+                if (response.Performance.Any())
+                {
+                    var start = response.Performance.Min(x => x.Date.Date);
+                    var end = response.Performance.Max(x => x.Date.Date);
+
+                    while (start < end)
+                    {
+                        if (!response.Performance.Any(x => x.Date.Date == start))
+                        {
+                            var previousDate = response.Performance
+                                .Where(x => x.Date.Date < start)
+                                .OrderByDescending(x => x.Date)
+                                .FirstOrDefault();
+
+                            var nextDate = response.Performance
+                                .Where(x => x.Date.Date > start)
+                                .OrderBy(x => x.Date)
+                                .FirstOrDefault();
+
+                            if (previousDate != null && nextDate == null)
+                            {
+                                response.Performance.Add(new InvictusPerformance()
+                                {
+                                    Date = start,
+                                    NetValue = previousDate.NetValue,
+                                    NetAssetValuePerToken = previousDate.NetAssetValuePerToken
+                                });
+                            }
+                            else if (previousDate == null && nextDate != null)
+                            {
+                                response.Performance.Add(new InvictusPerformance()
+                                {
+                                    Date = start,
+                                    NetValue = nextDate.NetValue,
+                                    NetAssetValuePerToken = nextDate.NetAssetValuePerToken
+                                });
+                            }
+                            else if (previousDate != null && nextDate != null)
+                            {
+                                response.Performance.Add(new InvictusPerformance()
+                                {
+                                    Date = start,
+                                    NetValue = ((nextDate.NetValue.FromPythonString() + previousDate.NetValue.FromPythonString()) / 2).ToString(),
+                                    NetAssetValuePerToken = ((nextDate.NetAssetValuePerToken.FromPythonString() + previousDate.NetAssetValuePerToken.FromPythonString()) / 2).ToString()
+                                });
+                            }
+                        }
+
+                        start = start.AddDays(1);
+                    }
+                }
+
+                foreach (var itemGroup in response.Performance
+                    .GroupBy(x => x.Date.Date)
+                    .Where(x => x.Key >= from.Date)
+                    .OrderBy(x => x.Key))
                 {
                     var values = itemGroup.Select(x => new
                     {

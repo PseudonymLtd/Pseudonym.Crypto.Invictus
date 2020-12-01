@@ -40,13 +40,12 @@
 </div>
 
 @code {
+
     [Parameter]
-    public ApiOperation Operation { get; set; }
+    public BusinessOperation Operation { get; set; }
 
     [Parameter]
     public bool Clickable { get; set; }
-
-    //public string FundImageName => $"{Investment.Fund.Token.Symbol}.png";
 
     protected override void OnInitialized()
     {
