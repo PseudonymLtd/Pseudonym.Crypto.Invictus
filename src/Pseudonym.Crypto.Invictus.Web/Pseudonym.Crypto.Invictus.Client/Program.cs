@@ -1,8 +1,10 @@
 using System;
 using System.Globalization;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.Components.WebAssembly.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -47,6 +49,17 @@ namespace Pseudonym.Crypto.Invictus.Web.Client
 
             container.AddSingleton<IUserSettingsHandle, UserSettingsHandle>();
             container.AddSingleton<IEnvironmentNameAccessor, EnvironmentNameAccessor>();
+
+            container.AddScoped(sp => new HttpClient(
+                new DefaultBrowserOptionsMessageHandler()
+                {
+                    DefaultBrowserRequestCache = BrowserRequestCache.NoCache,
+                    DefaultBrowserRequestCredentials = BrowserRequestCredentials.Include,
+                    DefaultBrowserRequestMode = BrowserRequestMode.Cors,
+                })
+            {
+                BaseAddress = new Uri(webAssemblyHostEnvironment.BaseAddress),
+            });
 
             container
                 .AddScoped<IHostClient, HostClient>()
