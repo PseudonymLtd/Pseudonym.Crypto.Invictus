@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.WebUtilities;
 using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Models;
-using Pseudonym.Crypto.Invictus.Shared.Models.Filters;
 using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
@@ -45,11 +44,11 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
             return ListAsync<ApiPerformance>(string.Format(
                     "/api/v1/funds/{0}/performance?{1}={2}&{3}={4}&{5}={6}",
                     symbol,
-                    ApiPerformanceQueryFilter.FromQueryName,
+                    ApiFilterNames.FromQueryName,
                     fromDate.ToString(Format.DateFormat),
-                    ApiPerformanceQueryFilter.ToQueryName,
+                    ApiFilterNames.ToQueryName,
                     toDate.ToString(Format.DateFormat),
-                    ApiPerformanceQueryFilter.ModeQueryName,
+                    ApiFilterNames.ModeQueryName,
                     mode));
         }
 
@@ -85,7 +84,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
         protected override async Task<TResponse> GetAsync<TResponse>(string url)
         {
             return await base.GetAsync<TResponse>(
-                QueryHelpers.AddQueryString(url, ApiCurrencyQueryFilter.CurrencyQueryName, userSettings.CurrencyCode.ToString()));
+                QueryHelpers.AddQueryString(url, ApiFilterNames.CurrencyQueryName, userSettings.CurrencyCode.ToString()));
         }
 
         protected override async Task<HttpClient> CreateClientAsync()

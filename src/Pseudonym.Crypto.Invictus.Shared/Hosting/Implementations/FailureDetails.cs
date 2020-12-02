@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Hosting.Models
@@ -17,7 +16,7 @@ namespace Pseudonym.Crypto.Invictus.Shared.Hosting.Models
             Errors = new Dictionary<string, IReadOnlyList<string>>();
         }
 
-        public FailureDetails(ActionContext context)
+        public FailureDetails(string traceId)
             : this()
         {
             Title = "One or more validation errors occurred.";
@@ -25,7 +24,7 @@ namespace Pseudonym.Crypto.Invictus.Shared.Hosting.Models
             Type = "https://tools.ietf.org/html/rfc7231#section-6.5";
             Status = StatusCodes.Status400BadRequest;
 
-            Extensions.Add("traceId", context.HttpContext.TraceIdentifier);
+            Extensions.Add("traceId", traceId);
         }
 
         [JsonProperty("detail", NullValueHandling = NullValueHandling.Ignore)]

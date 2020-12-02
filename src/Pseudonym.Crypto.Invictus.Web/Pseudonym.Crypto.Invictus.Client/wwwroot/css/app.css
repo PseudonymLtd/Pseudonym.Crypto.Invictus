@@ -103,7 +103,7 @@ app {
 }
 
 .sidebar {
-    background-color: #cf2127
+    background-color: #cf2127;
 }
 
     .sidebar .top-row {
@@ -204,12 +204,12 @@ app {
     z-index: 1000;
 }
 
-#blazor-error-ui .dismiss {
-    cursor: pointer;
-    position: absolute;
-    right: 0.75rem;
-    top: 0.5rem;
-}
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
 
 .tooltip-container {
     position: relative;

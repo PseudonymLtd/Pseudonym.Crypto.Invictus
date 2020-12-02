@@ -1,13 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
+using Pseudonym.Crypto.Invictus.Shared.Models;
 
-namespace Pseudonym.Crypto.Invictus.Shared.Models.Filters
+namespace Pseudonym.Crypto.Invictus.Funds.Controllers.Filters
 {
     public class ApiCurrencyQueryFilter
     {
-        public const string CurrencyQueryName = "currency";
-
-        [FromQuery(Name = CurrencyQueryName)]
+        [FromQuery(Name = ApiFilterNames.CurrencyQueryName)]
         public CurrencyCode CurrencyCode { get; set; } = CurrencyCode.USD;
     }
 }

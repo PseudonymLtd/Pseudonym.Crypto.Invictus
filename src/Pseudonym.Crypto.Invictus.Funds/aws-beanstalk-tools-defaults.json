@@ -2,7 +2,7 @@
 {
     "region" : "eu-west-2",
     "configuration" : "Release",
-    "framework"     : "netcoreapp3.1",
+    "framework"     : "net5.0",
     "self-contained" : true,
     "application"    : "Pseudonym.Crypto.Invictus.Funds",
     "environment"    : "Pseudonym-Crypto-Invictus-Funds",

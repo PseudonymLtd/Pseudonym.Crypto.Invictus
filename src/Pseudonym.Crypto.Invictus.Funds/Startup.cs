@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Text;
 using Amazon;
 using Amazon.DynamoDBv2;
-using Amazon.Extensions.NETCore.Setup;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -69,7 +68,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
                 {
                     options.InvalidModelStateResponseFactory = context =>
                     {
-                        var problems = new FailureDetails(context);
+                        var problems = new FailureDetails(context.HttpContext.TraceIdentifier);
 
                         return new BadRequestObjectResult(problems);
                     };

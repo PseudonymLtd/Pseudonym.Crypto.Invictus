@@ -2,19 +2,17 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
+using Pseudonym.Crypto.Invictus.Shared.Models;
 
-namespace Pseudonym.Crypto.Invictus.Shared.Models.Filters
+namespace Pseudonym.Crypto.Invictus.Funds.Controllers.Filters
 {
     public class ApiTransactionQueryFilter : ApiDateRangeQueryFilter, IValidatableObject
     {
-        public const string OffsetQueryName = "offset";
-        public const string PaginationIdQueryName = "pagination_id";
-
         [TransactionHash]
-        [FromQuery(Name = PaginationIdQueryName)]
+        [FromQuery(Name = ApiFilterNames.PaginationIdQueryName)]
         public string PaginationId { get; set; }
 
-        [FromQuery(Name = OffsetQueryName)]
+        [FromQuery(Name = ApiFilterNames.OffsetQueryName)]
         public DateTime? Offset { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -22,20 +20,20 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models.Filters
             if (string.IsNullOrWhiteSpace(PaginationId) && Offset.HasValue)
             {
                 yield return new ValidationResult(
-                    $"Cannot set field without specifying `{PaginationIdQueryName}`.",
+                    $"Cannot set field without specifying `{ApiFilterNames.PaginationIdQueryName}`.",
                     new List<string>()
                     {
-                        OffsetQueryName
+                        ApiFilterNames.OffsetQueryName
                     });
             }
 
             if (!string.IsNullOrWhiteSpace(PaginationId) && !Offset.HasValue)
             {
                 yield return new ValidationResult(
-                    $"Cannot set field without specifying `{OffsetQueryName}`.",
+                    $"Cannot set field without specifying `{ApiFilterNames.OffsetQueryName}`.",
                     new List<string>()
                     {
-                        PaginationIdQueryName
+                        ApiFilterNames.PaginationIdQueryName
                     });
             }
         }

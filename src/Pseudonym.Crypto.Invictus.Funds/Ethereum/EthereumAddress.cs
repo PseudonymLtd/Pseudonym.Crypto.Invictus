@@ -43,6 +43,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Ethereum
 
         public static explicit operator EthereumAddress(string hex) => new EthereumAddress(hex);
 
+        public static bool operator ==(EthereumAddress left, EthereumAddress right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(EthereumAddress left, EthereumAddress right)
+        {
+            return !(left == right);
+        }
+
         public bool Equals([AllowNull] EthereumAddress other)
         {
             return Hex.Equals(other.Hex, StringComparison.OrdinalIgnoreCase);

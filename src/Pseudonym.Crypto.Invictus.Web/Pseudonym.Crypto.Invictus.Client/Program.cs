@@ -24,7 +24,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.CurrentCulture;
 
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
-            builder.RootComponents.Add<App>("app");
+            builder.RootComponents.Add<App>("#app");
 
             ConfigureServices(builder.Services, builder.Configuration, builder.HostEnvironment);
 

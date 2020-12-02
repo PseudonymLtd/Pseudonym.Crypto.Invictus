@@ -3,46 +3,48 @@
 @inject IOptions<AppSettings> Settings
 @inject IAppState AppState
 
-<div class="sidebar">
-    <NavMenu />
-</div>
-
-<div class="main">
-    <div class="top-row px-4">
-        <a href="about" class="ml-md-auto">About</a>
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
     </div>
 
-    <div class="content px-4" style="position: relative; padding-bottom: 225px;">
-        <div>
-            @if (Environment.IsDevelopment())
-            {
-                <div class="dev-header">
-                    <p>API Url @Settings.Value.ApiUrl</p>
-                    <p>Service Name @Settings.Value.ServiceName</p>
-                    <p>Service Version @Settings.Value.Version</p>
-                </div>
-            }
-            @Body
+    <div class="main">
+        <div class="top-row px-4">
+            <a href="about" class="ml-md-auto">About</a>
         </div>
-        <div>
-            <footer class="page-footer font-small blue pt-4">
-                <hr class="clearfix w-100 d-md-none" />
-                <div class="footer-copyright text-center">
-                    <div>
-                        <a href="https://www.pseudonym.org.uk/">
-                            <img src="images/Logo_Light.png" style="height: 60px;" alt="Pseudonym Ltd">
-                        </a>
+
+        <div class="content px-4" style="position: relative; padding-bottom: 225px;">
+            <div>
+                @if (Environment.IsDevelopment())
+                {
+                    <div class="dev-header">
+                        <p>API Url @Settings.Value.ApiUrl</p>
+                        <p>Service Name @Settings.Value.ServiceName</p>
+                        <p>Service Version @Settings.Value.Version</p>
                     </div>
-                </div>
-            </footer>
+                }
+                @Body
+            </div>
+            <div>
+                <footer class="page-footer font-small blue pt-4">
+                    <hr class="clearfix w-100 d-md-none" />
+                    <div class="footer-copyright text-center">
+                        <div>
+                            <a href="https://www.pseudonym.org.uk/">
+                                <img src="images/Logo_Light.png" style="height: 60px;" alt="Pseudonym Ltd">
+                            </a>
+                        </div>
+                    </div>
+                </footer>
+            </div>
         </div>
     </div>
 </div>
 
 @code
 {
-    protected override void OnInitialized()
-    {
-        AppState.Assign(StateHasChanged);
+        protected override void OnInitialized()
+        {
+            AppState.Assign(StateHasChanged);
+        }
     }
-}

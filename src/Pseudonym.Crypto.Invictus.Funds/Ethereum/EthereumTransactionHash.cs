@@ -43,6 +43,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Ethereum
 
         public static explicit operator EthereumTransactionHash(string hex) => new EthereumTransactionHash(hex);
 
+        public static bool operator ==(EthereumTransactionHash left, EthereumTransactionHash right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(EthereumTransactionHash left, EthereumTransactionHash right)
+        {
+            return !(left == right);
+        }
+
         public bool Equals([AllowNull] EthereumTransactionHash other)
         {
             return Hex.Equals(other.Hex, StringComparison.OrdinalIgnoreCase);

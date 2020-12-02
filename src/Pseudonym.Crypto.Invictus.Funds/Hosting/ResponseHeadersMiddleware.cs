@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
-using Pseudonym.Crypto.Invictus.Shared.Models.Filters;
+using Pseudonym.Crypto.Invictus.Shared.Models;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Hosting
 {
@@ -21,8 +21,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Hosting
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
-            var currencyCode = context.Request.Query.ContainsKey(ApiCurrencyQueryFilter.CurrencyQueryName) &&
-                Enum.TryParse(context.Request.Query[ApiCurrencyQueryFilter.CurrencyQueryName].First(), out CurrencyCode cc)
+            var currencyCode = context.Request.Query.ContainsKey(ApiFilterNames.CurrencyQueryName) &&
+                Enum.TryParse(context.Request.Query[ApiFilterNames.CurrencyQueryName].First(), out CurrencyCode cc)
                 ? cc
                 : CurrencyCode.USD;
 

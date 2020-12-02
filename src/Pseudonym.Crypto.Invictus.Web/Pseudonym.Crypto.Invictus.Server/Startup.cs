@@ -53,7 +53,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Server
                 {
                     options.InvalidModelStateResponseFactory = context =>
                     {
-                        var problems = new FailureDetails(context);
+                        var problems = new FailureDetails(context.HttpContext.TraceIdentifier);
 
                         return new BadRequestObjectResult(problems);
                     };
