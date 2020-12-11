@@ -74,7 +74,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                         Symbol = a.Symbol ?? "-",
                         Value = a.Value,
                         Share = a.Share,
+                        CoinId = a.CoinId,
                         Link = a.Link
+                            ?? new Uri($"https://coinmarketcap.com/currencies/{a.CoinId}", UriKind.Absolute)
                     })
                     .ToList(),
                 Links = new ApiLinks()

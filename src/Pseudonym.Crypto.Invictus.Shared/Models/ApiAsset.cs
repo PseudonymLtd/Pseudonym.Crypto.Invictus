@@ -25,5 +25,8 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [Required]
         [JsonProperty("link")]
         public Uri Link { get; set; }
+
+        [JsonProperty("coin_id")]
+        public string CoinId { get; set; }
     }
 }

@@ -1,0 +1,104 @@
+﻿@inject IAppState AppState
+@inject IUserSettings UserSettings
+@inject HttpClient Client;
+
+<div>
+    @if (Coin != null)
+    {
+        <div style="color:#333; background: #fff; font-family: Helvetica,Arial,sans-serif; min-width:285px;">
+            <div>
+                <div style="float:right; width:67%; border: none; text-align:left; padding:5px 0px; line-height:25px;">
+                    <span style="font-size: 17px; text-decoration: none; color: #333;font-weight: bold">
+                        @Coin.Name
+                        <span style="font-size: 10px;padding-left: 5px">@Coin.Symbol</span>
+                    </span>
+                    <div style="font-size: 16px;color:#333">
+                        @Coin.PriceUSD @UserSettings.CurrencyCode
+                        <ProfitTag Value="decimal.Parse(Coin.PercentChangeHourly)" Decimals="2" Suffix="%" />
+                    </div>
+                    <div style="font-size: 12px; color:#959595">
+                        @Coin.PriceBTC BTC
+                    </div>
+                </div>
+                <div style="text-align:center;padding:5px 0px;width:33%;">
+                    <img src="https://c2.coinlore.com/img/@(CoinId).png" width="64" height="64" style="margin: 0 auto;">
+                </div>
+            </div>
+            <div style="clear:both;">
+                <div style="text-align:center;float:left;width:25%;font-size:12px;padding:12px 0;line-height:1.25em;">
+                    <b>Rank</b>
+                    <br />
+                    <br />
+                    <span style="font-size: 17px;">
+                        @Coin.Rank
+                    </span>
+                </div>
+                <div style="text-align:center; float:left; width:25%; font-size:12px; padding:12px 0 16px 0; line-height:1.25em;">
+                    <b>Market Cap</b>
+                    <br />
+                    <br />
+                    <span style="font-size: 14px;">
+                        @Coin.MarketCap
+                        <span style="font-size:9px">@UserSettings.CurrencyCode</span>
+                    </span>
+                </div>
+                <div style="text-align:center;float:left;width:25%;font-size:12px;padding:12px 0 16px 0;line-height:1.25em;">
+                    <b>Vol (24H)</b>
+                    <br />
+                    <br />
+                    <span style="font-size: 14px;">
+                        @Coin.VolumeUSD
+                        <span style="font-size:9px">@UserSettings.CurrencyCode</span>
+                    </span>
+                </div>
+                <div style="text-align:center; float:left; width:24%; font-size:12px; padding:12px 0 16px 0; line-height:1.25em;">
+                    <b>Daily Change</b>
+                    <br />
+                    <br />
+                    <ProfitTag Value="decimal.Parse(Coin.PercentChangeDaily)" Decimals="2" Suffix="%" />
+                </div>
+                <div style="text-align:center; float:left; width:24%; font-size:12px; padding:12px 0 16px 0; line-height:1.25em;">
+                    <b>Weekly Change</b>
+                    <br />
+                    <br />
+                    <ProfitTag Value="decimal.Parse(Coin.PercentChangeWeekly)" Decimals="2" Suffix="%" />
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <Loading />
+    }
+</div>
+
+@code {
+    private ApiCoin Coin;
+
+    [Parameter]
+    public string CoinId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.Assign(async () => await DrawAsync(false));
+
+        await DrawAsync(true);
+    }
+
+    private async Task DrawAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            Coin = null;
+
+            StateHasChanged();
+        }
+
+        var response = await Client.GetAsync($"https://widget.coinlore.com/widgets/new-single/?id={CoinId}&cur={UserSettings.CurrencyCode}");
+
+        Coin = JsonConvert.DeserializeObject<List<ApiCoin>>(await response.Content.ReadAsStringAsync())
+            .SingleOrDefault();
+
+        StateHasChanged();
+    }
+}

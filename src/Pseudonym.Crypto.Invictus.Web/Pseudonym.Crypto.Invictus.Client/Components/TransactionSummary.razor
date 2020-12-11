@@ -15,8 +15,8 @@
                     {
                         if (Transaction.IsSwap(Fund.Token.Address))
                         {
-                            var outboundSwap = GetSwap(TransferAction.Outbound);
-                            var inboundSwap = GetSwap(TransferAction.Inbound);
+                            var outboundSwap = Transaction.GetSwap(Fund.Token.Address, TransferAction.Outbound);
+                            var inboundSwap = Transaction.GetSwap(Fund.Token.Address, TransferAction.Inbound);
 
                             <span>
                                 Swap
@@ -64,11 +64,11 @@
                         {
                             <span>
                                 @(Transaction.IsInbound(Fund.Token.Address) ? "Buy" : "Sell")
-                                <LargeNumber Value="GetQuantity(Transaction.TransferAction)" Decimals="2" ShowZeroValue="true" />
+                                <LargeNumber Value="Transaction.GetTransferQuantity(Fund.Token.Address, Transaction.TransferAction)" Decimals="2" ShowZeroValue="true" />
                                 @Fund.Token.Symbol
                             </span>
 
-                            var quantity = GetQuantity(Transaction.TransferAction);
+                            var quantity = Transaction.GetTransferQuantity(Fund.Token.Address, Transaction.TransferAction);
                             var netSnapshotPrice = Transaction.Price.NetAssetValuePerToken * quantity;
                             var netPrice = Fund.NetAssetValuePerToken * quantity;
 
@@ -84,7 +84,7 @@
 
                             if (Fund.Market.IsTradeable)
                             {
-                                var marketSnapshotPrice = GetPrice(Transaction.TransferAction);
+                                var marketSnapshotPrice = Transaction.GetTransferPrice(Fund.Token.Address, Transaction.TransferAction);
                                 var marketPrice = Fund.Market.PricePerToken * quantity;
 
                                 var marketDiff = Transaction.IsInbound(Fund.Token.Address)
@@ -165,163 +165,5 @@
     protected override void OnInitialized()
     {
         AppState.Assign(StateHasChanged);
-    }
-
-    protected decimal GetPrice(TransferAction action)
-    {
-        var transfers = Transaction.Operations
-            .Where(o =>
-                o.TransferAction == action &&
-                o.Contract.Address == Fund.Token.Address);
-
-        switch (action)
-        {
-            case TransferAction.Inbound:
-                var inbound = transfers.LastOrDefault();
-                return inbound?.Quantity * inbound?.PricePerToken ?? 0;
-            case TransferAction.Outbound:
-                var outbound = transfers.FirstOrDefault();
-                return outbound?.Quantity * outbound?.PricePerToken ?? 0;
-            default:
-                if (Transaction.Operations.Count == 1 &&
-                    Transaction.Operations.Single().TransferAction != TransferAction.None)
-                {
-                    return Transaction.Operations.Single().Quantity * Transaction.Operations.Single().PricePerToken;
-                }
-                else
-                {
-                    return 0;
-                }
-        }
-    }
-
-    protected decimal GetQuantity(TransferAction action)
-    {
-        var transfers = Transaction.Operations
-            .Where(o =>
-                o.TransferAction == action &&
-                o.Contract.Address == Fund.Token.Address);
-
-        switch (action)
-        {
-            case TransferAction.Inbound:
-                return transfers.LastOrDefault()?.Quantity ?? 0;
-            case TransferAction.Outbound:
-                return transfers.FirstOrDefault()?.Quantity ?? 0;
-            default:
-                if (Transaction.Operations.Count == 1 &&
-                    Transaction.Operations.Single().TransferAction != TransferAction.None)
-                {
-                    return Transaction.Operations.Single().Quantity;
-                }
-                else
-                {
-                    return 0;
-                }
-        }
-    }
-
-    protected BusinessOperation GetSwap(TransferAction action)
-    {
-        if (Transaction.IsOutboundEtherSwap(Fund.Token.Address))
-        {
-            switch (action)
-            {
-                case TransferAction.Inbound:
-                    return Transaction.Operations
-                        .Where(o =>
-                            o.Type == OperationTypes.Transfer &&
-                            o.Contract.Address != Fund.Token.Address &&
-                            o.TransferAction == TransferAction.None)
-                        .LastOrDefault()
-                            ?? throw new PermanentException($"Could not find {action} Ether Swap for {Transaction.Hash}");
-                case TransferAction.Outbound:
-                    return Transaction.Operations
-                        .Where(o =>
-                            o.Type == OperationTypes.Transfer &&
-                            o.Contract.Address == Fund.Token.Address &&
-                            o.TransferAction == TransferAction.Outbound)
-                        .FirstOrDefault()
-                            ?? throw new PermanentException($"Could not find {action} Ether Swap for {Transaction.Hash}");
-                default:
-                    throw new ArgumentException($"Cannot Get Swap for action `{nameof(TransferAction.None)}`", nameof(action));
-            }
-        }
-        else if (Transaction.IsInboundEtherSwap(Fund.Token.Address))
-        {
-            switch (action)
-            {
-                case TransferAction.Inbound:
-                    return Transaction.Operations
-                        .Where(o =>
-                            o.Type == OperationTypes.Transfer &&
-                            o.Contract.Address == Fund.Token.Address &&
-                            o.TransferAction == TransferAction.Inbound)
-                        .LastOrDefault()
-                            ?? throw new PermanentException($"Could not find {action} Ether Swap for {Transaction.Hash}");
-                case TransferAction.Outbound:
-                    return Transaction.Operations
-                        .Where(o =>
-                            o.Type == OperationTypes.Transfer &&
-                            o.Contract.Address != Fund.Token.Address &&
-                            o.TransferAction == TransferAction.None)
-                        .FirstOrDefault()
-                            ?? throw new PermanentException($"Could not find {action} Ether Swap for {Transaction.Hash}");
-                default:
-                    throw new ArgumentException($"Cannot Get Swap for action `{nameof(TransferAction.None)}`", nameof(action));
-            }
-        }
-        else if (Transaction.IsOutboundTokenSwap(Fund.Token.Address))
-        {
-            switch (action)
-            {
-                case TransferAction.Inbound:
-                    return Transaction.Operations
-                        .Where(o =>
-                            o.Type == OperationTypes.Transfer &&
-                            o.Contract.Address != Fund.Token.Address &&
-                            o.TransferAction == TransferAction.Inbound)
-                        .LastOrDefault()
-                            ?? throw new PermanentException($"Could not find {action} Token Swap for {Transaction.Hash}");
-                case TransferAction.Outbound:
-                    return Transaction.Operations
-                        .Where(o =>
-                            o.Type == OperationTypes.Transfer &&
-                            o.Contract.Address == Fund.Token.Address &&
-                            o.TransferAction == TransferAction.Outbound)
-                        .FirstOrDefault()
-                            ?? throw new PermanentException($"Could not find {action} Token Swap for {Transaction.Hash}");
-                default:
-                    throw new ArgumentException($"Cannot Get Swap for action `{nameof(TransferAction.None)}`", nameof(action));
-            }
-        }
-        else if (Transaction.IsInboundTokenSwap(Fund.Token.Address))
-        {
-            switch (action)
-            {
-                case TransferAction.Inbound:
-                    return Transaction.Operations
-                        .Where(o =>
-                            o.Type == OperationTypes.Transfer &&
-                            o.Contract.Address == Fund.Token.Address &&
-                            o.TransferAction == TransferAction.Inbound)
-                        .LastOrDefault()
-                            ?? throw new PermanentException($"Could not find {action} Token Swap for {Transaction.Hash}");
-                case TransferAction.Outbound:
-                    return Transaction.Operations
-                        .Where(o =>
-                            o.Type == OperationTypes.Transfer &&
-                            o.Contract.Address != Fund.Token.Address &&
-                            o.TransferAction == TransferAction.Outbound)
-                        .FirstOrDefault()
-                            ?? throw new PermanentException($"Could not find {action} Token Swap for {Transaction.Hash}");
-                default:
-                    throw new ArgumentException($"Cannot Get Swap for action `{nameof(TransferAction.None)}`", nameof(action));
-            }
-        }
-        else
-        {
-            throw new PermanentException($"{Transaction.Hash} is not a swap.");
-        }
     }
 }

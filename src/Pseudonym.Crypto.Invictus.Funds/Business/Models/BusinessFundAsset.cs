@@ -14,5 +14,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
         public decimal Share { get; set; }
 
         public Uri Link { get; set; }
+
+        public string CoinId { get; set; }
     }
 }

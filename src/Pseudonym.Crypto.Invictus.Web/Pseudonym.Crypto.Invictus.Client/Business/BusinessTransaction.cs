@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
+using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 using Pseudonym.Crypto.Invictus.Shared.Models;
 
 namespace Pseudonym.Crypto.Invictus.Web.Client.Business
@@ -103,5 +105,163 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
             Operations.Any(o =>
                 o.TransferAction == TransferAction.None &&
                 o.Contract.Symbol == "WETH");
+
+        public decimal GetTransferPrice(string contractAddress, TransferAction action)
+        {
+            var transfers = Operations
+                .Where(o =>
+                    o.TransferAction == action &&
+                    o.Contract.Address == contractAddress);
+
+            switch (action)
+            {
+                case TransferAction.Inbound:
+                    var inbound = transfers.LastOrDefault();
+                    return inbound?.Quantity * inbound?.PricePerToken ?? 0;
+                case TransferAction.Outbound:
+                    var outbound = transfers.FirstOrDefault();
+                    return outbound?.Quantity * outbound?.PricePerToken ?? 0;
+                default:
+                    if (Operations.Count == 1 &&
+                        Operations.Single().TransferAction != TransferAction.None)
+                    {
+                        return Operations.Single().Quantity * Operations.Single().PricePerToken;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+            }
+        }
+
+        public decimal GetTransferQuantity(string contractAddress, TransferAction action)
+        {
+            var transfers = Operations
+                .Where(o =>
+                    o.TransferAction == action &&
+                    o.Contract.Address == contractAddress);
+
+            switch (action)
+            {
+                case TransferAction.Inbound:
+                    return transfers.LastOrDefault()?.Quantity ?? 0;
+                case TransferAction.Outbound:
+                    return transfers.FirstOrDefault()?.Quantity ?? 0;
+                default:
+                    if (Operations.Count == 1 &&
+                        Operations.Single().TransferAction != TransferAction.None)
+                    {
+                        return Operations.Single().Quantity;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+            }
+        }
+
+        public BusinessOperation GetSwap(string contractAddress, TransferAction action)
+        {
+            if (IsOutboundEtherSwap(contractAddress))
+            {
+                switch (action)
+                {
+                    case TransferAction.Inbound:
+                        return Operations
+                            .Where(o =>
+                                o.Type == OperationTypes.Transfer &&
+                                o.Contract.Address != contractAddress &&
+                                o.TransferAction == TransferAction.None)
+                            .LastOrDefault()
+                                ?? throw new PermanentException($"Could not find {action} Ether Swap for {Hash}");
+                    case TransferAction.Outbound:
+                        return Operations
+                            .Where(o =>
+                                o.Type == OperationTypes.Transfer &&
+                                o.Contract.Address == contractAddress &&
+                                o.TransferAction == TransferAction.Outbound)
+                            .FirstOrDefault()
+                                ?? throw new PermanentException($"Could not find {action} Ether Swap for {Hash}");
+                    default:
+                        throw new ArgumentException($"Cannot Get Swap for action `{nameof(TransferAction.None)}`", nameof(action));
+                }
+            }
+            else if (IsInboundEtherSwap(contractAddress))
+            {
+                switch (action)
+                {
+                    case TransferAction.Inbound:
+                        return Operations
+                            .Where(o =>
+                                o.Type == OperationTypes.Transfer &&
+                                o.Contract.Address == contractAddress &&
+                                o.TransferAction == TransferAction.Inbound)
+                            .LastOrDefault()
+                                ?? throw new PermanentException($"Could not find {action} Ether Swap for {Hash}");
+                    case TransferAction.Outbound:
+                        return Operations
+                            .Where(o =>
+                                o.Type == OperationTypes.Transfer &&
+                                o.Contract.Address != contractAddress &&
+                                o.TransferAction == TransferAction.None)
+                            .FirstOrDefault()
+                                ?? throw new PermanentException($"Could not find {action} Ether Swap for {Hash}");
+                    default:
+                        throw new ArgumentException($"Cannot Get Swap for action `{nameof(TransferAction.None)}`", nameof(action));
+                }
+            }
+            else if (IsOutboundTokenSwap(contractAddress))
+            {
+                switch (action)
+                {
+                    case TransferAction.Inbound:
+                        return Operations
+                            .Where(o =>
+                                o.Type == OperationTypes.Transfer &&
+                                o.Contract.Address != contractAddress &&
+                                o.TransferAction == TransferAction.Inbound)
+                            .LastOrDefault()
+                                ?? throw new PermanentException($"Could not find {action} Token Swap for {Hash}");
+                    case TransferAction.Outbound:
+                        return Operations
+                            .Where(o =>
+                                o.Type == OperationTypes.Transfer &&
+                                o.Contract.Address == contractAddress &&
+                                o.TransferAction == TransferAction.Outbound)
+                            .FirstOrDefault()
+                                ?? throw new PermanentException($"Could not find {action} Token Swap for {Hash}");
+                    default:
+                        throw new ArgumentException($"Cannot Get Swap for action `{nameof(TransferAction.None)}`", nameof(action));
+                }
+            }
+            else if (IsInboundTokenSwap(contractAddress))
+            {
+                switch (action)
+                {
+                    case TransferAction.Inbound:
+                        return Operations
+                            .Where(o =>
+                                o.Type == OperationTypes.Transfer &&
+                                o.Contract.Address == contractAddress &&
+                                o.TransferAction == TransferAction.Inbound)
+                            .LastOrDefault()
+                                ?? throw new PermanentException($"Could not find {action} Token Swap for {Hash}");
+                    case TransferAction.Outbound:
+                        return Operations
+                            .Where(o =>
+                                o.Type == OperationTypes.Transfer &&
+                                o.Contract.Address != contractAddress &&
+                                o.TransferAction == TransferAction.Outbound)
+                            .FirstOrDefault()
+                                ?? throw new PermanentException($"Could not find {action} Token Swap for {Hash}");
+                    default:
+                        throw new ArgumentException($"Cannot Get Swap for action `{nameof(TransferAction.None)}`", nameof(action));
+                }
+            }
+            else
+            {
+                throw new PermanentException($"{Hash} is not a swap.");
+            }
+        }
     }
 }

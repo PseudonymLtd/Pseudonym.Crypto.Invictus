@@ -31,6 +31,7 @@ else
                     }
                     else
                     {
+                        <img src="https://c2.coinlore.com/img/@(asset.CoinId).png" onerror="this.attributes.getNamedItem('src').value = 'images/default.png'" width="32" height="32" style="margin: 0 auto; padding-right: 3px;" />
                         @asset.Name
                     }
                 </div>
@@ -69,7 +70,28 @@ else
                     }
                     else
                     {
-                        <a href="@asset.Link.OriginalString" target="_blank" class="btn btn-danger btn-sm" role="button">External</a>
+                        <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#@(asset.Symbol)Model">
+                            Performance
+                        </button>
+                        <div class="modal fade modal-xl" id="@(asset.Symbol)Model" tabindex="-1" aria-hidden="true" style="max-width: unset !important;">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Performance Overview</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <CoinWidget CoinId="@asset.CoinId" />
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                        <a href="@asset.Link.OriginalString" target="_blank" class="btn btn-danger" role="button">Explore</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     }
                 </div>
             </div>

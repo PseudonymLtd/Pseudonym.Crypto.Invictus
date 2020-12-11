@@ -1,5 +1,5 @@
 ﻿<small style="font-size: 10px; vertical-align: top; font-weight: bold; @Style">
-    @(Value < 0 ? "-" : "+")<LargeNumber Value="Math.Abs(Value)" Decimals="Decimals" ShowZeroValue="true" />
+    @(Value < 0 ? "-" : "+")<LargeNumber Value="Math.Abs(Value)" Decimals="Decimals" ShowZeroValue="true" />@Suffix
 </small>
 
 @code {
@@ -8,6 +8,9 @@
 
     [Parameter]
     public int Decimals { get; set; } = 2;
+
+    [Parameter]
+    public string Suffix { get; set; }
 
     internal string Style => $"color: {(Value < 0 ? "red" : "green")};";
 }

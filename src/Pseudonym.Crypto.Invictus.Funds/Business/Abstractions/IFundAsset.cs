@@ -13,5 +13,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
         decimal Share { get; }
 
         Uri Link { get; }
+
+        string CoinId { get; }
     }
 }

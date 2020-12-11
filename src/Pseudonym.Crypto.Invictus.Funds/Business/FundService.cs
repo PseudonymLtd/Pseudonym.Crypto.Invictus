@@ -177,7 +177,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                         Share = CurrencyConverter.Convert(a.Value.FromPythonString() / netVal * 100, currencyCode),
                         Link = Enum.TryParse(a.Symbol, out Symbol symbol)
                             ? GetFundInfo(symbol).Links.External
-                            : new Uri($"https://coinmarketcap.com/currencies/{a.Name.Replace(" ", "-").ToLower().Trim()}", UriKind.Absolute)
+                            : null,
+                        CoinId = a.Name.Replace(" ", "-").Replace(".", "-").ToLower().Trim(),
                     })
                     .Where(x => x.Value > 0)
                     .Union(fundInfo.Assets
