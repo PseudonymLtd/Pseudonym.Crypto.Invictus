@@ -19,7 +19,7 @@
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "",
-      "workingDirectory": "bin\\Debug\\netcoreapp3.1",
+      "workingDirectory": "bin\\Debug\\net5.0",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

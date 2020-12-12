@@ -74,17 +74,20 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                         Symbol = a.Symbol ?? "-",
                         Value = a.Value,
                         Share = a.Share,
-                        CoinId = a.CoinId,
-                        Link = a.Link
-                            ?? new Uri($"https://coinmarketcap.com/currencies/{a.CoinId}", UriKind.Absolute)
+                        Links = new ApiAssetLinks()
+                        {
+                            [nameof(ApiAssetLinks.Link)] = a.Link,
+                            [nameof(ApiAssetLinks.ImageLink)] = a.ImageLink,
+                            [nameof(ApiAssetLinks.MarketLink)] = a.MarketLink,
+                        }
                     })
                     .ToList(),
-                Links = new ApiLinks()
+                Links = new ApiFundLinks()
                 {
-                    [nameof(ApiLinks.Self)] = new Uri(AppSettings.HostUrl.OriginalString.TrimEnd('/') + $"/api/v1/funds/{fund.Token.Symbol}", UriKind.Absolute),
-                    [nameof(ApiLinks.Lite)] = fund.LitepaperUri,
-                    [nameof(ApiLinks.Fact)] = fund.FactSheetUri,
-                    [nameof(ApiLinks.External)] = fund.InvictusUri
+                    [nameof(ApiFundLinks.Self)] = new Uri(AppSettings.HostUrl.OriginalString.TrimEnd('/') + $"/api/v1/funds/{fund.Token.Symbol}", UriKind.Absolute),
+                    [nameof(ApiFundLinks.Lite)] = fund.LitepaperUri,
+                    [nameof(ApiFundLinks.Fact)] = fund.FactSheetUri,
+                    [nameof(ApiFundLinks.External)] = fund.InvictusUri
                 }
             };
         }

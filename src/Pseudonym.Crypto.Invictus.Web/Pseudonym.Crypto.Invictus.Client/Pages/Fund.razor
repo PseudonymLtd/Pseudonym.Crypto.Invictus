@@ -25,13 +25,13 @@ else
             <div class="col py-1">
                 <small style="font-weight: bold;">Asset Name</small>
                 <div>
+                    <img src="@asset.Links.ImageLink.OriginalString" onerror="this.attributes.getNamedItem('src').value = 'images/default.png'" width="32" height="32" style="margin: 0 auto; padding-right: 3px;" />
                     @if (symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value))
                     {
                         <FundLink DisplayName="@UserSettings.Funds[symbol.Value].DisplayName" Name="@UserSettings.Funds[symbol.Value].Name" />
                     }
                     else
                     {
-                        <img src="https://c2.coinlore.com/img/@(asset.CoinId).png" onerror="this.attributes.getNamedItem('src').value = 'images/default.png'" width="32" height="32" style="margin: 0 auto; padding-right: 3px;" />
                         @asset.Name
                     }
                 </div>
@@ -68,9 +68,9 @@ else
                     {
                         <a @onclick="async (e) => { Symbol = asset.Symbol; await DrawAsync(false); }" href="funds/@symbol.Value" class="btn btn-primary btn-sm @symbol.Value.ToString().ToLower()" role="button">View Details</a>
                     }
-                    else
+                    else if (asset.Links.MarketLink != null)
                     {
-                        <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#@(asset.Symbol)Model">
+                        <button type="button" class="btn btn-danger btn-sm" style="min-width: 100px;" data-toggle="modal" data-target="#@(asset.Symbol)Model">
                             Performance
                         </button>
                         <div class="modal fade modal-xl" id="@(asset.Symbol)Model" tabindex="-1" aria-hidden="true" style="max-width: unset !important;">
@@ -83,15 +83,19 @@ else
                                         </button>
                                     </div>
                                     <div class="modal-body">
-                                        <CoinWidget CoinId="@asset.CoinId" />
+                                        <CoinWidget CoinLink="@asset.Links.MarketLink" ImageLink="asset.Links.ImageLink" />
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        <a href="@asset.Link.OriginalString" target="_blank" class="btn btn-danger" role="button">Explore</a>
+                                        <a href="@asset.Links.Link.OriginalString" target="_blank" class="btn btn-danger" role="button">Explore</a>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    }
+                    else
+                    {
+                        <a href="@asset.Links.Link.OriginalString" target="_blank" class="btn btn-danger btn-sm" style="min-width: 100px;" role="button">Explore</a>
                     }
                 </div>
             </div>

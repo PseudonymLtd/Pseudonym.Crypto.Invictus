@@ -36,9 +36,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 
             public decimal Value { get; set; }
 
-            public decimal Share { get; set; }
+            public bool Tradable { get; set; }
 
             public Uri Link { get; set; }
+
+            public Uri ImageLink { get; set; }
         }
 
         public sealed class FundLinks

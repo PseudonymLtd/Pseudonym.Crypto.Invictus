@@ -42,6 +42,6 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
 
         [Required]
         [JsonProperty("links")]
-        public ApiLinks Links { get; set; }
+        public ApiFundLinks Links { get; set; }
     }
 }

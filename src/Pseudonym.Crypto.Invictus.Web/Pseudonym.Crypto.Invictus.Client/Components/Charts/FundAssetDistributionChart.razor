@@ -64,7 +64,7 @@ else
             var asset = Fund.Assets.SingleOrDefault(a => a.Name.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
             if (asset != null)
             {
-                Runtime.InvokeAsync<object>("open", asset.Link.OriginalString, "_blank")
+                Runtime.InvokeAsync<object>("open", asset.Links.Link.OriginalString, "_blank")
                     .GetAwaiter()
                     .GetResult();
             }

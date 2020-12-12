@@ -23,10 +23,7 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         public decimal Share { get; set; }
 
         [Required]
-        [JsonProperty("link")]
-        public Uri Link { get; set; }
-
-        [JsonProperty("coin_id")]
-        public string CoinId { get; set; }
+        [JsonProperty("links")]
+        public ApiAssetLinks Links { get; set; }
     }
 }

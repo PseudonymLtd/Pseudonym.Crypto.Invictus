@@ -13,15 +13,15 @@
                         <span style="font-size: 10px;padding-left: 5px">@Coin.Symbol</span>
                     </span>
                     <div style="font-size: 16px;color:#333">
-                        @Coin.PriceUSD @UserSettings.CurrencyCode
-                        <ProfitTag Value="decimal.Parse(Coin.PercentChangeHourly)" Decimals="2" Suffix="%" />
+                        <Money Value="@(decimal.TryParse(Coin.PriceUSD, out decimal price) ? price : decimal.Zero)" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
+                        <ProfitTag Value="@(decimal.TryParse(Coin.PercentChangeHourly, out decimal hourlyVal) ? hourlyVal : decimal.Zero)" Decimals="2" Suffix="%" />
                     </div>
                     <div style="font-size: 12px; color:#959595">
                         @Coin.PriceBTC BTC
                     </div>
                 </div>
                 <div style="text-align:center;padding:5px 0px;width:33%;">
-                    <img src="https://c2.coinlore.com/img/@(CoinId).png" width="64" height="64" style="margin: 0 auto;">
+                    <img src="@ImageLink.OriginalString" onerror="this.attributes.getNamedItem('src').value = 'images/default.png'"  width="64" height="64" style="margin: 0 auto;">
                 </div>
             </div>
             <div style="clear:both;">
@@ -52,16 +52,13 @@
                     </span>
                 </div>
                 <div style="text-align:center; float:left; width:24%; font-size:12px; padding:12px 0 16px 0; line-height:1.25em;">
-                    <b>Daily Change</b>
+                    <b>Price Movement</b>
                     <br />
+                    <small style="padding-right: 2px;">1D</small>
+                    <ProfitTag Value="@(decimal.TryParse(Coin.PercentChangeDaily, out decimal dailyVal) ? dailyVal : decimal.Zero)" Decimals="2" Suffix="%" />
                     <br />
-                    <ProfitTag Value="decimal.Parse(Coin.PercentChangeDaily)" Decimals="2" Suffix="%" />
-                </div>
-                <div style="text-align:center; float:left; width:24%; font-size:12px; padding:12px 0 16px 0; line-height:1.25em;">
-                    <b>Weekly Change</b>
-                    <br />
-                    <br />
-                    <ProfitTag Value="decimal.Parse(Coin.PercentChangeWeekly)" Decimals="2" Suffix="%" />
+                    <small style="padding-right: 2px;">1W</small>
+                    <ProfitTag Value="@(decimal.TryParse(Coin.PercentChangeWeekly, out decimal weeklyVal) ? weeklyVal : decimal.Zero)" Decimals="2" Suffix="%" />
                 </div>
             </div>
         </div>
@@ -76,7 +73,10 @@
     private ApiCoin Coin;
 
     [Parameter]
-    public string CoinId { get; set; }
+    public Uri CoinLink { get; set; }
+
+    [Parameter]
+    public Uri ImageLink { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -94,10 +94,12 @@
             StateHasChanged();
         }
 
-        var response = await Client.GetAsync($"https://widget.coinlore.com/widgets/new-single/?id={CoinId}&cur={UserSettings.CurrencyCode}");
+        var response = await Client.GetAsync(CoinLink);
 
         Coin = JsonConvert.DeserializeObject<List<ApiCoin>>(await response.Content.ReadAsStringAsync())
             .SingleOrDefault();
+
+        Console.WriteLine(JsonConvert.SerializeObject(Coin));
 
         StateHasChanged();
     }

@@ -24,5 +24,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
         public TimeSpan JwtTimeout { get; set; }
 
         public List<FundSettings> Funds { get; set; } = new List<FundSettings>();
+
+        public List<AssetSettings> Assets { get; set; } = new List<AssetSettings>();
     }
 }

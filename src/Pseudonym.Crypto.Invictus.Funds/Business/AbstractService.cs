@@ -48,6 +48,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
         protected CancellationToken CancellationToken => scopedCancellationToken.Token;
 
+        protected Uri HostUrl => appSettings.HostUrl;
+
         protected FundSettings GetFundInfo(Symbol symbol)
         {
             var fundSettings = appSettings.Funds.Single(x => x.Symbol == symbol);
@@ -62,6 +64,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             }
 
             return fundSettings;
+        }
+
+        protected AssetSettings GetAssetInfo(string symbol)
+        {
+            return appSettings.Assets.SingleOrDefault(a =>
+                a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
         }
 
         protected TBusinessTransaction MapTransaction<TBusinessTransaction>(DataTransaction transaction)

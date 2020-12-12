@@ -14,6 +14,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         Uri Link { get; }
 
-        string CoinId { get; }
+        Uri ImageLink { get; }
+
+        Uri MarketLink { get; }
     }
 }

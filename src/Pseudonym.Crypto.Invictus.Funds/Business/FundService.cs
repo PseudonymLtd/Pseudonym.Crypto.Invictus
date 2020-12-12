@@ -169,29 +169,63 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     VolumeDiffMonthly = priceData?.VolumeDiffMonthly ?? 0
                 },
                 Assets = fund.Assets
-                    .Select(a => new BusinessFundAsset()
-                    {
-                        Symbol = a.Symbol,
-                        Name = a.Name,
-                        Value = CurrencyConverter.Convert(a.Value.FromPythonString(), currencyCode),
-                        Share = CurrencyConverter.Convert(a.Value.FromPythonString() / netVal * 100, currencyCode),
-                        Link = Enum.TryParse(a.Symbol, out Symbol symbol)
-                            ? GetFundInfo(symbol).Links.External
-                            : null,
-                        CoinId = a.Name.Replace(" ", "-").Replace(".", "-").ToLower().Trim(),
-                    })
+                    .Select(FromInvictusAsset)
                     .Where(x => x.Value > 0)
-                    .Union(fundInfo.Assets
-                        .Select(a => new BusinessFundAsset()
-                        {
-                            Symbol = a.Symbol,
-                            Name = a.Name,
-                            Value = CurrencyConverter.Convert(a.Value, currencyCode),
-                            Share = a.Share,
-                            Link = a.Link
-                        }))
+                    .Union(fundInfo.Assets.Select(FromFundAsset))
                     .ToList()
             };
+
+            BusinessFundAsset FromInvictusAsset(InvictusAsset asset)
+            {
+                var value = asset.Value.FromPythonString();
+                var isFiat = Enum.IsDefined(typeof(CurrencyCode), asset.Symbol);
+                var sanitisedId = asset.Name.Replace(" ", "-").Replace(".", "-").ToLower().Trim();
+                var coinloreId = GetAssetInfo(asset.Symbol)?.CoinLore ?? sanitisedId;
+                var coinMarketCapId = GetAssetInfo(asset.Symbol)?.CoinMarketCap ?? sanitisedId;
+                var fund = Enum.TryParse(asset.Symbol, out Symbol symbol)
+                    ? GetFundInfo(symbol)
+                    : null;
+
+                return new BusinessFundAsset()
+                {
+                    Symbol = asset.Symbol,
+                    Name = asset.Name,
+                    Value = CurrencyConverter.Convert(value, currencyCode),
+                    Share = value / netVal * 100,
+                    Link = fund?.Links?.External
+                        ?? (isFiat
+                            ? new Uri($"https://www.tradingview.com/symbols/ETH{asset.Symbol.ToUpper()}", UriKind.Absolute)
+                            : new Uri($"https://coinmarketcap.com/currencies/{coinMarketCapId}", UriKind.Absolute)),
+                    ImageLink = fund != null
+                        ? new Uri($"https://{HostUrl.Host}/resources/{symbol}.png", UriKind.Absolute)
+                        : new Uri($"https://c2.coinlore.com/img/{coinloreId}.png", UriKind.Absolute),
+                    MarketLink = (fund == null || fund.Tradable) && !isFiat
+                        ? new Uri($"https://widget.coinlore.com/widgets/new-single/?id={coinloreId}&cur={currencyCode}", UriKind.Absolute)
+                        : null
+                };
+            }
+
+            BusinessFundAsset FromFundAsset(FundSettings.FundAsset asset)
+            {
+                var sanitisedId = asset.Name.Replace(" ", "-").Replace(".", "-").ToLower().Trim();
+                var coinloreId = GetAssetInfo(asset.Symbol)?.CoinLore ?? sanitisedId;
+                var coinMarketCapId = GetAssetInfo(asset.Symbol)?.CoinMarketCap ?? sanitisedId;
+
+                return new BusinessFundAsset()
+                {
+                    Symbol = asset.Symbol,
+                    Name = asset.Name,
+                    Value = CurrencyConverter.Convert(asset.Value, currencyCode),
+                    Share = asset.Value / netVal * 100,
+                    Link = asset.Link
+                        ?? new Uri($"https://coinmarketcap.com/currencies/{coinMarketCapId}", UriKind.Absolute),
+                    ImageLink = asset.ImageLink
+                        ?? new Uri($"https://c2.coinlore.com/img/{coinloreId}.png", UriKind.Absolute),
+                    MarketLink = asset.Tradable
+                        ? new Uri($"https://widget.coinlore.com/widgets/new-single/?id={coinloreId}&cur={currencyCode}", UriKind.Absolute)
+                        : null
+                };
+            }
         }
     }
 }

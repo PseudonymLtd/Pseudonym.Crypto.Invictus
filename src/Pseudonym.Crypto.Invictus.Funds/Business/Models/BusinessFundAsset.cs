@@ -15,6 +15,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 
         public Uri Link { get; set; }
 
-        public string CoinId { get; set; }
+        public Uri ImageLink { get; set; }
+
+        public Uri MarketLink { get; set; }
     }
 }
