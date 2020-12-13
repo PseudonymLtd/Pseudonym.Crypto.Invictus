@@ -8,13 +8,16 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Services
     internal sealed class UserSettingsHandle : IUserSettingsHandle
     {
         private readonly UserSettings userSettings;
+        private readonly ICookieManager cookieManager;
         private readonly ISessionStore sessionStore;
 
         public UserSettingsHandle(
+            ICookieManager cookieManager,
             ISessionStore sessionStore,
             UserSettings userSettings)
         {
             this.userSettings = userSettings;
+            this.cookieManager = cookieManager;
             this.sessionStore = sessionStore;
         }
 
@@ -24,7 +27,9 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Services
         {
             updateFunc(userSettings);
 
-            await sessionStore.SetAsync(StoreKeys.UserSettings, userSettings);
+            await cookieManager.SetAsync(CookieKeys.WalletAddresses, userSettings.WalletAddress, 90);
+            await cookieManager.SetAsync(CookieKeys.CurrencyCode, userSettings.CurrencyCode, 90);
+            await sessionStore.SetAsync(StoreKeys.Funds, userSettings.Funds);
         }
     }
 }

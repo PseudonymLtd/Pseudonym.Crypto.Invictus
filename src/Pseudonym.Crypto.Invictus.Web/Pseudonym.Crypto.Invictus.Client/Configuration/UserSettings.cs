@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
 
@@ -15,18 +14,15 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Configuration
 
         private readonly Dictionary<Symbol, FundInfo> funds;
 
-        public UserSettings()
+        public UserSettings(Dictionary<Symbol, FundInfo> funds)
         {
-            funds = new Dictionary<Symbol, FundInfo>();
+            this.funds = funds;
         }
 
-        [JsonProperty("currency_code")]
         public CurrencyCode CurrencyCode { get; set; } = CurrencyCode.USD;
 
-        [JsonProperty("wallet_address")]
         public string WalletAddress { get; set; }
 
-        [JsonProperty("funds")]
         public IReadOnlyDictionary<Symbol, FundInfo> Funds => funds;
 
         public bool HasValidAddress()

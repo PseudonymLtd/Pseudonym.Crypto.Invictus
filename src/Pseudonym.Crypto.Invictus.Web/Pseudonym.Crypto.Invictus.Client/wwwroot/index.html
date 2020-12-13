@@ -1,45 +1,43 @@
 ﻿<!DOCTYPE html>
 <html>
-
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Invictus Fund Tracker</title>
-    <base href="/" />
-    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="Pseudonym.Crypto.Invictus.Web.Client.styles.css" rel="stylesheet" />
-    <link href="css/app.css" rel="stylesheet" />
-    <link href="css/funds.css" rel="stylesheet" />
-    <link href="manifest.json" rel="manifest" />
-    <link rel="apple-touch-icon" sizes="230x230" href="Logo_Small_Light.png" />
-    <link rel="icon" type="image/png" href="images/Logo_Small_Light.png" sizes="16x16">
-    <link rel="icon" type="image/png" href="images/Logo_Small_Light.png" sizes="32x32">
-    <script src="js/jquery-3.5.1.slim.min.js" type="text/javascript"></script>
-    <script src="js/bootstrap.bundle.min.js" type="text/javascript"></script>
-</head>
-
-<body>
-    <div id="app">
-        <div class="text-center">
-            <div class="spinner-border text-danger" role="status">
-                <span class="sr-only">Loading...</span>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <title>Invictus Fund Tracker</title>
+        <base href="/" />
+        <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
+        <link href="Pseudonym.Crypto.Invictus.Web.Client.styles.css" rel="stylesheet" />
+        <link href="css/app.css" rel="stylesheet" />
+        <link href="css/funds.css" rel="stylesheet" />
+        <link href="manifest.json" rel="manifest" />
+        <link rel="apple-touch-icon" sizes="230x230" href="Logo_Small_Light.png" />
+        <link rel="icon" type="image/png" href="images/Logo_Small_Light.png" sizes="16x16">
+        <link rel="icon" type="image/png" href="images/Logo_Small_Light.png" sizes="32x32">
+        <script src="js/jquery-3.5.1.slim.min.js" type="text/javascript" language="javascript"></script>
+        <script src="js/bootstrap.bundle.min.js" type="text/javascript" language="javascript"></script>
+        <script src="js/functions.js" type="text/javascript" language="javascript"></script>
+    </head>
+    <body>
+        <div id="app">
+            <div class="text-center">
+                <div class="spinner-border text-danger" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
-    </div>
-    <script src="_framework/blazor.webassembly.js"></script>
-    <script src="_content/ChartJs.Blazor/moment-with-locales.min.js" type="text/javascript" language="javascript"></script>
-    <script src="_content/ChartJs.Blazor/Chart.min.js" type="text/javascript" language="javascript"></script>
-    <script src="_content/ChartJs.Blazor/ChartJsBlazorInterop.js" type="text/javascript" language="javascript"></script>
-    <script src="_content/BlazorDateRangePicker/clickAndPositionHandler.js"></script>
-    <link href="_content/ChartJs.Blazor/ChartJSBlazor.css" rel="stylesheet" />
-    <link href="_content/BlazorDateRangePicker/daterangepicker.min.css" rel="stylesheet"/>
-    <script>navigator.serviceWorker.register('service-worker.js');</script>
-</body>
-
+        <div id="blazor-error-ui">
+            An unhandled error has occurred.
+            <a href="" class="reload">Reload</a>
+            <a class="dismiss">🗙</a>
+        </div>
+        <script src="_framework/blazor.webassembly.js"></script>
+        <script src="_content/ChartJs.Blazor/moment-with-locales.min.js" type="text/javascript" language="javascript"></script>
+        <script src="_content/ChartJs.Blazor/Chart.min.js" type="text/javascript" language="javascript"></script>
+        <script src="_content/ChartJs.Blazor/ChartJsBlazorInterop.js" type="text/javascript" language="javascript"></script>
+        <script src="_content/BlazorDateRangePicker/clickAndPositionHandler.js" type="text/javascript" language="javascript"></script>
+        <link href="_content/ChartJs.Blazor/ChartJSBlazor.css" rel="stylesheet" />
+        <link href="_content/BlazorDateRangePicker/daterangepicker.min.css" rel="stylesheet"/>
+        <script>navigator.serviceWorker.register('service-worker.js');</script>
+    </body>
 </html>

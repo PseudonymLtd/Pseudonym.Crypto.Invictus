@@ -99,8 +99,6 @@
         Coin = JsonConvert.DeserializeObject<List<ApiCoin>>(await response.Content.ReadAsStringAsync())
             .SingleOrDefault();
 
-        Console.WriteLine(JsonConvert.SerializeObject(Coin));
-
         StateHasChanged();
     }
 }

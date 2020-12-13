@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
 using Pseudonym.Crypto.Invictus.Web.Client.Clients;
 using Pseudonym.Crypto.Invictus.Web.Client.Configuration;
@@ -40,12 +42,26 @@ namespace Pseudonym.Crypto.Invictus.Web.Client
             container.Configure<AppSettings>(configuration.GetSection(nameof(AppSettings)));
 
             container.AddSingleton<IAppState, AppState>();
+            container.AddSingleton<ICookieManager, CookieManager>();
             container.AddSingleton<ISessionStore, SessionStore>();
-            container.AddSingleton(sp => sp
-                    .GetRequiredService<ISessionStore>()
-                    .Get<UserSettings>(StoreKeys.UserSettings)
-                        ?? new UserSettings())
-                .AddSingleton<IUserSettings>(sp => sp.GetRequiredService<UserSettings>());
+            container.AddSingleton(sp =>
+            {
+                var sessionStore = sp.GetRequiredService<ISessionStore>();
+                var cookieManager = sp.GetRequiredService<ICookieManager>();
+
+                var funds = sessionStore.Get<Dictionary<Symbol, FundInfo>>(StoreKeys.Funds)
+                    ?? new Dictionary<Symbol, FundInfo>();
+
+                var addr = cookieManager.Get<string>(CookieKeys.WalletAddresses);
+                var currencyCode = cookieManager.Get<CurrencyCode>(CookieKeys.CurrencyCode);
+
+                return new UserSettings(funds)
+                {
+                    WalletAddress = addr,
+                    CurrencyCode = currencyCode
+                };
+            });
+            container.AddSingleton<IUserSettings>(sp => sp.GetRequiredService<UserSettings>());
 
             container.AddSingleton<IUserSettingsHandle, UserSettingsHandle>();
             container.AddSingleton<IEnvironmentNameAccessor, EnvironmentNameAccessor>();
