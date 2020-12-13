@@ -1,0 +1,30 @@
+﻿@inject IAppState AppState
+@inject IUserSettings UserSettings
+
+<div class="container-fluid" style="max-width: none">
+    <div class="row">
+        <div class="col py-1">
+            <img src="images/funds/@FundImageName" class="mr-3" width="32" height="32" alt="@Investment.Fund.Token.Symbol">
+            <LargeNumber Value="Investment.Held" Decimals="2" />
+        </div>
+        <div class="col py-1">
+            <Money Value="Investment.RealValue" CurrencyCode="UserSettings.CurrencyCode" />
+            @if (Investment.Fund.Market.IsTradeable)
+            {
+                <span> / </span><Money Value="Investment.MarketValue ?? 0" CurrencyCode="UserSettings.CurrencyCode" />
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public ApiInvestment Investment { get; set; }
+
+    protected string FundImageName => $"{Investment.Fund.Token.Symbol}.png";
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+    }
+}

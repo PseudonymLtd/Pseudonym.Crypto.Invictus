@@ -6,28 +6,30 @@
 @inject NavigationManager NavigationManager
 
 <div>
-    <DateRangePicker MinDate="DateTimeOffset.UtcNow.AddYears(-1)"
-                     MaxDate="DateTimeOffset.UtcNow"
-                     StartDate="StartDate"
-                     EndDate="EndDate"
-                     Culture="CultureInfo.CurrentUICulture"
-                     ApplyButtonClasses="@Fund.Token.Symbol.ToString().ToLower()"
-                     OnRangeSelect="OnRangeSelectAsync"
-                     class="form-control form-control-sm date-picker" />
-    <ul class="pagination pagination-sm price-mode">
-        @foreach (PriceMode val in Enum.GetValues(typeof(PriceMode)))
-        {
-            <li class="page-item @(Mode == val ? "active" : string.Empty)" style="cursor: pointer">
-                <span class="page-link @($"{Fund.Token.Symbol.ToString().ToLower()}{(Mode == val ? string.Empty : "-text")}")" @onclick="async (e) => await OnClickAsync(val)">
-                    @val.ToString()
-                    <span class="sr-only">(@val.ToString())</span>
-                </span>
-            </li>
-        }
-    </ul>
-</div>
-<div style="max-width: 100%; max-height: @($"{Height}px"); margin-bottom: 40px;">
-    <ChartJsLineChart Config="config" Width="Width" Height="Height" @ref="chart" />
+    <div>
+        <DateRangePicker MinDate="DateTimeOffset.UtcNow.AddYears(-1)"
+                         MaxDate="DateTimeOffset.UtcNow"
+                         StartDate="StartDate"
+                         EndDate="EndDate"
+                         Culture="CultureInfo.CurrentUICulture"
+                         ApplyButtonClasses="@Fund.Token.Symbol.ToString().ToLower()"
+                         OnRangeSelect="OnRangeSelectAsync"
+                         class="form-control form-control-sm date-picker" />
+        <ul class="pagination pagination-sm price-mode" style="margin-right: -10px;">
+            @foreach (PriceMode val in Enum.GetValues(typeof(PriceMode)))
+            {
+                <li class="page-item @(Mode == val ? "active" : string.Empty)" style="cursor: pointer">
+                    <span class="page-link @($"{Fund.Token.Symbol.ToString().ToLower()}{(Mode == val ? string.Empty : "-text")}")" @onclick="async (e) => await OnClickAsync(val)">
+                        @val.ToString()
+                        <span class="sr-only">(@val.ToString())</span>
+                    </span>
+                </li>
+            }
+        </ul>
+    </div>
+    <div style="max-width: 100%; max-height: @($"{Height}px"); margin-bottom: 40px;">
+        <ChartJsLineChart Config="config" Width="Width" Height="Height" @ref="chart" />
+    </div>
 </div>
 
 @code {

@@ -19,35 +19,13 @@ else if (!investments.Any())
 }
 else
 {
-    <div style="text-align: center;">
-        <EthAddress Address="@UserSettings.WalletAddress" HighlightOwnership="false" FontSize="28" />
-    </div>
-    <div class="container-fluid" style="max-width: none;">
-        <div class="row justify-content-center">
-            <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                <small style="font-weight: bold;">Total Net Value (@UserSettings.CurrencyCode.GetSymbol())</small>
-                <div>
-                    <Money Value="TotalAssetValue" Decimals="2" CurrencyCode="UserSettings.CurrencyCode" />
-                </div>
-            </div>
-            <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                <small style="font-weight: bold;">Total Market Value (@UserSettings.CurrencyCode.GetSymbol())</small>
-                <div>
-                    <Money Value="TotalMarketValue" Decimals="2" CurrencyCode="UserSettings.CurrencyCode" />
-                </div>
-            </div>
-        </div>
-    </div>
-    <h2 class="display-4" style="text-align: center;">Portfolio Distribution</h2>
-
-    <PortfolioDistributionChart Investments="investments" IsHollow="false" />
-
+    <PortfolioSummary Investments="investments" />
     <div class="container" style="display: contents;">
         @foreach (var investment in investments.OrderBy(x => x.RealValue))
         {
             <div class="row">
                 <div class="col">
-                    <InvestmentSummary Investment="investment" CurrencyCode="UserSettings.CurrencyCode" Clickable="true" />
+                    <InvestmentSummary Investment="investment" Clickable="true" />
                 </div>
             </div>
         }
@@ -62,10 +40,6 @@ else
     {
         investments = new List<ApiInvestment>();
     }
-
-    protected decimal TotalAssetValue => investments.Sum(x => x.RealValue);
-
-    protected decimal TotalMarketValue => investments.Sum(x => x.MarketValue ?? 0);
 
     protected override async Task OnInitializedAsync()
     {

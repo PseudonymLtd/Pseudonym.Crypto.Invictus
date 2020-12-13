@@ -56,11 +56,15 @@
                 </div>
             </div>
         </div>
+        @if (ShowGraph)
+        {
+            <FundPerformanceChart Fund="Fund" />
+        }
         @if (Clickable)
         {
-            <a href="funds/@Fund.Token.Symbol" 
-               class="btn btn-primary btn-lg @Fund.Token.Symbol.ToString().ToLower()" 
-               role="button" 
+            <a href="funds/@Fund.Token.Symbol"
+               class="btn btn-primary btn-lg @Fund.Token.Symbol.ToString().ToLower()"
+               role="button"
                style="margin-left: auto; margin-right: 0; display: block; max-width: 150px;">Explore</a>
         }
     </div>
@@ -72,6 +76,9 @@
 
     [Parameter]
     public bool Clickable { get; set; }
+
+    [Parameter]
+    public bool ShowGraph { get; set; }
 
     public string FundImageName => $"{Fund.Token.Symbol}.png";
 

@@ -1,4 +1,5 @@
 ﻿@inject IAppState AppState
+@inject IUserSettings UserSettings
 @inject NavigationManager NavigationManager
 
 <div class="jumbotron jumbotron-fluid">
@@ -26,9 +27,9 @@
                         </div>
                     </div>
                     <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                        <small style="font-weight: bold;">Net Value (@CurrencyCode.GetSymbol())</small>
+                        <small style="font-weight: bold;">Net Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                         <div>
-                            <Money Value="Investment.RealValue" CurrencyCode="CurrencyCode" />
+                            <Money Value="Investment.RealValue" CurrencyCode="UserSettings.CurrencyCode" />
                         </div>
                     </div>
                     <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
@@ -40,9 +41,9 @@
                     @if (Investment.Fund.Market.IsTradeable)
                     {
                         <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                            <small style="font-weight: bold;">Market Value (@CurrencyCode.GetSymbol())</small>
+                            <small style="font-weight: bold;">Market Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                             <div>
-                                <Money Value="Investment.MarketValue ?? 0" CurrencyCode="CurrencyCode" />
+                                <Money Value="Investment.MarketValue ?? 0" CurrencyCode="UserSettings.CurrencyCode" />
                             </div>
                         </div>
                     }
@@ -63,9 +64,6 @@
 
     [Parameter]
     public ApiInvestment Investment { get; set; }
-
-    [Parameter]
-    public CurrencyCode CurrencyCode { get; set; }
 
     [Parameter]
     public bool Clickable { get; set; }
