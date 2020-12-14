@@ -93,13 +93,13 @@ else
                 var max = now.AddDays(-1);
 
                 await foreach (var perf in Client
-                .ListFundPerformanceAsync(
-                    symbol,
-                    PriceMode.Avg,
-                    transactions.Min(x => x.ConfirmedAt).AddDays(-1),
-                    maxDate > max
-                        ? max
-                        : maxDate))
+                    .ListFundPerformanceAsync(
+                        symbol,
+                        PriceMode.Avg,
+                        transactions.Min(x => x.ConfirmedAt).AddDays(-1),
+                        maxDate > max
+                            ? max
+                            : maxDate))
                 {
                     var items = transactions
                         .Where(t => t.ConfirmedAt.Date == perf.Date.Date)
@@ -114,6 +114,13 @@ else
                                 NetAssetValuePerToken = perf.NetAssetValuePerToken,
                                 MarketValuePerToken = perf.MarketValuePerToken
                             };
+
+                            foreach (var operation in item.Operations.Where(op =>
+                                op.PricePerToken == default &&
+                                op.Contract.Symbol.Equals(investment.Fund.Token.Symbol.ToString(), StringComparison.OrdinalIgnoreCase)))
+                            {
+                                operation.PricePerToken = perf.MarketValuePerToken ?? perf.NetAssetValuePerToken;
+                            }
                         }
 
                         StateHasChanged();
@@ -156,7 +163,12 @@ else
                     IsEth = operation.IsEth,
                     Sender = operation.Sender,
                     Address = operation.Address,
-                    PricePerToken = operation.PricePerToken,
+                    PricePerToken =
+                        performance != null &&
+                        operation.PricePerToken == default &&
+                        operation.Contract.Symbol.Equals(investment.Fund.Token.Symbol.ToString(), StringComparison.OrdinalIgnoreCase)
+                            ? performance.MarketValuePerToken ?? performance.NetAssetValuePerToken
+                            : operation.PricePerToken,
                     Priority = operation.Priority,
                     Quantity = operation.Quantity,
                     Type = operation.Type,
@@ -171,12 +183,12 @@ else
                         Holders = operation.Contract.Holders,
                         Issuances = operation.Contract.Issuances,
                         Name = operation.Contract.Name,
-                        Link = string.IsNullOrEmpty(operation.Contract.Link)
-                            ? null
-                            : new Uri(operation.Contract.Link, UriKind.Absolute)
+                        Link = operation.Contract.Links.Link,
+                        ImageLink = operation.Contract.Links.ImageLink,
+                        MarketLink = operation.Contract.Links.MarketLink
                     }
                 })
                 .ToList()
         };
-}
+    }
 }

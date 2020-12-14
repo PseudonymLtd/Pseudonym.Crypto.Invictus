@@ -180,6 +180,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 var value = asset.Value.FromPythonString();
                 var isFiat = Enum.IsDefined(typeof(CurrencyCode), asset.Symbol);
                 var sanitisedId = asset.Name.Replace(" ", "-").Replace(".", "-").ToLower().Trim();
+                var sanitisedName = string.Join(" ", asset.Name.Trim()
+                    .Replace("-", " ")
+                    .Split(' ')
+                    .Select(x => x.Length > 1 ? x.Substring(0, 1).ToUpper() + x.Substring(1) : x.ToUpper()));
                 var coinloreId = GetAssetInfo(asset.Symbol)?.CoinLore ?? sanitisedId;
                 var coinMarketCapId = GetAssetInfo(asset.Symbol)?.CoinMarketCap ?? sanitisedId;
                 var fund = Enum.TryParse(asset.Symbol, out Symbol symbol)
@@ -189,18 +193,18 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 return new BusinessFundAsset()
                 {
                     Symbol = asset.Symbol,
-                    Name = asset.Name,
+                    Name = sanitisedName,
                     Value = CurrencyConverter.Convert(value, currencyCode),
                     Share = value / netVal * 100,
                     Link = fund?.Links?.External
                         ?? (isFiat
-                            ? new Uri($"https://www.tradingview.com/symbols/ETH{asset.Symbol.ToUpper()}", UriKind.Absolute)
-                            : new Uri($"https://coinmarketcap.com/currencies/{coinMarketCapId}", UriKind.Absolute)),
+                            ? new Uri(string.Format(FiatTemplate, asset.Symbol.ToUpper()), UriKind.Absolute)
+                            : new Uri(string.Format(LinkTemplate, coinMarketCapId), UriKind.Absolute)),
                     ImageLink = fund != null
                         ? new Uri($"https://{HostUrl.Host}/resources/{symbol}.png", UriKind.Absolute)
-                        : new Uri($"https://c2.coinlore.com/img/{coinloreId}.png", UriKind.Absolute),
+                        : new Uri(string.Format(ImageTemplate, coinloreId), UriKind.Absolute),
                     MarketLink = (fund == null || fund.Tradable) && !isFiat
-                        ? new Uri($"https://widget.coinlore.com/widgets/new-single/?id={coinloreId}&cur={currencyCode}", UriKind.Absolute)
+                        ? new Uri(string.Format(MarketTemplate, coinloreId, currencyCode), UriKind.Absolute)
                         : null
                 };
             }
@@ -218,11 +222,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     Value = CurrencyConverter.Convert(asset.Value, currencyCode),
                     Share = asset.Value / netVal * 100,
                     Link = asset.Link
-                        ?? new Uri($"https://coinmarketcap.com/currencies/{coinMarketCapId}", UriKind.Absolute),
+                        ?? new Uri(string.Format(LinkTemplate, coinMarketCapId), UriKind.Absolute),
                     ImageLink = asset.ImageLink
-                        ?? new Uri($"https://c2.coinlore.com/img/{coinloreId}.png", UriKind.Absolute),
+                        ?? new Uri(string.Format(ImageTemplate, coinloreId), UriKind.Absolute),
                     MarketLink = asset.Tradable
-                        ? new Uri($"https://widget.coinlore.com/widgets/new-single/?id={coinloreId}&cur={currencyCode}", UriKind.Absolute)
+                        ? new Uri(string.Format(MarketTemplate, coinloreId, currencyCode), UriKind.Absolute)
                         : null
                 };
             }

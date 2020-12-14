@@ -19,6 +19,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 {
     internal abstract class AbstractService
     {
+        protected const string FiatTemplate = "https://www.tradingview.com/symbols/ETH{0}";
+        protected const string LinkTemplate = "https://coinmarketcap.com/currencies/{0}";
+        protected const string ImageTemplate = "https://c2.coinlore.com/img/{0}.png";
+        protected const string MarketTemplate = "https://widget.coinlore.com/widgets/new-single/?id={0}&cur={1}";
+
         private readonly AppSettings appSettings;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IScopedCancellationToken scopedCancellationToken;
@@ -93,6 +98,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
         protected BusinessOperation MapOperation(DataOperation operation, CurrencyCode currencyCode)
         {
+            var sanitisedId = operation.ContractName.Replace(" ", "-").Replace(".", "-").ToLower().Trim();
+            var coinloreId = GetAssetInfo(operation.ContractSymbol)?.CoinLore ?? sanitisedId;
+            var coinMarketCapId = GetAssetInfo(operation.ContractSymbol)?.CoinMarketCap ?? sanitisedId;
+            var fund = Enum.TryParse(operation.ContractSymbol, out Symbol symbol)
+                ? GetFundInfo(symbol)
+                : null;
+
             return new BusinessOperation()
             {
                 Hash = new EthereumTransactionHash(operation.Hash),
@@ -123,9 +135,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 ContractHolders = operation.ContractHolders,
                 ContractIssuances = operation.ContractIssuances,
                 ContractName = operation.ContractName,
-                ContractLink = string.IsNullOrEmpty(operation.ContractLink)
-                    ? null
-                    : new Uri(operation.ContractLink, UriKind.Absolute),
+                ContractLink = fund?.Links?.External
+                    ?? (!string.IsNullOrEmpty(operation.ContractLink)
+                        ? new Uri(operation.ContractLink, UriKind.Absolute)
+                        : new Uri(string.Format(LinkTemplate, coinMarketCapId), UriKind.Absolute)),
+                ContractImageLink = fund != null
+                        ? new Uri($"https://{HostUrl.Host}/resources/{symbol}.png", UriKind.Absolute)
+                        : new Uri(string.Format(ImageTemplate, coinloreId), UriKind.Absolute),
+                ContractMarketLink = fund == null || fund.Tradable
+                        ? new Uri(string.Format(MarketTemplate, coinloreId, currencyCode), UriKind.Absolute)
+                        : null
             };
         }
     }

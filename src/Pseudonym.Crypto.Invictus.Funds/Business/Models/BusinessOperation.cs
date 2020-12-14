@@ -43,6 +43,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 
         public Uri ContractLink { get; set; }
 
+        public Uri ContractImageLink { get; set; }
+
+        public Uri ContractMarketLink { get; set; }
+
         public IReadOnlyList<EthereumAddress> Addresses { get; set; }
 
         public override bool Equals(object obj)

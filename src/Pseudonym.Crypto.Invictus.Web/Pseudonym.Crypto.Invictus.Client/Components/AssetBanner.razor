@@ -4,57 +4,18 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col py-1">
-            <img src="@Asset.Links.ImageLink.OriginalString" onerror="this.attributes.getNamedItem('src').value = 'images/default.png'" width="32" height="32" style="margin: 0 auto; padding-right: 3px;" />
-            @if (Symbol.HasValue && UserSettings.Funds.ContainsKey(Symbol.Value))
-            {
-                <FundLink DisplayName="@UserSettings.Funds[Symbol.Value].DisplayName" Name="@UserSettings.Funds[Symbol.Value].Name" />
-            }
-            else
-            {
-                @Asset.Name
-            }
+        <div class="col-4 py-1">
+            <img src="@Asset.Links.ImageLink.OriginalString" onerror="this.attributes.getNamedItem('src').value = 'images/default.png'" width="32" height="32" style="margin: 0 auto; margin-right: 3px;" />
+            @Asset.Name
         </div>
-        <div class="col py-1">
+        <div class="col-3 py-1">
             <Money Value="@Asset.Value" CurrencyCode="UserSettings.CurrencyCode" />
         </div>
-        <div class="col py-1">
+        <div class="col-2 py-1">
             <LargeNumber Value="Asset.Share" Decimals="2" Suffix="%" />
         </div>
-        <div class="col py-1">
-            @if (Symbol.HasValue)
-            {
-                <a href="funds/@Symbol.Value" class="btn btn-primary btn-sm @Symbol.Value.ToString().ToLower()" role="button">View Details</a>
-            }
-            else if (Asset.Links.MarketLink != null)
-            {
-                <button type="button" class="btn btn-danger btn-sm" style="min-width: 100px;" data-toggle="modal" data-target="#@(Asset.Symbol)Model">
-                    Performance
-                </button>
-                <div class="modal fade modal-xl" id="@(Asset.Symbol)Model" tabindex="-1" aria-hidden="true" style="max-width: unset !important;">
-                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Performance Overview</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <CoinWidget CoinLink="@Asset.Links.MarketLink" ImageLink="Asset.Links.ImageLink" />
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <a href="@Asset.Links.Link.OriginalString" target="_blank" class="btn btn-danger" role="button">Explore</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-            else
-            {
-                <a href="@Asset.Links.Link.OriginalString" target="_blank" class="btn btn-danger btn-sm" style="min-width: 100px;" role="button">Explore</a>
-            }
+        <div class="col-3 py-1">
+            <TokenExplorer Symbol="@Asset.Symbol" Link="Asset.Links.Link" ImageLink="Asset.Links.ImageLink" MarketLink="Asset.Links.MarketLink" />
         </div>
     </div>
 </div>
@@ -62,8 +23,6 @@
 @code {
     [Parameter]
     public ApiAsset Asset { get; set; }
-
-    protected Symbol? Symbol { get; set; }
 
     protected override void OnInitialized()
     {

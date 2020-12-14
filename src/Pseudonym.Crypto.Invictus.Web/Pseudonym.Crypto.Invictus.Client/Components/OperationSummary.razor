@@ -7,7 +7,14 @@
             <small style="font-weight: bold;">Token</small>
             <div>
                 <TransferType Type="@Operation.TransferAction" />
-                <Token Symbol="@Operation.Contract.Symbol" ContractAddress="@Operation.Contract.Address" />
+                <img src="@Operation.Contract.ImageLink.OriginalString" onerror="this.attributes.getNamedItem('src').value = 'images/default.png'" width="24" height="24" style="margin: 0 auto;" />
+                <span>@Operation.Contract.Symbol</span>
+                @if (Operation.Quantity != default)
+                {
+                    <small style="font-size: 10px; vertical-align: top; font-weight: bold;">
+                        &times; <LargeNumber Value="Operation.Quantity" Decimals="2" />
+                    </small>
+                }
             </div>
         </div>
         <div class="col py-1">
@@ -25,16 +32,16 @@
             </div>
         </div>
         <div class="col py-1">
-            <small style="font-weight: bold;">Quantity</small>
-            <div>
-                <LargeNumber Value="Operation.Quantity" Decimals="2" />
-            </div>
+            @if (Operation.Quantity != default)
+            {
+                <small style="font-weight: bold;">Value (@UserSettings.CurrencyCode.GetSymbol())</small>
+                <div>
+                    <Money Value="@(Operation.PricePerToken * Operation.Quantity)" CurrencyCode="UserSettings.CurrencyCode" />
+                </div>
+            }
         </div>
-        <div class="col py-1">
-            <small style="font-weight: bold;">Value (@UserSettings.CurrencyCode.GetSymbol())</small>
-            <div>
-                <Money Value="@(Operation.PricePerToken * Operation.Quantity)" CurrencyCode="UserSettings.CurrencyCode" />
-            </div>
+        <div class="col py-1" style="margin-top: auto; margin-bottom: auto;">
+            <TokenExplorer Symbol="@Operation.Contract.Symbol" Link="Operation.Contract.Link" ImageLink="Operation.Contract.ImageLink" MarketLink="Operation.Contract.MarketLink" />
         </div>
     </div>
 </div>
@@ -43,9 +50,6 @@
 
     [Parameter]
     public BusinessOperation Operation { get; set; }
-
-    [Parameter]
-    public bool Clickable { get; set; }
 
     protected override void OnInitialized()
     {

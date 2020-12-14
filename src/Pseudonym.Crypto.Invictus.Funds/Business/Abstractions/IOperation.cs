@@ -42,6 +42,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         Uri ContractLink { get; }
 
+        Uri ContractImageLink { get; }
+
+        Uri ContractMarketLink { get; }
+
         IReadOnlyList<EthereumAddress> Addresses { get; }
     }
 }

@@ -1,0 +1,72 @@
+﻿@inject IAppState AppState
+@inject NavigationManager NavigationManager
+
+@if (FundSymbol.HasValue)
+{
+    <a @onclick="@(() => NavigationManager.NavigateTo($"funds/{FundSymbol.Value}", true))" style="min-width: 100px;" class="btn btn-primary btn-sm @FundSymbol.Value.ToString().ToLower()" role="button">View Details</a>
+}
+else if (MarketLink != null)
+{
+    <button type="button" class="btn btn-danger btn-sm" style="min-width: 100px;" data-toggle="modal" data-target="#@WidgetId">
+        Token Info
+    </button>
+    <div class="modal fade modal-xl" id="@WidgetId" tabindex="-1" aria-hidden="true" style="max-width: unset !important;">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Performance Overview</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <CoinWidget CoinLink="@MarketLink" ImageLink="ImageLink" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <a href="@Link.OriginalString" target="_blank" class="btn btn-danger" role="button">Explore</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <a href="@Link.OriginalString" target="_blank" class="btn btn-danger btn-sm" style="min-width: 100px;" role="button">Explore</a>
+}
+
+@code {
+
+    private readonly Guid widgetGuid;
+
+    public TokenExplorer()
+    {
+        widgetGuid = Guid.NewGuid();
+    }
+
+    [Parameter]
+    public Uri Link { get; set; }
+
+    [Parameter]
+    public Uri ImageLink { get; set; }
+
+    [Parameter]
+    public Uri MarketLink { get; set; }
+
+    [Parameter]
+    public string Symbol { get; set; }
+
+    protected Symbol? FundSymbol { get; set; }
+
+    protected string WidgetId => $"Symbol-{widgetGuid}";
+
+    protected override void OnInitialized()
+    {
+        if (Enum.TryParse(Symbol, out Symbol symbol))
+        {
+            FundSymbol = symbol;
+        }
+
+        AppState.Assign(StateHasChanged);
+    }
+}

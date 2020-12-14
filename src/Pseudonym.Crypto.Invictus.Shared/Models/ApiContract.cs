@@ -30,7 +30,8 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [JsonProperty("issuances")]
         public long Issuances { get; set; }
 
-        [JsonProperty("link")]
-        public string Link { get; set; }
+        [Required]
+        [JsonProperty("links")]
+        public ApiAssetLinks Links { get; set; }
     }
 }

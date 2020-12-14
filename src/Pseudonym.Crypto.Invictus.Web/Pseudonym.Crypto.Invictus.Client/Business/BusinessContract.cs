@@ -23,6 +23,12 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
         [Required]
         public long Issuances { get; set; }
 
+        [Required]
         public Uri Link { get; set; }
+
+        [Required]
+        public Uri ImageLink { get; set; }
+
+        public Uri MarketLink { get; set; }
     }
 }

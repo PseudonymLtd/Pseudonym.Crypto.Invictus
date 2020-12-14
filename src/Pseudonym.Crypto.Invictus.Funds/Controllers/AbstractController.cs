@@ -146,8 +146,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                             Decimals = o.ContractDecimals,
                             Holders = o.ContractHolders,
                             Issuances = o.ContractIssuances,
-                            Link = o.ContractLink?.OriginalString,
-                            Name = o.ContractName
+                            Name = o.ContractName,
+                            Links = new ApiAssetLinks()
+                            {
+                                [nameof(ApiAssetLinks.Link)] = o.ContractLink,
+                                [nameof(ApiAssetLinks.ImageLink)] = o.ContractImageLink,
+                                [nameof(ApiAssetLinks.MarketLink)] = o.ContractMarketLink,
+                            }
                         }
                     })
                     .ToList()
