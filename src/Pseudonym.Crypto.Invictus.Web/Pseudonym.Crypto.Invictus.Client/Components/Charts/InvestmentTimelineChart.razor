@@ -1,0 +1,232 @@
+﻿@using ChartJs.Blazor.Charts
+@using ChartJs.Blazor.ChartJS.LineChart
+@inject IUserSettings UserSettings
+@inject IAppState AppState
+@inject NavigationManager NavigationManager
+
+<div>
+    <div style="margin-bottom: 1rem;">
+        <DateRangePicker MinDate="Transactions.OrderBy(t => t.ConfirmedAt).FirstOrDefault()?.ConfirmedAt.Date ?? DateTimeOffset.UtcNow.AddYears(-1)"
+                         MaxDate="DateTimeOffset.UtcNow"
+                         StartDate="StartDate"
+                         EndDate="EndDate"
+                         Culture="CultureInfo.CurrentUICulture"
+                         ApplyButtonClasses="invictus"
+                         OnRangeSelect="OnRangeSelectAsync"
+                         class="form-control form-control-sm date-picker" />
+    </div>
+    <div style="max-width: 100%; max-height: @($"{Height}px"); margin-bottom: 40px;">
+        <div style="position: relative;">
+            @if (!datasets.Any(d => d.Data.Any()))
+            {
+                <div style="position: absolute; width: 100%; height: 100%; text-align: center; padding: 100px 0;">
+                    <Loading />
+                </div>
+            }
+            <ChartJsLineChart Config="config" Width="Width" Height="Height" @ref="chart" />
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private readonly LineConfig config;
+    private readonly List<LineDataset<TimeTuple<decimal>>> datasets;
+    private ChartJsLineChart chart;
+
+    public InvestmentTimelineChart()
+    {
+        EndDate = DateTimeOffset.UtcNow;
+        StartDate = EndDate.Value.AddYears(-1);
+
+        config = new LineConfig()
+        {
+            Options = new LineOptions()
+            {
+                ShowLines = true,
+                SpanGaps = true,
+                Hover = new LineOptionsHover()
+                {
+                    DisplayColors = true,
+                    Enabled = true,
+                    Intersect = true,
+                    Mode = InteractionMode.X,
+                },
+                Scales = new Scales()
+                {
+                    xAxes = new List<CartesianAxis>()
+                    {
+                        new TimeAxis
+                        {
+                            Distribution = TimeDistribution.Linear,
+                            Ticks = new TimeTicks
+                            {
+                                Source = TickSource.Data
+                            },
+                            Time = new TimeOptions
+                            {
+                                Unit = TimeMeasurement.Day,
+                                Round = TimeMeasurement.Second,
+                                MinUnit = TimeMeasurement.Second,
+                                TooltipFormat = "DD-MM-YYYY HH:mm:ss",
+                                DisplayFormats = TimeDisplayFormats.DE_CH
+                            },
+                            ScaleLabel = new ScaleLabel()
+                        }
+                    }
+                },
+                Responsive = true,
+                Tooltips = new Tooltips()
+                {
+                    DisplayColors = true,
+                    Intersect = false,
+                    Mode = InteractionMode.Nearest,
+                },
+                MaintainAspectRatio = false,
+                Title = new OptionsTitle()
+                {
+                    Display = !string.IsNullOrEmpty(SubTitle),
+                    Text = new IndexableOption<string>(SubTitle),
+                },
+                Animation = new Animation()
+                {
+                    Duration = 1000,
+                    Easing = Easing.EaseInOutExpo
+                },
+                ResponsiveAnimationDuration = 1000,
+                OnClick = new DotNetInstanceClickHandler(JInstanceClickHandler)
+            }
+        };
+
+        datasets = new List<LineDataset<TimeTuple<decimal>>>();
+    }
+
+    [Parameter]
+    public int Height { get; set; } = 300;
+
+    [Parameter]
+    public int Width { get; set; } = 2000;
+
+    [Parameter]
+    public string SubTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public List<ApiFund> Funds { get; set; } = new List<ApiFund>();
+
+    [Parameter]
+    public List<BusinessTransaction> Transactions { get; set; }
+
+    [Parameter]
+    public EventCallback<BusinessTransaction> ClickCallback { get; set; }
+
+    protected DateTimeOffset? StartDate { get; private set; }
+
+    protected DateTimeOffset? EndDate { get; private set; }
+
+    [JSInvokable]
+    public void JInstanceClickHandler(object sender, object args)
+    {
+        var clickData = JsonConvert.DeserializeObject<List<JLineClickData>>(args.ToString());
+        if (clickData.Any())
+        {
+            var data = clickData.First();
+
+            var fund = Funds.Single(f => f.Token.Address.Equals(datasets[data.ParentIndex].Id, StringComparison.OrdinalIgnoreCase));
+            var transactions = GetDrawableTransactions(fund)
+                .ToList();
+
+            Task.Run(async () => await ClickCallback.InvokeAsync(transactions[data.Index]));
+        }
+    }
+
+    protected IEnumerable<BusinessTransaction> GetDrawableTransactions(ApiFund fund) => Transactions
+        .Where(x =>
+            x.Price != null &&
+            x.ContractAddress.Equals(fund.Token.Address, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(t => t.ConfirmedAt)
+        .SkipWhile(t => t.ConfirmedAt < StartDate)
+        .TakeWhile(t => t.ConfirmedAt <= EndDate);
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.Assign(async () => await DrawAsync(false, false));
+
+        datasets.AddRange(Funds.Select(f => new LineDataset<TimeTuple<decimal>>
+        {
+            Id = f.Token.Address,
+            Fill = false,
+            BorderWidth = 2,
+            PointRadius = 4,
+            PointHoverRadius = 6,
+            PointBorderWidth = 1,
+            PointHoverBorderWidth = 1,
+            SteppedLine = SteppedLine.False,
+            LineTension = 0,
+            Label = f.Token.Symbol.ToString(),
+            BackgroundColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(f.Token.Symbol)),
+            BorderColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(f.Token.Symbol)),
+            PointHitRadius = 8
+        }));
+
+        foreach (var dataset in datasets)
+        {
+            config.Data.Datasets.Add(dataset);
+        }
+
+        await DrawAsync(true, false);
+    }
+
+    public async Task DrawAsync(bool firstRender, bool transactionsLoaded)
+    {
+        if (!firstRender)
+        {
+            datasets.ForEach(d => d.RemoveAll(x => true));
+        }
+
+        if (transactionsLoaded)
+        {
+            StartDate = Transactions.OrderBy(t => t.ConfirmedAt).FirstOrDefault()?.ConfirmedAt.Date ?? DateTimeOffset.UtcNow.AddYears(-1);
+        }
+
+        var axis = config.Options.Scales.xAxes.OfType<TimeAxis>().First();
+
+        axis.Time.Min = new Moment(StartDate.Value.UtcDateTime);
+        axis.Time.Max = new Moment(EndDate.Value.UtcDateTime);
+
+        foreach (var dataset in datasets)
+        {
+            var fund = Funds.Single(f => dataset.Id.Equals(f.Token.Address, StringComparison.OrdinalIgnoreCase));
+            var total = Transactions
+                .Where(x =>
+                    x.Price != null &&
+                    x.ContractAddress.Equals(fund.Token.Address, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(t => t.ConfirmedAt)
+                .TakeWhile(t => t.ConfirmedAt < StartDate)
+                .Sum(t => t.GetTrade(fund).SignedQuantity);
+
+            foreach (var transaction in GetDrawableTransactions(fund))
+            {
+                var trade = transaction.GetTrade(fund);
+
+                total += trade.SignedQuantity;
+
+                dataset.Add(new TimeTuple<decimal>(new Moment(transaction.ConfirmedAt), total));
+            }
+        }
+
+        if (chart != null)
+        {
+            await chart.Update();
+        }
+
+        StateHasChanged();
+    }
+
+    public async Task OnRangeSelectAsync(DateRange range)
+    {
+        StartDate = range.Start;
+        EndDate = range.End;
+
+        await DrawAsync(false, false);
+    }
+}

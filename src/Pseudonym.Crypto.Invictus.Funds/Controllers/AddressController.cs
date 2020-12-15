@@ -72,7 +72,29 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 Held = investment.Held,
                 Share = investment.Share,
                 RealValue = investment.RealValue,
-                MarketValue = investment.MarketValue
+                MarketValue = investment.MarketValue,
+                SubInvestments = investment.SubInvestments
+                    .Select(i => new ApiSubInvestment()
+                    {
+                        Held = i.Held,
+                        MarketValue = i.MarketValue,
+                        Coin = new ApiCoin()
+                        {
+                            Name = i.Coin.Name,
+                            Symbol = i.Coin.Symbol ?? "-",
+                            ContractAddress = i.Coin.ContractAddress?.Address,
+                            FixedValuePerCoin = i.Coin.FixedValuePerCoin,
+                            HexColour = i.Coin.HexColour,
+                            Decimals = i.Coin.Decimals,
+                            Links = new ApiCoinLinks()
+                            {
+                                [nameof(ApiCoinLinks.Link)] = i.Coin.Link,
+                                [nameof(ApiCoinLinks.ImageLink)] = i.Coin.ImageLink,
+                                [nameof(ApiCoinLinks.MarketLink)] = i.Coin.MarketLink,
+                            }
+                        }
+                    })
+                    .ToList()
             };
         }
 

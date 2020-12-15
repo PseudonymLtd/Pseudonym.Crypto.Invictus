@@ -20,7 +20,7 @@ else if (MarketLink != null)
                     </button>
                 </div>
                 <div class="modal-body">
-                    <CoinWidget CoinLink="@MarketLink" ImageLink="ImageLink" />
+                    <CoinWidget CoinLink="@MarketLink" CoinName="@Name" ImageLink="ImageLink" />
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -55,6 +55,9 @@ else
 
     [Parameter]
     public string Symbol { get; set; }
+
+    [Parameter]
+    public string Name { get; set; }
 
     protected Symbol? FundSymbol { get; set; }
 

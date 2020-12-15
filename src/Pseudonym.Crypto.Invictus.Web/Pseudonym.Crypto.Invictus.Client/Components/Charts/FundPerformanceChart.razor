@@ -8,13 +8,13 @@
 <div>
     <div>
         <DateRangePicker MinDate="DateTimeOffset.UtcNow.AddYears(-1)"
-                         MaxDate="DateTimeOffset.UtcNow"
-                         StartDate="StartDate"
-                         EndDate="EndDate"
-                         Culture="CultureInfo.CurrentUICulture"
-                         ApplyButtonClasses="@Fund.Token.Symbol.ToString().ToLower()"
-                         OnRangeSelect="OnRangeSelectAsync"
-                         class="form-control form-control-sm date-picker" />
+                            MaxDate="DateTimeOffset.UtcNow"
+                            StartDate="StartDate"
+                            EndDate="EndDate"
+                            Culture="CultureInfo.CurrentUICulture"
+                            ApplyButtonClasses="@Fund.Token.Symbol.ToString().ToLower()"
+                            OnRangeSelect="OnRangeSelectAsync"
+                            class="form-control form-control-sm date-picker" />
         <ul class="pagination pagination-sm price-mode" style="margin-right: -10px;">
             @foreach (PriceMode val in Enum.GetValues(typeof(PriceMode)))
             {
@@ -28,7 +28,15 @@
         </ul>
     </div>
     <div style="max-width: 100%; max-height: @($"{Height}px"); margin-bottom: 40px;">
-        <ChartJsLineChart Config="config" Width="Width" Height="Height" @ref="chart" />
+        <div style="position: relative;">
+            @if (!navDataset.Data.Any())
+            {
+                <div style="position: absolute; width: 100%; height: 100%; text-align: center; padding: 100px 0;">
+                    <Awaiting Symbol="Fund.Token.Symbol" />
+                </div>
+            }
+            <ChartJsLineChart Config="config" Width="Width" Height="Height" @ref="chart" />
+        </div>
     </div>
 </div>
 
@@ -76,10 +84,7 @@
                                 TooltipFormat = "DD-MM-YYYY",
                                 DisplayFormats = TimeDisplayFormats.DE_CH
                             },
-                            ScaleLabel = new ScaleLabel
-                            {
-                                LabelString = "Date"
-                            }
+                            ScaleLabel = new ScaleLabel()
                         }
                     }
                 },

@@ -28,6 +28,14 @@ namespace Microsoft.Extensions.DependencyInjection
             return container;
         }
 
+        public static IServiceCollection AddLightstreamClient(this IServiceCollection container)
+        {
+            container.AddScoped<ILightstreamClient, LightstreamClient>()
+                .AddHttpClient(nameof(LightstreamClient), (sp, client) => ConfigureHttpClient(sp, client, d => d.Lightstreams));
+
+            return container;
+        }
+
         public static IServiceCollection AddInvictusClient(this IServiceCollection container)
         {
             container.AddScoped<IInvictusClient, InvictusClient>()

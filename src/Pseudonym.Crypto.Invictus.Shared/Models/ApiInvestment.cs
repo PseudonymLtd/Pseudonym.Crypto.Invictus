@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Models
@@ -24,5 +25,9 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [Required]
         [JsonProperty("share")]
         public decimal Share { get; set; }
+
+        [Required]
+        [JsonProperty("sub_investments")]
+        public IReadOnlyList<ApiSubInvestment> SubInvestments { get; set; } = new List<ApiSubInvestment>();
     }
 }

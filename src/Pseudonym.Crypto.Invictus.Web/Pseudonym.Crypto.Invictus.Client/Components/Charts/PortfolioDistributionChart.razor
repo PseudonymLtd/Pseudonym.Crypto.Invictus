@@ -47,7 +47,7 @@ else
     [JSInvokable]
     public void InstanceClickHandler(object sender, object args)
     {
-        var clickData = JsonConvert.DeserializeObject<List<JClickData>>(args.ToString())
+        var clickData = JsonConvert.DeserializeObject<List<JPieClickData>>(args.ToString())
             .First();
 
         var investment = Investments.SingleOrDefault(i =>

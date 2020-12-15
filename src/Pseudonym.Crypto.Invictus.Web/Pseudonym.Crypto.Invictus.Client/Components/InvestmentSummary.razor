@@ -30,6 +30,10 @@
                         <small style="font-weight: bold;">Net Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                         <div>
                             <Money Value="Investment.RealValue" CurrencyCode="UserSettings.CurrencyCode" />
+                            @if (NetProfit.HasValue)
+                            {
+                                <ProfitTag Value="NetProfit.Value" Decimals="2" />
+                            }
                         </div>
                     </div>
                     <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
@@ -44,12 +48,29 @@
                             <small style="font-weight: bold;">Market Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                             <div>
                                 <Money Value="Investment.MarketValue ?? 0" CurrencyCode="UserSettings.CurrencyCode" />
+                                @if (MarketProfit.HasValue)
+                                {
+                                    <ProfitTag Value="MarketProfit.Value" Decimals="2" />
+                                }
+                            </div>
+                        </div>
+                    }
+                    @if (Investment.SubInvestments.Any())
+                    {
+                        <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                            <small style="font-weight: bold;">Additional Value (@UserSettings.CurrencyCode.GetSymbol())</small>
+                            <div>
+                                <Money Value="Investment.SubInvestments.Sum(si => si.MarketValue)" CurrencyCode="UserSettings.CurrencyCode" />
                             </div>
                         </div>
                     }
                 </div>
             </div>
         </div>
+        @if (ShowGraph)
+        {
+            <InvestmentTimelineChart Funds="new List<ApiFund>() { Investment.Fund }" Transactions="Transactions" ClickCallback="ClickCallback" @ref="chart" />
+        }
         @if (Clickable)
         {
             <a href="investments/@Investment.Fund.Token.Symbol"
@@ -62,16 +83,47 @@
 
 @code {
 
+    private InvestmentTimelineChart chart;
+
     [Parameter]
     public ApiInvestment Investment { get; set; }
 
     [Parameter]
+    public List<BusinessTransaction> Transactions { get; set; }
+
+    [Parameter]
     public bool Clickable { get; set; }
 
-    public string FundImageName => $"{Investment.Fund.Token.Symbol}.png";
+    [Parameter]
+    public bool ShowGraph { get; set; }
+
+    [Parameter]
+    public EventCallback<BusinessTransaction> ClickCallback { get; set; }
+
+    protected string FundImageName => $"{Investment.Fund.Token.Symbol}.png";
+
+    protected decimal? NetProfit => Transactions
+        ?.Where(x => x.Price != null)
+        ?.Select(t => t.GetTrade(Investment.Fund))
+        ?.Sum(t => t.NetDiff);
+
+    protected decimal? MarketProfit => Transactions
+        ?.Where(x => x.Price != null)
+        ?.Select(t => t.GetTrade(Investment.Fund))
+        ?.Sum(t => t.MarketDiff ?? decimal.Zero);
+
+    public async Task StateHasChangedAsync()
+    {
+        StateHasChanged();
+
+        if (chart != null)
+        {
+            await chart.DrawAsync(false, true);
+        }
+    }
 
     protected override void OnInitialized()
     {
-        AppState.Assign(StateHasChanged);
+        AppState.Assign(async () => await StateHasChangedAsync());
     }
 }

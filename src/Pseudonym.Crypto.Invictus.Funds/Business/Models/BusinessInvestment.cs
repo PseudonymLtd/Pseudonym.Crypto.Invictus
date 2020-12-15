@@ -1,4 +1,5 @@
-﻿using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
+﻿using System.Collections.Generic;
+using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 {
@@ -15,5 +16,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
         public decimal? MarketValue => Fund.Market.IsTradable
             ? Fund.Market.PricePerToken * Held
             : default(decimal?);
+
+        public IReadOnlyList<ISubInvestment> SubInvestments { get; set; }
     }
 }

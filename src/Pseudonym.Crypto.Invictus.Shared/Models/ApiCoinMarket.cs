@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace Pseudonym.Crypto.Invictus.Web.Client.Clients.Models
+namespace Pseudonym.Crypto.Invictus.Shared.Models
 {
-    public sealed class ApiCoin
+    public sealed class ApiCoinMarket
     {
         [JsonProperty("symbol")]
         public string Symbol { get; set; }

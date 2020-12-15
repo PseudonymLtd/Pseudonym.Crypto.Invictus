@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -19,11 +20,15 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
     {
         private readonly IFundService fundService;
         private readonly IEtherClient etherClient;
+        private readonly ILightstreamClient lightstreamClient;
+        private readonly IEthplorerClient ethplorerClient;
 
         public AddressService(
             IOptions<AppSettings> appSettings,
             IFundService fundService,
             IEtherClient etherClient,
+            ILightstreamClient lightstreamClient,
+            IEthplorerClient ethplorerClient,
             ICurrencyConverter currencyConverter,
             ITransactionRepository transactionRepository,
             IOperationRepository operationRepository,
@@ -33,6 +38,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
         {
             this.fundService = fundService;
             this.etherClient = etherClient;
+            this.lightstreamClient = lightstreamClient;
+            this.ethplorerClient = ethplorerClient;
         }
 
         public async IAsyncEnumerable<IInvestment> ListInvestmentsAsync(EthereumAddress address, CurrencyCode currencyCode)
@@ -41,7 +48,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 .ListFundsAsync(currencyCode)
                 .WithCancellation(CancellationToken))
             {
-                var tokenCount = await etherClient.GetContractBalanceAsync(fund.Token.ContractAddress, address);
+                var tokenCount = await etherClient.GetContractBalanceAsync(fund.Token.ContractAddress, address, fund.Token.Decimals);
                 if (tokenCount > 0)
                 {
                     yield return new BusinessInvestment()
@@ -57,12 +64,54 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
         {
             var fundInfo = GetFundInfo(symbol);
             var fund = await fundService.GetFundAsync(symbol, currencyCode);
-            var tokenCount = await etherClient.GetContractBalanceAsync(fundInfo.Address, address);
+            var tokenCount = await etherClient.GetContractBalanceAsync(fundInfo.Address, address, fund.Token.Decimals);
+
+            var subInvestments = new List<ISubInvestment>();
+
+            foreach (var asset in fund.Assets.Where(a => a.Coin.ContractAddress.HasValue))
+            {
+                var held = await etherClient.GetContractBalanceAsync(asset.Coin.ContractAddress.Value, address, asset.Coin.Decimals.Value);
+                if (held > 0)
+                {
+                    var marketValuePerToken = asset.Coin.FixedValuePerCoin.HasValue
+                        ? asset.Coin.FixedValuePerCoin.Value
+                        : (await ethplorerClient.GetTokenInfoAsync(asset.Coin.ContractAddress.Value)).MarketValuePerToken;
+
+                    subInvestments.Add(new BusinessSubInvestment()
+                    {
+                        Coin = asset.Coin,
+                        Held = held,
+                        MarketValue = CurrencyConverter.Convert(marketValuePerToken, currencyCode) * held
+                    });
+                }
+            }
+
+            var lightStreamAsset = fund.Assets.SingleOrDefault(a =>
+                a.Coin.Name.Equals(nameof(Dependencies.Lightstreams), StringComparison.OrdinalIgnoreCase));
+
+            if (lightStreamAsset != null)
+            {
+                var held = await lightstreamClient.GetEthBalanceAsync(address);
+                if (held > 0)
+                {
+                    var marketValuePerToken = lightStreamAsset.Coin.FixedValuePerCoin.HasValue
+                        ? lightStreamAsset.Coin.FixedValuePerCoin.Value
+                        : decimal.Zero;
+
+                    subInvestments.Add(new BusinessSubInvestment()
+                    {
+                        Coin = lightStreamAsset.Coin,
+                        Held = held,
+                        MarketValue = CurrencyConverter.Convert(marketValuePerToken, currencyCode) * held
+                    });
+                }
+            }
 
             return new BusinessInvestment()
             {
                 Fund = fund,
-                Held = tokenCount
+                Held = tokenCount,
+                SubInvestments = subInvestments
             };
         }
 

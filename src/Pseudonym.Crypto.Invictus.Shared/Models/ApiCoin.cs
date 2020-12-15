@@ -3,13 +3,8 @@ using Newtonsoft.Json;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Models
 {
-    public sealed class ApiContract
+    public sealed class ApiCoin
     {
-        [Required]
-        [EthereumAddress]
-        [JsonProperty("address")]
-        public string Address { get; set; }
-
         [Required]
         [JsonProperty("name")]
         public string Name { get; set; }
@@ -18,17 +13,17 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [JsonProperty("symbol")]
         public string Symbol { get; set; }
 
-        [Required]
         [JsonProperty("decimals")]
-        public int Decimals { get; set; }
+        public int? Decimals { get; set; }
 
-        [Required]
-        [JsonProperty("holders")]
-        public long Holders { get; set; }
+        [JsonProperty("contract_address")]
+        public string ContractAddress { get; set; }
 
-        [Required]
-        [JsonProperty("issuances")]
-        public long Issuances { get; set; }
+        [JsonProperty("fixed_value_per_coin")]
+        public decimal? FixedValuePerCoin { get; set; }
+
+        [JsonProperty("hex_colour")]
+        public string HexColour { get; set; }
 
         [Required]
         [JsonProperty("links")]

@@ -26,7 +26,7 @@ else
     private readonly PieConfig config;
     private ChartJsPieChart chart;
 
-    public FundAssetDistributionChart()
+    public SubInvestmentDistributionChart()
     {
         config = new PieConfig();
     }
@@ -44,7 +44,7 @@ else
     public bool IsHollow { get; set; }
 
     [Parameter]
-    public ApiFund Fund { get; set; }
+    public IReadOnlyList<ApiSubInvestment> SubInvestments { get; set; }
 
     [JSInvokable]
     public void InstanceClickHandler(object sender, object args)
@@ -52,22 +52,12 @@ else
         var clickData = JsonConvert.DeserializeObject<List<JPieClickData>>(args.ToString())
             .First();
 
-        var fund = UserSettings.Funds.SingleOrDefault(f =>
-        f.Value.DisplayName.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
-
-        if (!fund.Equals(default(KeyValuePair<Symbol, FundInfo>)))
+        var subInvestment = SubInvestments.SingleOrDefault(a => a.Coin.Name.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
+        if (subInvestment != null)
         {
-            NavigationManager.NavigateTo($"/funds/{fund.Key}", true);
-        }
-        else
-        {
-            var asset = Fund.Assets.SingleOrDefault(a => a.Coin.Name.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
-            if (asset != null)
-            {
-                Runtime.InvokeAsync<object>("open", asset.Coin.Links.Link.OriginalString, "_blank")
-                    .GetAwaiter()
-                    .GetResult();
-            }
+            Runtime.InvokeAsync<object>("open", subInvestment.Coin.Links.Link.OriginalString, "_blank")
+                .GetAwaiter()
+                .GetResult();
         }
 
     }
@@ -122,28 +112,15 @@ else
             Weight = 1
         };
 
-        foreach (var asset in Fund.Assets)
+        foreach (var subInvestment in SubInvestments)
         {
-            dataSet.Data.Add((double)Math.Round(asset.Value, 2));
+            dataSet.Data.Add((double)Math.Round(subInvestment.MarketValue, 2));
 
-            var symbol = Enum.IsDefined(typeof(Symbol), asset.Coin.Symbol)
-                ? Enum.Parse<Symbol>(asset.Coin.Symbol)
-                : default(Symbol?);
+            colours.Add(string.IsNullOrEmpty(subInvestment.Coin.HexColour)
+                ? InvictusColours.RandomColor()
+                : ColorTranslator.FromHtml(subInvestment.Coin.HexColour));
 
-            if (symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value))
-            {
-                colours.Add(InvictusColours.GetByFund(symbol.Value));
-
-                config.Data.Labels.Add(UserSettings.Funds[symbol.Value].DisplayName);
-            }
-            else
-            {
-                colours.Add(string.IsNullOrEmpty(asset.Coin.HexColour)
-                    ? InvictusColours.RandomColor()
-                    : ColorTranslator.FromHtml(asset.Coin.HexColour));
-
-                config.Data.Labels.Add(asset.Coin.Name);
-            }
+            config.Data.Labels.Add(subInvestment.Coin.Name);
         }
 
         var compiledColours = colours

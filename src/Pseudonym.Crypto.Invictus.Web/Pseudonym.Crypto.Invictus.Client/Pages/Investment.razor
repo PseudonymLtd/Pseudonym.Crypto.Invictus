@@ -1,4 +1,5 @@
 ﻿@page "/investments/{symbol}"
+@inject IJSRuntime JSRuntime
 @inject IUserSettings UserSettings
 @inject IApiClient Client
 @inject IAppState AppState
@@ -14,7 +15,12 @@ else if (investment == null)
 }
 else
 {
-    <InvestmentSummary Investment="investment" Clickable="false" />
+    <InvestmentSummary Investment="investment" Transactions="transactions" ShowGraph="true" Clickable="false" ClickCallback="TransactionOnClickAsync" @ref="investmentSummary" />
+    <FundBreakdown Fund="investment.Fund" />
+    if (investment.SubInvestments.Any())
+    {
+        <InvestmentExposure Investments="investment.SubInvestments" />
+    }
     if (!transactions.Any())
     {
         <Loading />
@@ -24,7 +30,8 @@ else
         <div>
             @foreach (var transaction in transactions.OrderByDescending(x => x.ConfirmedAt))
             {
-                <TransactionSummary Fund="investment.Fund" Transaction="transaction" />
+                <Anchor Id="@transaction.Hash" />
+                <TransactionSummary Fund="investment.Fund" Transaction="transaction" CollapseId="@($"Id-{transaction.Hash}")" />
             }
         </div>
     }
@@ -35,6 +42,7 @@ else
     private readonly List<BusinessTransaction> transactions;
 
     private ApiInvestment investment;
+    private InvestmentSummary investmentSummary;
 
     public Investment()
     {
@@ -46,17 +54,20 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("Init");
-
         AppState.Assign(async () => await DrawAsync(false));
 
         await DrawAsync(true);
     }
 
+    protected async Task TransactionOnClickAsync(BusinessTransaction clickedTransaction)
+    {
+        await JSRuntime.InvokeVoidAsync($"functions.CollapseShow", $"Id-{clickedTransaction.Hash}");
+
+        NavigationManager.NavigateTo($"investments/{investment.Fund.Token.Symbol}#{clickedTransaction.Hash.ToAnchorName()}");
+    }
+
     private async Task DrawAsync(bool firstRender)
     {
-        Console.WriteLine("Draw");
-
         if (Enum.TryParse(Symbol, out Symbol symbol))
         {
             if (!firstRender)
@@ -126,6 +137,8 @@ else
                         StateHasChanged();
                     }
                 }
+
+                await investmentSummary.StateHasChangedAsync();
             }
         }
         else
@@ -139,6 +152,7 @@ else
         return new BusinessTransaction()
         {
             Hash = transaction.Hash,
+            ContractAddress = investment.Fund.Token.Address,
             BlockNumber = transaction.BlockNumber,
             Confirmations = transaction.Confirmations,
             ConfirmedAt = transaction.ConfirmedAt,

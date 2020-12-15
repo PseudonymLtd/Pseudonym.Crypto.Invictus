@@ -10,6 +10,8 @@
 
         public Dependency<InfuraDependencySettings> Infura { get; set; }
 
+        public Dependency<DependencySettings> Lightstreams { get; set; }
+
         public Dependency<DependencySettings> ExchangeRate { get; set; }
     }
 }

@@ -171,7 +171,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 Assets = fund.Assets
                     .Select(FromInvictusAsset)
                     .Where(x => x.Value > 0)
-                    .Union(fundInfo.Assets.Select(FromFundAsset))
+                    .Union(fundInfo.Assets.Select(a => MapFundAsset(a, netVal, currencyCode)))
                     .ToList()
             };
 
@@ -192,42 +192,24 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
                 return new BusinessFundAsset()
                 {
-                    Symbol = asset.Symbol,
-                    Name = sanitisedName,
+                    Coin = new BusinessCoin()
+                    {
+                        Name = sanitisedName,
+                        Symbol = asset.Symbol,
+                        HexColour = GetAssetInfo(asset.Symbol)?.Colour,
+                        Link = fund?.Links?.External
+                            ?? (isFiat
+                                ? new Uri(string.Format(FiatTemplate, asset.Symbol.ToUpper()), UriKind.Absolute)
+                                : new Uri(string.Format(LinkTemplate, coinMarketCapId), UriKind.Absolute)),
+                        ImageLink = fund != null
+                            ? new Uri($"https://{HostUrl.Host}/resources/{symbol}.png", UriKind.Absolute)
+                            : new Uri(string.Format(ImageTemplate, coinloreId), UriKind.Absolute),
+                        MarketLink = (fund == null || fund.Tradable) && !isFiat
+                            ? new Uri(string.Format(MarketTemplate, coinloreId, currencyCode), UriKind.Absolute)
+                            : null
+                    },
                     Value = CurrencyConverter.Convert(value, currencyCode),
-                    Share = value / netVal * 100,
-                    Link = fund?.Links?.External
-                        ?? (isFiat
-                            ? new Uri(string.Format(FiatTemplate, asset.Symbol.ToUpper()), UriKind.Absolute)
-                            : new Uri(string.Format(LinkTemplate, coinMarketCapId), UriKind.Absolute)),
-                    ImageLink = fund != null
-                        ? new Uri($"https://{HostUrl.Host}/resources/{symbol}.png", UriKind.Absolute)
-                        : new Uri(string.Format(ImageTemplate, coinloreId), UriKind.Absolute),
-                    MarketLink = (fund == null || fund.Tradable) && !isFiat
-                        ? new Uri(string.Format(MarketTemplate, coinloreId, currencyCode), UriKind.Absolute)
-                        : null
-                };
-            }
-
-            BusinessFundAsset FromFundAsset(FundSettings.FundAsset asset)
-            {
-                var sanitisedId = asset.Name.Replace(" ", "-").Replace(".", "-").ToLower().Trim();
-                var coinloreId = GetAssetInfo(asset.Symbol)?.CoinLore ?? sanitisedId;
-                var coinMarketCapId = GetAssetInfo(asset.Symbol)?.CoinMarketCap ?? sanitisedId;
-
-                return new BusinessFundAsset()
-                {
-                    Symbol = asset.Symbol,
-                    Name = asset.Name,
-                    Value = CurrencyConverter.Convert(asset.Value, currencyCode),
-                    Share = asset.Value / netVal * 100,
-                    Link = asset.Link
-                        ?? new Uri(string.Format(LinkTemplate, coinMarketCapId), UriKind.Absolute),
-                    ImageLink = asset.ImageLink
-                        ?? new Uri(string.Format(ImageTemplate, coinloreId), UriKind.Absolute),
-                    MarketLink = asset.Tradable
-                        ? new Uri(string.Format(MarketTemplate, coinloreId, currencyCode), UriKind.Absolute)
-                        : null
+                    Share = value / netVal * 100
                 };
             }
         }

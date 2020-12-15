@@ -1,11 +1,11 @@
 ﻿namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 {
-    public interface IFundAsset
+    public interface ISubInvestment
     {
         ICoin Coin { get; }
 
-        decimal Value { get; }
+        decimal Held { get; }
 
-        decimal Share { get; }
+        decimal MarketValue { get; }
     }
 }

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 using Pseudonym.Crypto.Invictus.Shared.Models;
+using Pseudonym.Crypto.Invictus.Web.Client.Business.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Web.Client.Business
 {
@@ -12,6 +12,9 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
     {
         [Required]
         public string Hash { get; set; }
+
+        [Required]
+        public string ContractAddress { get; set; }
 
         [Required]
         public long BlockNumber { get; set; }
@@ -52,80 +55,151 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
         [Required]
         public BusinessPrice Price { get; set; }
 
-        public bool IsInbound(string contractAddress)
+        public ITrade GetTrade(ApiFund fund)
+        {
+            return IsSwap()
+                ? GetSwapData(fund)
+                : GetTradeData(fund);
+        }
+
+        public BusinessTrade GetTradeData(ApiFund fund)
+        {
+            if (!IsSwap())
+            {
+                return new BusinessTrade()
+                {
+                    IsTradeable = fund.Market.IsTradeable,
+                    IsInbound = IsInbound(),
+                    Quantity = GetTransferQuantity(TransferAction),
+                    NetCurrentPricePerToken = fund.NetAssetValuePerToken,
+                    NetSnapshotPricePerToken = Price.NetAssetValuePerToken,
+                    MarketCurrentPricePerToken = fund.Market.IsTradeable
+                        ? fund.Market.PricePerToken
+                        : default(decimal?),
+                    MarketSnapshotPricePerToken = fund.Market.IsTradeable
+                        ? GetTransferPricePerToken(TransferAction)
+                        : default(decimal?)
+                };
+            }
+            else
+            {
+                throw new PermanentException($"{Hash} is not a trade.");
+            }
+        }
+
+        public BusinessSwap GetSwapData(ApiFund fund)
+        {
+            if (IsSwap())
+            {
+                var outboundSwap = GetSwap(TransferAction.Outbound);
+                var inboundSwap = GetSwap(TransferAction.Inbound);
+                var isInbound = inboundSwap.Contract.Address == fund.Token.Address;
+
+                var fundOp = isInbound
+                    ? inboundSwap
+                    : outboundSwap;
+
+                return new BusinessSwap()
+                {
+                    InboundSymbol = IsOutboundEtherSwap()
+                        ? "ETH"
+                        : inboundSwap.Contract.Symbol,
+                    InboundQuantity = inboundSwap.Quantity,
+                    OutboundSymbol = IsInboundEtherSwap()
+                        ? "ETH"
+                        : outboundSwap.Contract.Symbol,
+                    OutboundQuantity = outboundSwap.Quantity,
+                    IsTradeable = fund.Market.IsTradeable,
+                    IsInbound = isInbound,
+                    Quantity = fundOp.Quantity,
+                    NetCurrentPricePerToken = fund.NetAssetValuePerToken,
+                    NetSnapshotPricePerToken = Price.NetAssetValuePerToken,
+                    MarketCurrentPricePerToken = fund.Market.IsTradeable
+                        ? fund.Market.PricePerToken
+                        : default(decimal?),
+                    MarketSnapshotPricePerToken = fund.Market.IsTradeable
+                        ? fundOp.PricePerToken
+                        : default(decimal?)
+                };
+            }
+            else
+            {
+                throw new PermanentException($"{Hash} is not a swap.");
+            }
+        }
+
+        public bool IsInbound()
         {
             var lastOperation = Operations.LastOrDefault();
 
             return lastOperation != null &&
                 lastOperation.TransferAction == TransferAction.Inbound &&
-                lastOperation.Contract.Address == contractAddress;
+                lastOperation.Contract.Address == ContractAddress;
         }
 
-        public bool IsOutbound(string contractAddress)
+        public bool IsOutbound()
         {
-            return !IsInbound(contractAddress);
+            return !IsInbound();
         }
 
-        public bool IsSwap(string contractAddress) => IsEtherSwap(contractAddress) || IsTokenSwap(contractAddress);
+        public bool IsSwap() => IsEtherSwap() || IsTokenSwap();
 
-        public bool IsTokenSwap(string contractAddress) => IsOutboundTokenSwap(contractAddress) || IsInboundTokenSwap(contractAddress);
+        public bool IsTokenSwap() => IsOutboundTokenSwap() || IsInboundTokenSwap();
 
-        public bool IsInboundTokenSwap(string contractAddress) =>
+        public bool IsInboundTokenSwap() =>
             TransferAction == TransferAction.Outbound &&
             Operations.Any(o =>
                 o.TransferAction == TransferAction.Outbound &&
-                o.Contract.Address != contractAddress) &&
+                o.Contract.Address != ContractAddress) &&
             Operations.Any(o =>
                 o.TransferAction == TransferAction.Inbound &&
-                o.Contract.Address == contractAddress);
+                o.Contract.Address == ContractAddress);
 
-        public bool IsOutboundTokenSwap(string contractAddress) =>
+        public bool IsOutboundTokenSwap() =>
             TransferAction == TransferAction.Outbound &&
             Operations.Any(o =>
                 o.TransferAction == TransferAction.Outbound &&
-                o.Contract.Address == contractAddress) &&
+                o.Contract.Address == ContractAddress) &&
             Operations.Any(o =>
                 o.TransferAction == TransferAction.Inbound &&
-                o.Contract.Address != contractAddress);
+                o.Contract.Address != ContractAddress);
 
-        public bool IsEtherSwap(string contractAddress) => IsOutboundEtherSwap(contractAddress) || IsInboundEtherSwap(contractAddress);
+        public bool IsEtherSwap() => IsOutboundEtherSwap() || IsInboundEtherSwap();
 
-        public bool IsInboundEtherSwap(string contractAddress) =>
+        public bool IsInboundEtherSwap() =>
             TransferAction == TransferAction.Outbound &&
             Eth > 0 &&
             Operations.Any(o =>
                 o.TransferAction == TransferAction.Inbound &&
-                o.Contract.Address == contractAddress);
+                o.Contract.Address == ContractAddress);
 
-        public bool IsOutboundEtherSwap(string contractAddress) =>
+        public bool IsOutboundEtherSwap() =>
             TransferAction == TransferAction.Outbound &&
             Operations.Any(o =>
                 o.TransferAction == TransferAction.Outbound &&
-                o.Contract.Address == contractAddress) &&
+                o.Contract.Address == ContractAddress) &&
             Operations.Any(o =>
                 o.TransferAction == TransferAction.None &&
                 o.Contract.Symbol == "WETH");
 
-        public decimal GetTransferPrice(string contractAddress, TransferAction action)
+        public decimal GetTransferPricePerToken(TransferAction action)
         {
             var transfers = Operations
                 .Where(o =>
                     o.TransferAction == action &&
-                    o.Contract.Address == contractAddress);
+                    o.Contract.Address == ContractAddress);
 
             switch (action)
             {
                 case TransferAction.Inbound:
-                    var inbound = transfers.LastOrDefault();
-                    return inbound?.Quantity * inbound?.PricePerToken ?? 0;
+                    return transfers.LastOrDefault()?.PricePerToken ?? 0;
                 case TransferAction.Outbound:
-                    var outbound = transfers.FirstOrDefault();
-                    return outbound?.Quantity * outbound?.PricePerToken ?? 0;
+                    return transfers.FirstOrDefault()?.PricePerToken ?? 0;
                 default:
                     if (Operations.Count == 1 &&
                         Operations.Single().TransferAction != TransferAction.None)
                     {
-                        return Operations.Single().Quantity * Operations.Single().PricePerToken;
+                        return Operations.Single().PricePerToken;
                     }
                     else
                     {
@@ -134,12 +208,12 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
             }
         }
 
-        public decimal GetTransferQuantity(string contractAddress, TransferAction action)
+        public decimal GetTransferQuantity(TransferAction action)
         {
             var transfers = Operations
                 .Where(o =>
                     o.TransferAction == action &&
-                    o.Contract.Address == contractAddress);
+                    o.Contract.Address == ContractAddress);
 
             switch (action)
             {
@@ -160,9 +234,9 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
             }
         }
 
-        public BusinessOperation GetSwap(string contractAddress, TransferAction action)
+        public BusinessOperation GetSwap(TransferAction action)
         {
-            if (IsOutboundEtherSwap(contractAddress))
+            if (IsOutboundEtherSwap())
             {
                 switch (action)
                 {
@@ -170,7 +244,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         return Operations
                             .Where(o =>
                                 o.Type == OperationTypes.Transfer &&
-                                o.Contract.Address != contractAddress &&
+                                o.Contract.Address != ContractAddress &&
                                 o.TransferAction == TransferAction.None)
                             .LastOrDefault()
                                 ?? throw new PermanentException($"Could not find {action} Ether Swap for {Hash}");
@@ -178,7 +252,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         return Operations
                             .Where(o =>
                                 o.Type == OperationTypes.Transfer &&
-                                o.Contract.Address == contractAddress &&
+                                o.Contract.Address == ContractAddress &&
                                 o.TransferAction == TransferAction.Outbound)
                             .FirstOrDefault()
                                 ?? throw new PermanentException($"Could not find {action} Ether Swap for {Hash}");
@@ -186,7 +260,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         throw new ArgumentException($"Cannot Get Swap for action `{nameof(TransferAction.None)}`", nameof(action));
                 }
             }
-            else if (IsInboundEtherSwap(contractAddress))
+            else if (IsInboundEtherSwap())
             {
                 switch (action)
                 {
@@ -194,7 +268,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         return Operations
                             .Where(o =>
                                 o.Type == OperationTypes.Transfer &&
-                                o.Contract.Address == contractAddress &&
+                                o.Contract.Address == ContractAddress &&
                                 o.TransferAction == TransferAction.Inbound)
                             .LastOrDefault()
                                 ?? throw new PermanentException($"Could not find {action} Ether Swap for {Hash}");
@@ -202,7 +276,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         return Operations
                             .Where(o =>
                                 o.Type == OperationTypes.Transfer &&
-                                o.Contract.Address != contractAddress &&
+                                o.Contract.Address != ContractAddress &&
                                 o.TransferAction == TransferAction.None)
                             .FirstOrDefault()
                                 ?? throw new PermanentException($"Could not find {action} Ether Swap for {Hash}");
@@ -210,7 +284,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         throw new ArgumentException($"Cannot Get Swap for action `{nameof(TransferAction.None)}`", nameof(action));
                 }
             }
-            else if (IsOutboundTokenSwap(contractAddress))
+            else if (IsOutboundTokenSwap())
             {
                 switch (action)
                 {
@@ -218,7 +292,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         return Operations
                             .Where(o =>
                                 o.Type == OperationTypes.Transfer &&
-                                o.Contract.Address != contractAddress &&
+                                o.Contract.Address != ContractAddress &&
                                 o.TransferAction == TransferAction.Inbound)
                             .LastOrDefault()
                                 ?? throw new PermanentException($"Could not find {action} Token Swap for {Hash}");
@@ -226,7 +300,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         return Operations
                             .Where(o =>
                                 o.Type == OperationTypes.Transfer &&
-                                o.Contract.Address == contractAddress &&
+                                o.Contract.Address == ContractAddress &&
                                 o.TransferAction == TransferAction.Outbound)
                             .FirstOrDefault()
                                 ?? throw new PermanentException($"Could not find {action} Token Swap for {Hash}");
@@ -234,7 +308,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         throw new ArgumentException($"Cannot Get Swap for action `{nameof(TransferAction.None)}`", nameof(action));
                 }
             }
-            else if (IsInboundTokenSwap(contractAddress))
+            else if (IsInboundTokenSwap())
             {
                 switch (action)
                 {
@@ -242,7 +316,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         return Operations
                             .Where(o =>
                                 o.Type == OperationTypes.Transfer &&
-                                o.Contract.Address == contractAddress &&
+                                o.Contract.Address == ContractAddress &&
                                 o.TransferAction == TransferAction.Inbound)
                             .LastOrDefault()
                                 ?? throw new PermanentException($"Could not find {action} Token Swap for {Hash}");
@@ -250,7 +324,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         return Operations
                             .Where(o =>
                                 o.Type == OperationTypes.Transfer &&
-                                o.Contract.Address != contractAddress &&
+                                o.Contract.Address != ContractAddress &&
                                 o.TransferAction == TransferAction.Outbound)
                             .FirstOrDefault()
                                 ?? throw new PermanentException($"Could not find {action} Token Swap for {Hash}");

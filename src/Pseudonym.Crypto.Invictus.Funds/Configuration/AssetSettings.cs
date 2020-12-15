@@ -7,5 +7,7 @@
         public string CoinMarketCap { get; set; }
 
         public string CoinLore { get; set; }
+
+        public string Colour { get; set; }
     }
 }

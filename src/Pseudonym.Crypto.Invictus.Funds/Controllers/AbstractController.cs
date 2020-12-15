@@ -70,16 +70,23 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 Assets = fund.Assets
                     .Select(a => new ApiAsset()
                     {
-                        Name = a.Name,
-                        Symbol = a.Symbol ?? "-",
-                        Value = a.Value,
-                        Share = a.Share,
-                        Links = new ApiAssetLinks()
+                        Coin = new ApiCoin()
                         {
-                            [nameof(ApiAssetLinks.Link)] = a.Link,
-                            [nameof(ApiAssetLinks.ImageLink)] = a.ImageLink,
-                            [nameof(ApiAssetLinks.MarketLink)] = a.MarketLink,
-                        }
+                            Name = a.Coin.Name,
+                            Symbol = a.Coin.Symbol ?? "-",
+                            ContractAddress = a.Coin.ContractAddress?.Address,
+                            HexColour = a.Coin.HexColour,
+                            FixedValuePerCoin = a.Coin.FixedValuePerCoin,
+                            Decimals = a.Coin.Decimals,
+                            Links = new ApiCoinLinks()
+                            {
+                                [nameof(ApiCoinLinks.Link)] = a.Coin.Link,
+                                [nameof(ApiCoinLinks.ImageLink)] = a.Coin.ImageLink,
+                                [nameof(ApiCoinLinks.MarketLink)] = a.Coin.MarketLink,
+                            }
+                        },
+                        Value = a.Value,
+                        Share = a.Share
                     })
                     .ToList(),
                 Links = new ApiFundLinks()
@@ -147,11 +154,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                             Holders = o.ContractHolders,
                             Issuances = o.ContractIssuances,
                             Name = o.ContractName,
-                            Links = new ApiAssetLinks()
+                            Links = new ApiCoinLinks()
                             {
-                                [nameof(ApiAssetLinks.Link)] = o.ContractLink,
-                                [nameof(ApiAssetLinks.ImageLink)] = o.ContractImageLink,
-                                [nameof(ApiAssetLinks.MarketLink)] = o.ContractMarketLink,
+                                [nameof(ApiCoinLinks.Link)] = o.ContractLink,
+                                [nameof(ApiCoinLinks.ImageLink)] = o.ContractImageLink,
+                                [nameof(ApiCoinLinks.MarketLink)] = o.ContractMarketLink,
                             }
                         }
                     })

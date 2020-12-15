@@ -26,5 +26,24 @@
         }
 
         return null;
+    },
+    ScrollToId: function (id) {
+        const element = document.getElementById(id);
+        if (element instanceof HTMLElement) {
+            element.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+                inline: "nearest"
+            });
+        }
+    },
+    CollapseShow: function (id) {
+        $('#' + id).collapse('show');
+    },
+    CollapseHide: function (id) {
+        $('#' + id).collapse('hide');
+    },
+    CollapseHide: function (id) {
+        $('#' + id).collapse('toggle');
     }
 }

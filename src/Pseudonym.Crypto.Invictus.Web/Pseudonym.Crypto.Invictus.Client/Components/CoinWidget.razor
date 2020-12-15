@@ -3,21 +3,21 @@
 @inject HttpClient Client;
 
 <div>
-    @if (Coin != null)
+    @if (coin != null)
     {
         <div style="color:#333; background: #fff; font-family: Helvetica,Arial,sans-serif; min-width:285px;">
             <div>
                 <div style="float:right; width:67%; border: none; text-align:left; padding:5px 0px; line-height:25px;">
                     <span style="font-size: 17px; text-decoration: none; color: #333;font-weight: bold">
-                        @Coin.Name
-                        <span style="font-size: 10px;padding-left: 5px">@Coin.Symbol</span>
+                        @(CoinName ?? coin.Name)
+                        <span style="font-size: 10px;padding-left: 5px">@coin.Symbol</span>
                     </span>
                     <div style="font-size: 16px;color:#333">
-                        <Money Value="@(decimal.TryParse(Coin.PriceUSD, out decimal price) ? price : decimal.Zero)" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
-                        <ProfitTag Value="@(decimal.TryParse(Coin.PercentChangeHourly, out decimal hourlyVal) ? hourlyVal : decimal.Zero)" Decimals="2" Suffix="%" />
+                        <Money Value="@(decimal.TryParse(coin.PriceUSD, out decimal price) ? price : decimal.Zero)" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
+                        <ProfitTag Value="@(decimal.TryParse(coin.PercentChangeHourly, out decimal hourlyVal) ? hourlyVal : decimal.Zero)" Decimals="2" Suffix="%" />
                     </div>
                     <div style="font-size: 12px; color:#959595">
-                        @Coin.PriceBTC BTC
+                        @coin.PriceBTC BTC
                     </div>
                 </div>
                 <div style="text-align:center;padding:5px 0px;width:33%;">
@@ -30,7 +30,7 @@
                     <br />
                     <br />
                     <span style="font-size: 17px;">
-                        @Coin.Rank
+                        @coin.Rank
                     </span>
                 </div>
                 <div style="text-align:center; float:left; width:25%; font-size:12px; padding:12px 0 16px 0; line-height:1.25em;">
@@ -38,7 +38,7 @@
                     <br />
                     <br />
                     <span style="font-size: 14px;">
-                        @Coin.MarketCap
+                        @coin.MarketCap
                         <span style="font-size:9px">@UserSettings.CurrencyCode</span>
                     </span>
                 </div>
@@ -47,7 +47,7 @@
                     <br />
                     <br />
                     <span style="font-size: 14px;">
-                        @Coin.VolumeUSD
+                        @coin.VolumeUSD
                         <span style="font-size:9px">@UserSettings.CurrencyCode</span>
                     </span>
                 </div>
@@ -55,10 +55,10 @@
                     <b>Price Movement</b>
                     <br />
                     <small style="padding-right: 2px;">1D</small>
-                    <ProfitTag Value="@(decimal.TryParse(Coin.PercentChangeDaily, out decimal dailyVal) ? dailyVal : decimal.Zero)" Decimals="2" Suffix="%" />
+                    <ProfitTag Value="@(decimal.TryParse(coin.PercentChangeDaily, out decimal dailyVal) ? dailyVal : decimal.Zero)" Decimals="2" Suffix="%" />
                     <br />
                     <small style="padding-right: 2px;">1W</small>
-                    <ProfitTag Value="@(decimal.TryParse(Coin.PercentChangeWeekly, out decimal weeklyVal) ? weeklyVal : decimal.Zero)" Decimals="2" Suffix="%" />
+                    <ProfitTag Value="@(decimal.TryParse(coin.PercentChangeWeekly, out decimal weeklyVal) ? weeklyVal : decimal.Zero)" Decimals="2" Suffix="%" />
                 </div>
             </div>
         </div>
@@ -70,7 +70,10 @@
 </div>
 
 @code {
-    private ApiCoin Coin;
+    private ApiCoinMarket coin;
+
+    [Parameter]
+    public string CoinName { get; set; }
 
     [Parameter]
     public Uri CoinLink { get; set; }
@@ -89,14 +92,14 @@
     {
         if (!firstRender)
         {
-            Coin = null;
+            coin = null;
 
             StateHasChanged();
         }
 
         var response = await Client.GetAsync(CoinLink);
 
-        Coin = JsonConvert.DeserializeObject<List<ApiCoin>>(await response.Content.ReadAsStringAsync())
+        coin = JsonConvert.DeserializeObject<List<ApiCoinMarket>>(await response.Content.ReadAsStringAsync())
             .SingleOrDefault();
 
         StateHasChanged();

@@ -225,6 +225,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
                 .AddBloxyClient()
                 .AddEthplorerClient()
                 .AddInfuraClient()
+                .AddLightstreamClient()
                 .AddInvictusClient()
                 .AddExchangeRateClient();
 

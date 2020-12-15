@@ -4,17 +4,28 @@
 
 namespace Pseudonym.Crypto.Invictus.Web.Client.Utils.Interop
 {
-    public sealed class JClickData
+    public sealed class JPieClickData
     {
         [JsonRequired]
         [JsonProperty("_model")]
-        public JModel Model { get; set; }
+        public JPieModel Model { get; set; }
     }
 
-    public sealed class JModel
+    public sealed class JPieModel
     {
         [JsonRequired]
         [JsonProperty("label")]
         public string Label { get; set; }
+    }
+
+    public sealed class JLineClickData
+    {
+        [JsonRequired]
+        [JsonProperty("_datasetIndex")]
+        public int ParentIndex { get; set; }
+
+        [JsonRequired]
+        [JsonProperty("_index")]
+        public int Index { get; set; }
     }
 }

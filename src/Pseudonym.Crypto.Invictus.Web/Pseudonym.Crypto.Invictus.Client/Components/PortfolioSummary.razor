@@ -20,7 +20,7 @@
                             </div>
                         </div>
                     </div>
-                    @foreach (var investment in Investments)
+                    @foreach (var investment in Investments.OrderByDescending(x => x.RealValue))
                     {
                         <InvestmentBanner Investment="investment" />
                     }

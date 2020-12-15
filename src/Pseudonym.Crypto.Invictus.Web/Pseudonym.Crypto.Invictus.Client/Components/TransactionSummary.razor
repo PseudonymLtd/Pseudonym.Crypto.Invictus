@@ -13,88 +13,54 @@
                 <footer class="blockquote-footer">
                     @if (Transaction.Price != null)
                     {
-                        if (Transaction.IsSwap(Fund.Token.Address))
+                        if (Transaction.IsSwap())
                         {
-                            var outboundSwap = Transaction.GetSwap(Fund.Token.Address, TransferAction.Outbound);
-                            var inboundSwap = Transaction.GetSwap(Fund.Token.Address, TransferAction.Inbound);
+                            var swap = Transaction.GetSwapData(Fund);
 
                             <span>
                                 Swap
-                                <LargeNumber Value="outboundSwap.Quantity" Decimals="2" ShowZeroValue="true" />
-                                @outboundSwap.Contract.Symbol
-                                For
-                                <LargeNumber Value="inboundSwap.Quantity" Decimals="2" ShowZeroValue="true" />
-                                @inboundSwap.Contract.Symbol
+                                <LargeNumber Value="swap.OutboundQuantity" Decimals="2" ShowZeroValue="true" />
+                                <small>@swap.OutboundSymbol</small>
+                                ➝
+                                <LargeNumber Value="swap.InboundQuantity" Decimals="2" ShowZeroValue="true" />
+                                <small>@swap.InboundSymbol</small>
                             </span>
-
-                            var fundSwap = inboundSwap.Contract.Address == Fund.Token.Address
-                                ? inboundSwap
-                                : outboundSwap;
-
-                            var netSnapshotPrice = Transaction.Price.NetAssetValuePerToken * fundSwap.Quantity;
-                            var netPrice = Fund.NetAssetValuePerToken * fundSwap.Quantity;
-
-                            var diff = Transaction.IsInbound(Fund.Token.Address)
-                                ? netPrice - netSnapshotPrice
-                                : netSnapshotPrice - netPrice;
-
                             <span>
                                 NET
-                                <Money Value="netSnapshotPrice" Decimals="2" ShowZeroValue="true" />
-                                <ProfitTag Value="diff" Decimals="2" />
+                                <Money Value="swap.NetSnapshotPrice" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
+                                <ProfitTag Value="swap.NetDiff" Decimals="2" />
                             </span>
 
-                            if (Fund.Market.IsTradeable)
+                            if (swap.IsTradeable)
                             {
-                                var marketSnapshotPrice = fundSwap.PricePerToken * fundSwap.Quantity;
-                                var marketPrice = Fund.Market.PricePerToken * fundSwap.Quantity;
-
-                                var marketDiff = Transaction.IsInbound(Fund.Token.Address)
-                                    ? marketPrice - marketSnapshotPrice
-                                    : marketSnapshotPrice - marketPrice;
-
                                 <span>
                                     MKT
-                                    <Money Value="marketSnapshotPrice" Decimals="2" ShowZeroValue="true" />
-                                    <ProfitTag Value="marketDiff" Decimals="2" />
+                                    <Money Value="swap.MarketSnapshotPrice.Value" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
+                                    <ProfitTag Value="swap.MarketDiff.Value" Decimals="2" />
                                 </span>
                             }
                         }
                         else
                         {
+                            var trade = Transaction.GetTradeData(Fund);
+
                             <span>
-                                @(Transaction.IsInbound(Fund.Token.Address) ? "Buy" : "Sell")
-                                <LargeNumber Value="Transaction.GetTransferQuantity(Fund.Token.Address, Transaction.TransferAction)" Decimals="2" ShowZeroValue="true" />
-                                @Fund.Token.Symbol
+                                @(trade.IsInbound ? "Buy" : "Sell")
+                                <LargeNumber Value="trade.Quantity" Decimals="2" ShowZeroValue="true" />
+                                <small>@Fund.Token.Symbol</small>
                             </span>
-
-                            var quantity = Transaction.GetTransferQuantity(Fund.Token.Address, Transaction.TransferAction);
-                            var netSnapshotPrice = Transaction.Price.NetAssetValuePerToken * quantity;
-                            var netPrice = Fund.NetAssetValuePerToken * quantity;
-
-                            var diff = Transaction.IsInbound(Fund.Token.Address)
-                                ? netPrice - netSnapshotPrice
-                                : netSnapshotPrice - netPrice;
-
                             <span>
                                 NET
-                                <Money Value="netSnapshotPrice" Decimals="2" ShowZeroValue="true" />
-                                <ProfitTag Value="diff" Decimals="2" />
+                                <Money Value="trade.NetSnapshotPrice" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
+                                <ProfitTag Value="trade.NetDiff" Decimals="2" />
                             </span>
 
-                            if (Fund.Market.IsTradeable)
+                            if (trade.IsTradeable)
                             {
-                                var marketSnapshotPrice = Transaction.GetTransferPrice(Fund.Token.Address, Transaction.TransferAction);
-                                var marketPrice = Fund.Market.PricePerToken * quantity;
-
-                                var marketDiff = Transaction.IsInbound(Fund.Token.Address)
-                                    ? marketPrice - marketSnapshotPrice
-                                    : marketSnapshotPrice - marketPrice;
-
                                 <span>
                                     MKT
-                                    <Money Value="marketSnapshotPrice" Decimals="2" ShowZeroValue="true" />
-                                    <ProfitTag Value="marketDiff" Decimals="2" />
+                                    <Money Value="trade.MarketSnapshotPrice.Value" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
+                                    <ProfitTag Value="trade.MarketDiff.Value" Decimals="2" />
                                 </span>
                             }
                         }
@@ -156,11 +122,9 @@
     public BusinessTransaction Transaction { get; set; }
 
     [Parameter]
-    public bool Clickable { get; set; }
+    public string CollapseId { get; set; }
 
     public string FundImageName => $"{Fund.Token.Symbol}.png";
-
-    internal string CollapseId => $"Id-{Transaction.Hash}";
 
     protected override void OnInitialized()
     {

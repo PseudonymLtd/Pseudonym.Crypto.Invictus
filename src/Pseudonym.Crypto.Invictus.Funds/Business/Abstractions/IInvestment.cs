@@ -1,4 +1,6 @@
-﻿namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
+﻿using System.Collections.Generic;
+
+namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 {
     public interface IInvestment
     {
@@ -11,5 +13,7 @@
         decimal? MarketValue { get; }
 
         decimal Share { get; }
+
+        IReadOnlyList<ISubInvestment> SubInvestments { get; set; }
     }
 }

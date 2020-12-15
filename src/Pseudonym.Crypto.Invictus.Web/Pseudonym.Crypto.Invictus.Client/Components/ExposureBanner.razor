@@ -1,0 +1,30 @@
+﻿@inject IUserSettings UserSettings
+@inject IAppState AppState
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-4 py-1">
+            <img src="@Investment.Coin.Links.ImageLink.OriginalString" onerror="this.attributes.getNamedItem('src').value = 'images/default.png'" width="32" height="32" style="margin: 0 auto; margin-right: 3px;" />
+            @Investment.Coin.Name
+        </div>
+        <div class="col-2 py-1">
+            <LargeNumber Value="Investment.Held" Decimals="2" />
+        </div>
+        <div class="col-3 py-1">
+            <Money Value="Investment.MarketValue" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
+        </div>
+        <div class="col-3 py-1">
+            <TokenExplorer Symbol="@Investment.Coin.Symbol" Name="@Investment.Coin.Name" Link="Investment.Coin.Links.Link" ImageLink="Investment.Coin.Links.ImageLink" MarketLink="Investment.Coin.Links.MarketLink" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public ApiSubInvestment Investment { get; set; }
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+    }
+}

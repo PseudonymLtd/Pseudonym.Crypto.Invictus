@@ -140,11 +140,42 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                         ? new Uri(operation.ContractLink, UriKind.Absolute)
                         : new Uri(string.Format(LinkTemplate, coinMarketCapId), UriKind.Absolute)),
                 ContractImageLink = fund != null
-                        ? new Uri($"https://{HostUrl.Host}/resources/{symbol}.png", UriKind.Absolute)
-                        : new Uri(string.Format(ImageTemplate, coinloreId), UriKind.Absolute),
+                    ? new Uri($"https://{HostUrl.Host}/resources/{symbol}.png", UriKind.Absolute)
+                    : new Uri(string.Format(ImageTemplate, coinloreId), UriKind.Absolute),
                 ContractMarketLink = fund == null || fund.Tradable
+                    ? new Uri(string.Format(MarketTemplate, coinloreId, currencyCode), UriKind.Absolute)
+                    : null
+            };
+        }
+
+        protected BusinessFundAsset MapFundAsset(FundSettings.FundAsset asset, decimal fundValue, CurrencyCode currencyCode)
+        {
+            var sanitisedId = asset.Name.Replace(" ", "-").Replace(".", "-").ToLower().Trim();
+            var coinloreId = GetAssetInfo(asset.Symbol)?.CoinLore ?? sanitisedId;
+            var coinMarketCapId = GetAssetInfo(asset.Symbol)?.CoinMarketCap ?? sanitisedId;
+
+            return new BusinessFundAsset()
+            {
+                Coin = new BusinessCoin()
+                {
+                    Name = asset.Name,
+                    Symbol = asset.Symbol,
+                    HexColour = GetAssetInfo(asset.Symbol)?.Colour,
+                    ContractAddress = !string.IsNullOrEmpty(asset.ContractAddress)
+                        ? new EthereumAddress(asset.ContractAddress)
+                        : default(EthereumAddress?),
+                    Decimals = asset.Decimals,
+                    FixedValuePerCoin = asset.FixedValuePerCoin,
+                    Link = asset.Link
+                        ?? new Uri(string.Format(LinkTemplate, coinMarketCapId), UriKind.Absolute),
+                    ImageLink = asset.ImageLink
+                        ?? new Uri(string.Format(ImageTemplate, coinloreId), UriKind.Absolute),
+                    MarketLink = asset.Tradable
                         ? new Uri(string.Format(MarketTemplate, coinloreId, currencyCode), UriKind.Absolute)
                         : null
+                },
+                Value = CurrencyConverter.Convert(asset.Value, currencyCode),
+                Share = asset.Value / fundValue * 100
             };
         }
     }

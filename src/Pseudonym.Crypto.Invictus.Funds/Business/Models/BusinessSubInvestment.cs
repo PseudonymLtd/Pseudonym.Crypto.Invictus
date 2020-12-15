@@ -2,12 +2,12 @@
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 {
-    internal sealed class BusinessFundAsset : IFundAsset
+    internal sealed class BusinessSubInvestment : ISubInvestment
     {
         public ICoin Coin { get; set; }
 
-        public decimal Value { get; set; }
+        public decimal Held { get; set; }
 
-        public decimal Share { get; set; }
+        public decimal MarketValue { get; set; }
     }
 }

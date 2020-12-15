@@ -3,18 +3,18 @@ using Newtonsoft.Json;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Models
 {
-    public sealed class ApiAsset
+    public sealed class ApiSubInvestment
     {
         [Required]
         [JsonProperty("coin")]
         public ApiCoin Coin { get; set; }
 
         [Required]
-        [JsonProperty("value")]
-        public decimal Value { get; set; }
+        [JsonProperty("held")]
+        public decimal Held { get; set; }
 
         [Required]
-        [JsonProperty("share")]
-        public decimal Share { get; set; }
+        [JsonProperty("market_value")]
+        public decimal MarketValue { get; set; }
     }
 }

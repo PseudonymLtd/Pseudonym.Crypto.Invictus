@@ -38,6 +38,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 
             public bool Tradable { get; set; }
 
+            public string ContractAddress { get; set; }
+
+            public decimal? FixedValuePerCoin { get; set; }
+
+            public int? Decimals { get; set; }
+
             public Uri Link { get; set; }
 
             public Uri ImageLink { get; set; }

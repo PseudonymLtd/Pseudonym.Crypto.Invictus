@@ -1,12 +1,11 @@
 ﻿@inject IUserSettings UserSettings
 @inject IAppState AppState
-@inject NavigationManager NavigationManager
 
 <div class="container-fluid">
     <div class="row">
         <div class="col-4 py-1">
-            <img src="@Asset.Links.ImageLink.OriginalString" onerror="this.attributes.getNamedItem('src').value = 'images/default.png'" width="32" height="32" style="margin: 0 auto; margin-right: 3px;" />
-            @Asset.Name
+            <img src="@Asset.Coin.Links.ImageLink.OriginalString" onerror="this.attributes.getNamedItem('src').value = 'images/default.png'" width="32" height="32" style="margin: 0 auto; margin-right: 3px;" />
+            @Asset.Coin.Name
         </div>
         <div class="col-3 py-1">
             <Money Value="@Asset.Value" CurrencyCode="UserSettings.CurrencyCode" />
@@ -15,7 +14,7 @@
             <LargeNumber Value="Asset.Share" Decimals="2" Suffix="%" />
         </div>
         <div class="col-3 py-1">
-            <TokenExplorer Symbol="@Asset.Symbol" Link="Asset.Links.Link" ImageLink="Asset.Links.ImageLink" MarketLink="Asset.Links.MarketLink" />
+            <TokenExplorer Symbol="@Asset.Coin.Symbol" Name="@Asset.Coin.Name" Link="Asset.Coin.Links.Link" ImageLink="Asset.Coin.Links.ImageLink" MarketLink="Asset.Coin.Links.MarketLink" />
         </div>
     </div>
 </div>

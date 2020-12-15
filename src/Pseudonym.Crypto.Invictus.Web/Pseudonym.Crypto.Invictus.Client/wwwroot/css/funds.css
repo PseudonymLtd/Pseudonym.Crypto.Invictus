@@ -1,4 +1,24 @@
-﻿.iba {
+﻿.invictus {
+    color: white !important;
+    background-color: #cf2127 !important;
+    border-color: #cf2127 !important;
+}
+
+.invictus:hover {
+    color: white !important
+}
+
+.invictus-text {
+    color: #cf2127 !important;
+}
+
+    .invictus-text:hover {
+        color: white !important;
+        background-color: #cf2127 !important;
+        border-color: #cf2127 !important;
+    }
+
+.iba {
     color: white !important;
     background-color: #f67a06 !important;
     border-color: #f67a06 !important;
