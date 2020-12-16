@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject IWebAssemblyHostEnvironment Environment
 @inject IOptions<AppSettings> Settings
+@inject IUserSettings UserSettings
 @inject IAppState AppState
 
 <div class="page">
@@ -10,19 +11,10 @@
 
     <div class="main">
         <div class="top-row px-4">
-            <a href="about" class="ml-md-auto">About</a>
         </div>
 
         <div class="content px-4" style="position: relative; padding-bottom: 225px;">
             <div>
-                @if (Environment.IsDevelopment())
-                {
-                    <div class="dev-header">
-                        <p>API Url @Settings.Value.ApiUrl</p>
-                        <p>Service Name @Settings.Value.ServiceName</p>
-                        <p>Service Version @Settings.Value.Version</p>
-                    </div>
-                }
                 @Body
                 <AnchorNavigator />
             </div>
@@ -44,8 +36,8 @@
 
 @code
 {
-        protected override void OnInitialized()
-        {
-            AppState.Assign(StateHasChanged);
-        }
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
     }
+}

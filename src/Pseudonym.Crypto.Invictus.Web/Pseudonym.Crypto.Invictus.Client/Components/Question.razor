@@ -1,0 +1,31 @@
+﻿<div class="container-fluid">
+    <div style="margin-top: auto; margin-bottom: auto; padding-bottom: 6px;" data-toggle="collapse" href="#@CollapseId" role="button" aria-expanded="false" aria-controls="@CollapseId">
+        <blockquote class="blockquote">
+            @Title
+            <footer class="blockquote-footer">
+                @ShortAnswer
+            </footer>
+        </blockquote>
+    </div>
+    <div class="collapse" id="@CollapseId">
+        @Answer
+    </div>
+</div>
+
+@code {
+    public Question()
+    {
+        CollapseId = $"Q-{Guid.NewGuid().ToString()}";
+    }
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public string ShortAnswer { get; set; }
+
+    [Parameter]
+    public RenderFragment Answer { get; set; }
+
+    protected string CollapseId { get; }
+}

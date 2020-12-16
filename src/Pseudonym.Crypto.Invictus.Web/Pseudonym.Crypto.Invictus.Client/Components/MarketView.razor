@@ -1,0 +1,45 @@
+﻿@inject IAppState AppState
+@inject IJSRuntime JsRuntime
+
+<div class="jumbotron jumbotron-fluid">
+    <div class="container" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
+        <div class="row">
+            <div class="col">
+                <h1 class="display-4">Markets</h1>
+                <p class="lead">@Exchange Market Pair @Pair</p>
+                <div class="tradingview-widget-container">
+                    <div id="@MarketId" style="min-height: 600px; height: 600px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    public MarketView()
+    {
+        MarketId = $"MV-{Guid.NewGuid().ToString()}";
+    }
+
+    [Parameter]
+    public string Exchange { get; set; }
+
+    [Parameter]
+    public string Pair { get; set; }
+
+    protected string MarketId { get; }
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        await JsRuntime.InvokeAsync<string>("functions.NewMarket", MarketId, Exchange, Pair);
+    }
+}

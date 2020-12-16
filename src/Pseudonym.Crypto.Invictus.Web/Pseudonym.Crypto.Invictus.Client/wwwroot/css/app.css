@@ -43,21 +43,6 @@ a, .btn-link {
     justify-content: flex-end !important;
 }
 
-.dev-header {
-    margin: 0;
-    padding: 5px;
-    background-color: #cf2127;
-    position: relative;
-    display: inline-block;
-}
-
-    .dev-header p {
-        margin: 0;
-        font-size: 10px;
-        color: white;
-        padding: 5px;
-    }
-
 .clickable-row {
 }
 

@@ -403,3 +403,6 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+
+# Aws Configs
+aws-ecs-tools-defaults.json

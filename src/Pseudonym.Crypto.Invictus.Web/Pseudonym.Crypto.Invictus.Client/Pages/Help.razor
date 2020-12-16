@@ -1,0 +1,177 @@
+﻿@page "/help"
+
+<div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        <div class="media" style="margin-top: auto; margin-bottom: auto; padding-bottom: 6px;">
+            <img src="images/funds/C10.png" class="mr-3" alt="Psuedonym">
+            <h1 class="display-4" style="margin-top: auto; margin-bottom: auto;">Help</h1>
+        </div>
+        <p class="lead">
+            Welcome to the help section of the Invictus Capital Portfolio tracker.
+            Below you can find answers to frequently asked questions and learn a bit more about how this site works.
+        </p>
+        <div class="alert alert-secondary mt-4" role="alert">
+            <span class="oi oi-dollar mr-2" aria-hidden="true"></span>
+            <span class="text-wrap">
+                Please be kind enough to consider donating to the below address, or tip us in brave! All proceeds go to upkeep and development of this site.
+            </span>
+            <hr />
+            <strong><EthAddress Address="0xec55cc3eb260B0b9C3b2aF7E0C074095a59114a5" FontSize="16" HighlightOwnership="false" /></strong>
+            @*<form action="https://www.paypal.com/donate" method="post" target="_top">
+                <input type="hidden" name="cmd" value="_donations" />
+                <input type="hidden" name="business" value="FGP5HTJDMG3RJ" />
+                <input type="hidden" name="item_name" value="Crypto Services" />
+                <input type="hidden" name="currency_code" value="GBP" />
+                <button class="btn btn-primary" name="submit">
+                    Donate
+                </button>
+            </form>*@
+        </div>
+        <div class="media" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
+            <Question Title="Who is this site maintained by?" ShortAnswer="Pseudonym Ltd">
+                <Answer>
+                    <p>
+                        This site is run by Pseudonym Ltd, which is a one man company run by <Link DisplayText="Tom Day" Url="https://www.linkedin.com/in/tom-day-684a0ba6" CaptionText="LinkedIn" />.
+                        Tom participated in the <b>Crypto20</b> <small>ICO</small> making his debut investment in the crypto space.
+                    </p>
+                    <p>
+                        In 2020, Tom took part in Invictus Capital's community developer program,
+                        aiming to incentivize developers and tech savvy people alike in the space to make tools for the wider Invictus community.
+                        This product is the result of that program.
+                    </p>
+                    <p>
+                        <b>Note:</b> Although incentivized by Invictus Capital, this tool is maintained 100% separately from Invictus Capital - please don't bother them with stuff to do with this site!
+                    </p>
+                </Answer>
+            </Question>
+            <Question Title="Why is the site sudddenly not working?" ShortAnswer="The site has probably updated. You should clear your cache.">
+                <Answer>
+                    <p>
+                        This site is made using Blazor. For all of its technical greatness, its still pretty bad when it comes to updating our website.
+                    </p>
+                    <p>
+                        If you find the site suddenly stops working, it could be us! But before sending us a bug report, try the following:
+                    </p>
+                    <ul>
+                        <li>Press F12 if you're on a desktop, or if on a tablet device or mobile, navigate to the developer tools section of your browser.</li>
+                        <li>
+                            If on desktop, a new pane will appear - click the "Application" tab and hit clear cache. This will clear the cache for this site.
+                            <p>
+                                <b>Note:</b> watch out for cookies - you probably want to uncheck any tick boxes that refer to clearing cookies, you'll want to keep them.
+                            </p>
+                        </li>
+                        <li>
+                            If you're using a mobile or tablet device, your browser may not have a "developer" mode. In this case, you'll have to clear your global cache.
+                            <p>
+                                To clear your global cache, you'll need to go into your settings, under the privacy section on your browser, there should be a clear method to clearing out your cache.
+                            </p>
+                        </li>
+                    </ul>
+                </Answer>
+            </Question>
+        </div>
+        <div class="media" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
+            <Question Title="Where does the data on this site come from?" ShortAnswer="A number of reputable crypto sources, which are then cached.">
+                <Answer>
+                    <p>
+                        Data on this site is collected from a variety of sources to maintain data integrity. Most of this data is collected and then cached in our own storage systems.
+                    </p>
+                    <p>
+                        <span>Below is a list of current data sources:</span>
+                        <ul>
+                            <li>
+                                <b><Link DisplayText="Invictus Capital" Url="https://invictuscapital.com" CaptionText="Extenal Link" /></b>
+                                <p>
+                                    Would be difficult to create a Invictus Capital Portfolio tracker without having NAV data from these guys.
+                                </p>
+                            </li>
+                            <li>
+                                <b><Link DisplayText="Bloxy" Url="https://bloxy.info" CaptionText="Extenal Link" /></b>
+                                <p>
+                                    Bloxy is used to collect transaction data for all of the invictus funds, which we then cache on our own data clusters for quicker access.
+                                </p>
+                            </li>
+                            <li>
+                                <b><Link DisplayText="Ethplorer" Url="https://ethplorer.io" CaptionText="Extenal Link" /></b>
+                                <p>
+                                    Ethplorer is used to collect transactional operation data to obtain a finer granularity of detail. These also get cached for quicker access.
+                                </p>
+                            </li>
+                            <li>
+                                <b><Link DisplayText="Infura" Url="https://infura.io" CaptionText="Extenal Link" /></b>
+                                <p>
+                                    Infura provides a <small>RPC</small> which is used to collate data about token holdings across addresses.
+                                </p>
+                            </li>
+                            <li>
+                                <b><Link DisplayText="Lightstreams" Url="https://explorer.lightstreams.io" CaptionText="Extenal Link" /></b>
+                                <p>
+                                    Lightstreams provides a <small>RPC</small> to connect to their Lightstream network. This is a holding of the <b>Invictus Hyperion Fund</b> and is used to collate data about <small>PHT</small> holdings across addresses.
+                                </p>
+                            </li>
+                        </ul>
+                    </p>
+                </Answer>
+            </Question>
+            <Question Title="How often is data refreshed on this site?" ShortAnswer="Hourly.">
+                <Answer>
+                    <p>
+                        There are a number of features on this site which update at different intervals, but its safte to say that the site data in general updates hourly.
+                    </p>
+                    <p>
+                        Here is a quick breakdown of features and their update intervals:
+                        <ul>
+                            <li>
+                                <b>Transactions</b> - Hourly
+                            </li>
+                            <li>
+                                <b>Fiat Exchange Rates</b> - Hourly
+                            </li>
+                            <li>
+                                <b>Invictus Fund Prices</b> - Live
+                            </li>
+                            <li>
+                                <b>Non Invictus Fund Prices</b> - Live
+                            </li>
+                        </ul>
+                    </p>
+                </Answer>
+            </Question>
+        </div>
+        <div class="media" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
+            <Question Title="How do I report a problem?" ShortAnswer="Send an email to Tom - tom.day@psuedonym.org.uk">
+                <Answer>
+                    <p>
+                        If you find an issue on the site, please email Tom <a href="mailto:tom.day@psuedonym.org.uk">here</a>.
+                        Before you do, try clearing your browser cache, worth a shot, and usually works!
+                    </p>
+                    <p>
+                        <b>Note:</b> To best service your issue, please be as descriptive as possible in your email, and be sure to use a couple of screen shots.
+                        Try to include a rough time estimate of when you encountered the issue too!
+                    </p>
+                </Answer>
+            </Question>
+            <Question Title="Is this site still being developed?" ShortAnswer="Yes - watch this space!">
+                <Answer>
+                    <p>
+                        The site is constantly being improved and updated. There is a maximum monthly budget for running costs, which will hopefully grow over time.
+                    </p>
+                    <p>
+                        Here is a quick rundown of features in the pipeline:
+                        <ul>
+                            <li>
+                                <b>Multiple Addresses</b> - Ability to input multiple addresses at once, so that your portfolio view can correctly determine transfers between your wallets.
+                            </li>
+                            <li>
+                                <b>Public API</b> - Whats the point in caching all this data if only I can use it?
+                            </li>
+                            <li>
+                                <b>Graphing and Exporting</b> - Further useful views and charts, coupled with the ability to export data into common formats like json, xml &amp; csv.
+                            </li>
+                        </ul>
+                    </p>
+                </Answer>
+            </Question>
+        </div>
+    </div>
+</div>

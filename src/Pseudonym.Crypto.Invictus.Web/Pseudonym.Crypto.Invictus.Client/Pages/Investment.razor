@@ -21,6 +21,18 @@ else
     {
         <InvestmentExposure Investments="investment.SubInvestments" />
     }
+    if (investment.Fund.Market.IsTradeable)
+    {
+        switch (investment.Fund.Token.Symbol)
+        {
+            case Invictus.Shared.Enums.Symbol.IHF:
+                <MarketView Exchange="HITBTC" Pair="IHFUSDT" />
+                break;
+            case Invictus.Shared.Enums.Symbol.C20:
+                <MarketView Exchange="HITBTC" Pair="C20USD" />
+                break;
+        }
+    }
     if (!transactions.Any())
     {
         <Loading />

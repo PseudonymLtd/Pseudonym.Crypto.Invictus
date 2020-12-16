@@ -11,6 +11,18 @@ else
 {
     <FundSummary Fund="fund" Clickable="false" ShowGraph="true" />
     <FundBreakdown Fund="fund" />
+    @if (fund.Market.IsTradeable)
+    {
+        switch (fund.Token.Symbol)
+        {
+            case Invictus.Shared.Enums.Symbol.IHF:
+                <MarketView Exchange="HITBTC" Pair="IHFUSDT" />
+                break;
+            case Invictus.Shared.Enums.Symbol.C20:
+                <MarketView Exchange="HITBTC" Pair="C20USD" />
+                break;
+        }
+    }
 }
 
 @code {

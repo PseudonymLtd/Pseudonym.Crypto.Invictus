@@ -45,5 +45,22 @@
     },
     CollapseHide: function (id) {
         $('#' + id).collapse('toggle');
+    },
+    NewMarket: function (id, exchange, pair) {
+            new TradingView.widget(
+            {
+                autosize: true,
+                symbol: exchange.toUpperCase() + ":" + pair.toUpperCase(),
+                interval: "D",
+                timezone: "Etc/UTC",
+                theme: "dark",
+                style: "1",
+                locale: "uk",
+                toolbar_bg: "#f1f3f6",
+                withdateranges: true,
+                enable_publishing: false,
+                save_image: false,
+                container_id: id
+            });
     }
 }
