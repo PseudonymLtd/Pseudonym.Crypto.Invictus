@@ -153,8 +153,8 @@ namespace Pseudonym.Crypto.Invictus.Web.Server
 
             app.UseHsts();
             app.UseHttpsRedirection();
-            app.UseBlazorFrameworkFiles();
             app.UseResponseCompression();
+            app.UseBlazorFrameworkFiles();
             app.UseMiddleware<ScopedCancellationTokenMiddleware>();
             app.UseMiddleware<ScopedCorrelationIdMiddleware>();
             app.UseMiddleware<KestralResponseBodyMiddleware>();

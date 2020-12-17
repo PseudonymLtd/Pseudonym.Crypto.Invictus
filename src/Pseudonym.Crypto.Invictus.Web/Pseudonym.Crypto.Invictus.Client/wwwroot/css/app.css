@@ -39,6 +39,10 @@ a, .btn-link {
     margin-bottom: calc(-1.5em + -0.5rem - 2px);
 }
 
+.flag {
+    border: #797979 solid 1px;
+}
+
 .price-mode {
     justify-content: flex-end !important;
 }
@@ -246,6 +250,10 @@ app {
         text-align: center;
     }
 
+    .text-mob-xs {
+        font-size: x-small;
+    }
+
     .text-mob-sm {
         font-size: small;
     }
@@ -256,6 +264,10 @@ app {
 
     .text-mob-lg {
         font-size: large;
+    }
+
+    .text-mob-xl {
+        font-size: x-large;
     }
 
     .text-align-mob-left {
@@ -281,6 +293,15 @@ app {
     .invisible-mob {
         display: none;
     }
+
+    .currency-selector {
+        width: 100% !important;
+    }
+
+        .currency-selector .dropdown-item .flag {
+            width: 25px !important;
+            height: 15px !important;
+        }
 
     .portfolio-address .tooltip-container {
         display: block !important;

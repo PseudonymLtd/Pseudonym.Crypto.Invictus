@@ -1,9 +1,10 @@
 ﻿@page "/help"
+@inject IAppState AppState
 
 <div class="jumbotron jumbotron-fluid">
     <div class="container">
         <div class="media" style="margin-top: auto; margin-bottom: auto; padding-bottom: 6px;">
-            <img src="images/funds/C10.png" class="mr-3" alt="Psuedonym">
+            <img src="images/funds/C10.png" class="mr-3">
             <h1 class="display-4" style="margin-top: auto; margin-bottom: auto;">Help</h1>
         </div>
         <p class="lead">
@@ -11,21 +12,29 @@
             Below you can find answers to frequently asked questions and learn a bit more about how this site works.
         </p>
         <div class="alert alert-secondary mt-4" role="alert">
-            <span class="oi oi-dollar mr-2" aria-hidden="true"></span>
-            <span class="text-wrap">
-                Please be kind enough to consider donating to the below address, or tip us in brave! All proceeds go to upkeep and development of this site.
-            </span>
-            <hr />
-            <strong><EthAddress Address="0xec55cc3eb260B0b9C3b2aF7E0C074095a59114a5" FontSize="16" HighlightOwnership="false" /></strong>
-            @*<form action="https://www.paypal.com/donate" method="post" target="_top">
-                <input type="hidden" name="cmd" value="_donations" />
-                <input type="hidden" name="business" value="FGP5HTJDMG3RJ" />
-                <input type="hidden" name="item_name" value="Crypto Services" />
-                <input type="hidden" name="currency_code" value="GBP" />
-                <button class="btn btn-primary" name="submit">
-                    Donate
-                </button>
-            </form>*@
+            <p class="lead text-wrap">
+                <span class="oi oi-dollar mr-2" style="font-size: 1.25rem;" aria-hidden="true"></span>
+                Please be kind enough to consider donating to help keep this site running.
+            </p>
+            <ul>
+                <li>We are a brave content creator, if you're using brave, feel free to tip us!</li>
+                <li>You can send some of your unwanted swag to <EthAddress Address="0xec55cc3eb260B0b9C3b2aF7E0C074095a59114a5" HighlightOwnership="false" /></li>
+                <li>
+                    Or you may donate with paypal
+                    <form action="https://www.paypal.com/donate" method="post" target="_top">
+                        <input type="hidden" name="hosted_button_id" value="CY7M2436H8BJ6" />
+                        <button class="btn btn-danger btn-sm" name="submit">
+                            Donate
+                        </button>
+                    </form>
+                </li>
+            </ul>
+            <blockquote class="blockquote" style="font-size: 1rem;">
+                100% of your donations will go towards upkeep and improving this site. This is a personal project of mine and a true passion, I cannot thank you enough.
+                <footer class="blockquote-footer">
+                    Tom Day
+                </footer>
+            </blockquote>
         </div>
         <div class="media" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
             <Question Title="Who is this site maintained by?" ShortAnswer="Pseudonym Ltd">
@@ -44,7 +53,7 @@
                     </p>
                 </Answer>
             </Question>
-            <Question Title="Why is the site sudddenly not working?" ShortAnswer="The site has probably updated. You should clear your cache.">
+            <Question Title="Why is the site suddenly not working?" ShortAnswer="The site has probably updated. You should clear your cache.">
                 <Answer>
                     <p>
                         This site is made using Blazor. For all of its technical greatness, its still pretty bad when it comes to updating our website.
@@ -56,14 +65,27 @@
                         <li>Press F12 if you're on a desktop, or if on a tablet device or mobile, navigate to the developer tools section of your browser.</li>
                         <li>
                             If on desktop, a new pane will appear - click the "Application" tab and hit clear cache. This will clear the cache for this site.
+                            <br />
+                            <br />
                             <p>
-                                <b>Note:</b> watch out for cookies - you probably want to uncheck any tick boxes that refer to clearing cookies, you'll want to keep them.
+                                <b>Note 1:</b> Watch out for cookies - you probably want to uncheck any tick boxes that refer to clearing cookies, you'll want to keep them.
+                            </p>
+                            <p>
+                                <b>Note 2:</b> If you have the option, tick the checkbox "update on reload" under service workers, this should solve the issue for you permanently.
                             </p>
                         </li>
                         <li>
                             If you're using a mobile or tablet device, your browser may not have a "developer" mode. In this case, you'll have to clear your global cache.
                             <p>
                                 To clear your global cache, you'll need to go into your settings, under the privacy section on your browser, there should be a clear method to clearing out your cache.
+                            </p>
+                        </li>
+                        <li>
+                            If you're using the app on your tablet or phone, just uninstall the app and reinstall it from the website, to be safe.
+                            <br />
+                            <br />
+                            <p>
+                                <b>Note:</b> We're working on a way to sort this one out, as it's not ideal!
                             </p>
                         </li>
                     </ul>
@@ -81,42 +103,42 @@
                         <ul>
                             <li>
                                 <b><Link DisplayText="Invictus Capital" Url="https://invictuscapital.com" CaptionText="Extenal Link" /></b>
-                                <p>
-                                    Would be difficult to create a Invictus Capital Portfolio tracker without having NAV data from these guys.
-                                </p>
-                            </li>
-                            <li>
-                                <b><Link DisplayText="Bloxy" Url="https://bloxy.info" CaptionText="Extenal Link" /></b>
-                                <p>
-                                    Bloxy is used to collect transaction data for all of the invictus funds, which we then cache on our own data clusters for quicker access.
-                                </p>
-                            </li>
-                            <li>
-                                <b><Link DisplayText="Ethplorer" Url="https://ethplorer.io" CaptionText="Extenal Link" /></b>
-                                <p>
-                                    Ethplorer is used to collect transactional operation data to obtain a finer granularity of detail. These also get cached for quicker access.
-                                </p>
-                            </li>
-                            <li>
-                                <b><Link DisplayText="Infura" Url="https://infura.io" CaptionText="Extenal Link" /></b>
-                                <p>
-                                    Infura provides a <small>RPC</small> which is used to collate data about token holdings across addresses.
-                                </p>
-                            </li>
-                            <li>
-                                <b><Link DisplayText="Lightstreams" Url="https://explorer.lightstreams.io" CaptionText="Extenal Link" /></b>
-                                <p>
-                                    Lightstreams provides a <small>RPC</small> to connect to their Lightstream network. This is a holding of the <b>Invictus Hyperion Fund</b> and is used to collate data about <small>PHT</small> holdings across addresses.
-                                </p>
-                            </li>
-                        </ul>
+                    <p>
+                        Would be difficult to create a Invictus Capital Portfolio tracker without having NAV data from these guys.
+                    </p>
+                    </li>
+                    <li>
+                        <b><Link DisplayText="Bloxy" Url="https://bloxy.info" CaptionText="Extenal Link" /></b>
+                        <p>
+                            Bloxy is used to collect transaction data for all of the invictus funds, which we then cache on our own data clusters for quicker access.
+                        </p>
+                    </li>
+                    <li>
+                        <b><Link DisplayText="Ethplorer" Url="https://ethplorer.io" CaptionText="Extenal Link" /></b>
+                        <p>
+                            Ethplorer is used to collect transactional operation data to obtain a finer granularity of detail. These also get cached for quicker access.
+                        </p>
+                    </li>
+                    <li>
+                        <b><Link DisplayText="Infura" Url="https://infura.io" CaptionText="Extenal Link" /></b>
+                        <p>
+                            Infura provides a <small>RPC</small> which is used to collate data about token holdings across addresses.
+                        </p>
+                    </li>
+                    <li>
+                        <b><Link DisplayText="Lightstreams" Url="https://explorer.lightstreams.io" CaptionText="Extenal Link" /></b>
+                        <p>
+                            Lightstreams provides a <small>RPC</small> to connect to their Lightstream network. This is a holding of the <b>Invictus Hyperion Fund</b> and is used to collate data about <small>PHT</small> holdings across addresses.
+                        </p>
+                    </li>
+                    </ul>
                     </p>
                 </Answer>
             </Question>
             <Question Title="How often is data refreshed on this site?" ShortAnswer="Hourly.">
                 <Answer>
                     <p>
-                        There are a number of features on this site which update at different intervals, but its safte to say that the site data in general updates hourly.
+                        There are a number of features on this site which update at different intervals, but its safe to say that the site data in general updates hourly.
                     </p>
                     <p>
                         Here is a quick breakdown of features and their update intervals:
@@ -160,6 +182,9 @@
                         Here is a quick rundown of features in the pipeline:
                         <ul>
                             <li>
+                                <b>ICAP</b> - With <small>ICAP</small> on the horizon, we're working closely with Invictus to support it from launch day.
+                            </li>
+                            <li>
                                 <b>Multiple Addresses</b> - Ability to input multiple addresses at once, so that your portfolio view can correctly determine transfers between your wallets.
                             </li>
                             <li>
@@ -175,3 +200,10 @@
         </div>
     </div>
 </div>
+
+@code { 
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+    }
+}

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -52,17 +53,21 @@ namespace Pseudonym.Crypto.Invictus.Web.Client
                 var funds = sessionStore.Get<Dictionary<Symbol, FundInfo>>(StoreKeys.Funds)
                     ?? new Dictionary<Symbol, FundInfo>();
 
-                var addr = cookieManager.Get<string>(CookieKeys.WalletAddresses);
                 var currencyCode = cookieManager.Get<CurrencyCode>(CookieKeys.CurrencyCode);
+                var addr = cookieManager.Get<string>(CookieKeys.WalletAddresses);
+                var secondaryAddresses = cookieManager.Get<string>(CookieKeys.SecondaryWalletAddresses)
+                    ?.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    ?.ToList()
+                    ?? new List<string>();
 
-                return new UserSettings(funds)
+                return new UserSettings(funds, secondaryAddresses)
                 {
                     WalletAddress = addr,
                     CurrencyCode = currencyCode
                 };
             });
-            container.AddSingleton<IUserSettings>(sp => sp.GetRequiredService<UserSettings>());
 
+            container.AddSingleton<IUserSettings>(sp => sp.GetRequiredService<UserSettings>());
             container.AddSingleton<IUserSettingsHandle, UserSettingsHandle>();
             container.AddSingleton<IEnvironmentNameAccessor, EnvironmentNameAccessor>();
 

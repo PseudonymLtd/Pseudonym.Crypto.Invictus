@@ -1,0 +1,181 @@
+﻿@page "/settings"
+@inject IAppState AppState
+@inject IUserSettings UserSettings
+@inject IUserSettingsHandle UserSettingsHandle
+
+<div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        <div class="media" style="margin-top: auto; margin-bottom: auto; padding-bottom: 6px;">
+            <img src="images/funds/C20.png" class="mr-3">
+            <h1 class="display-4" style="margin-top: auto; margin-bottom: auto;">Settings</h1>
+        </div>
+        <p class="lead">
+            Below you can set your preferences including output currency and addresses.
+        </p>
+        <div class="alert alert-secondary mt-4" role="alert">
+            <h3>
+                <span class="oi oi-globe mr-2" style="font-size: 1.5rem;" aria-hidden="true"></span>
+                Locale
+            </h3>
+            <div class="form-group">
+                <blockquote class="blockquote" for="dropdownMenuButton" style="font-size: 1rem;">
+                    Fiat Currency
+                    <footer id="currencyCodeHelp" class="blockquote-footer">
+                        @if (UserSettings.CurrencyCode != CurrencyCode.USD)
+                        {
+                            <span>Price data is converted from @CurrencyCode.USD &rarr; @UserSettings.CurrencyCode</span>
+                        }
+                        else
+                        {
+                            <span>Price data is in @CurrencyCode.USD</span>
+                        }
+                    </footer>
+                </blockquote>
+                <CurrencySelector />
+            </div>
+        </div>
+        <div class="alert alert-secondary mt-4" role="alert">
+            <h3>
+                <span class="oi oi-fork mr-2" style="font-size: 1.5rem;" aria-hidden="true"></span>
+                Addresses
+            </h3>
+            <div class="form-group">
+                <blockquote class="blockquote" for="dropdownMenuButton" style="font-size: 1rem;">
+                    Primary Address
+                    <footer class="blockquote-footer">
+                        This is your primary address, and is used for all portfolio displays.
+                    </footer>
+                </blockquote>
+                <div class="form-group">
+                    <input type="text"
+                           class="form-control @(PrimaryAddressIsValid ? "is-valid" : "is-invalid")"
+                           id="primaryWalletAddress"
+                           aria-describedby="primaryWalletAddressFeedback"
+                           required
+                           style="border-color: #dc3545; font-size: small;"
+                           value="@UserSettingsHandle.Settings.WalletAddress"
+                           @onchange="ChangeWalletAddressAsync" />
+                    <div id="primaryWalletAddressFeedback" class="invalid-feedback">
+                        Please provide a valid ethereum address
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <blockquote class="blockquote" for="dropdownMenuButton" style="font-size: 1rem;">
+                    Secondary Addresses
+                    <footer class="blockquote-footer">
+                        Secondary addresses are used to mark other addresses you own. When you transfer between these addresses, it will not be seen as a buy or sell.
+                    </footer>
+                </blockquote>
+                <div style="padding-bottom: 12px;">
+                    @foreach (var item in UserSettingsHandle.Settings.SecondaryWalletAddresses)
+                    {
+                    <div style="padding: 2px 0; width: 100%;">
+                        <span class="badge badge-secondary text-wrap">
+                            <EthAddress Address="@item" HighlightOwnership="false" />
+                        </span>
+                        <span class="badge badge-danger" style="cursor: pointer;" @onclick="(e) => OnDeleteSecondaryWalletAddressAsync(item, e)">
+                            &times;
+                        </span>
+                    </div>
+                    }
+                </div>
+                <div class="input-group mb-3">
+                    <input type="text"
+                           class="form-control @(SecondaryAddressIsValid ? "is-valid" : "is-invalid")"
+                           id="secondaryWalletAddress"
+                           required
+                           aria-describedby="secondaryWalletAddressFeedback"
+                           style="border-color: #dc3545; font-size: small;"
+                           value="@SecondaryAddressInput"
+                           @onchange="ChangeSecondaryWalletAddress"/>
+                    <div class="input-group-append" style="height: 34px;">
+                        <button class="btn btn-danger" type="button" @onclick="OnAddSecondaryWalletAddressAsync">Add</button>
+                    </div>
+                    <div id="secondaryWalletAddressFeedback" class="invalid-feedback">
+                        Please provide a valid ethereum address
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    protected string SecondaryAddressInput { get; set; }
+
+    protected bool PrimaryAddressIsValid { get; private set; }
+
+    protected bool SecondaryAddressIsValid { get; private set; }
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+
+        PrimaryAddressIsValid = UserSettingsHandle.Settings.HasValidAddress();
+        SecondaryAddressIsValid = true;
+        SecondaryAddressInput = string.Empty;
+    }
+
+    private async Task ChangeWalletAddressAsync(ChangeEventArgs e)
+    {
+        var addr = e.Value.ToString();
+
+        if (UserSettingsHandle.Settings.IsValidAddress(addr))
+        {
+            Console.WriteLine($"Changing Address to: {e.Value}");
+
+            await UserSettingsHandle.UpdateAsync(us => us.WalletAddress = addr);
+
+            PrimaryAddressIsValid = true;
+
+            AppState.NotifyStateChanged();
+        }
+        else
+        {
+            PrimaryAddressIsValid = false;
+
+            StateHasChanged();
+        }
+    }
+
+    private void ChangeSecondaryWalletAddress(ChangeEventArgs e)
+    {
+        SecondaryAddressInput = e.Value.ToString();
+        SecondaryAddressIsValid = UserSettingsHandle.Settings.IsValidAddress(SecondaryAddressInput);
+
+        StateHasChanged();
+    }
+
+    private async Task OnAddSecondaryWalletAddressAsync(MouseEventArgs e)
+    {
+        if (UserSettingsHandle.Settings.IsValidAddress(SecondaryAddressInput) &&
+            !UserSettingsHandle.Settings.WalletAddress.Equals(SecondaryAddressInput, StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine($"Adding Secondary Address: {SecondaryAddressInput}");
+
+            await UserSettingsHandle.UpdateAsync(us => us.AddSecondaryAddress(SecondaryAddressInput));
+
+            SecondaryAddressInput = string.Empty;
+
+            AppState.NotifyStateChanged();
+        }
+
+        if (UserSettingsHandle.Settings.WalletAddress.Equals(SecondaryAddressInput, StringComparison.OrdinalIgnoreCase))
+        {
+            SecondaryAddressInput = string.Empty;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task OnDeleteSecondaryWalletAddressAsync(string address, MouseEventArgs e)
+    {
+        Console.WriteLine($"Removing Secondary Address: {address}");
+
+        await UserSettingsHandle.UpdateAsync(us => us.RemoveSecondaryAddress(address));
+
+        AppState.NotifyStateChanged();
+    }
+}

@@ -16,10 +16,21 @@ else
         switch (fund.Token.Symbol)
         {
             case Invictus.Shared.Enums.Symbol.IHF:
-                <MarketView Exchange="HITBTC" Pair="IHFUSDT" />
+                var ihfPairs = new List<(string Exchange, string Pair)>()
+                {
+                    ("HITBTC", "IHFUSDT")
+                };
+
+                <MarketView ExchangePairs="ihfPairs" />
                 break;
             case Invictus.Shared.Enums.Symbol.C20:
-                <MarketView Exchange="HITBTC" Pair="C20USD" />
+                var c20Pairs = new List<(string Exchange, string Pair)>()
+                {
+                    ("HITBTC", "C20USD"),
+                    ("HITBTC", "C20ETH"),
+                    ("HITBTC", "C20BTC")
+                };
+                <MarketView ExchangePairs="c20Pairs" />
                 break;
         }
     }

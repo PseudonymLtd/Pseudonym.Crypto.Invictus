@@ -2,7 +2,7 @@
 @inject IAppState AppState
 
 <div class="container-fluid">
-    <div class="row">
+    <div class="row row-cols-xs-1 row-cols-sm-2 row-cols-md-4">
         <div class="col-4 py-1">
             <img src="@Asset.Coin.Links.ImageLink.OriginalString" onerror="this.attributes.getNamedItem('src').value = 'images/default.png'" width="32" height="32" style="margin: 0 auto; margin-right: 3px;" />
             @Asset.Coin.Name
