@@ -8,39 +8,33 @@ using Amazon.DynamoDBv2.Model;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Data.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
-using Pseudonym.Crypto.Invictus.Funds.Utils;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Data
 {
-    internal sealed class OperationRepository : IOperationRepository
+    internal sealed class OperationRepository : BaseRepository<DataOperation>, IOperationRepository
     {
-        private const int MaxBatchWrites = 25;
         private const string TableName = "Pseudonym-Crypto-Invictus-Operations";
         private const string InboundIndexName = "Inbound";
         private const string OutboundIndexName = "Outbound";
 
-        private readonly IAmazonDynamoDB amazonDynamoDB;
-        private readonly IScopedCancellationToken scopedCancellationToken;
-
         public OperationRepository(
             IAmazonDynamoDB amazonDynamoDB,
             IScopedCancellationToken scopedCancellationToken)
+            : base(amazonDynamoDB, scopedCancellationToken, TableName)
         {
-            this.amazonDynamoDB = amazonDynamoDB;
-            this.scopedCancellationToken = scopedCancellationToken;
         }
 
         public async Task<DataOperation> GetOperationAsync(EthereumTransactionHash hash, int order)
         {
-            var response = await amazonDynamoDB.GetItemAsync(
+            var response = await DynamoDB.GetItemAsync(
                 TableName,
                 new Dictionary<string, AttributeValue>()
                 {
                     [nameof(DataOperation.Hash)] = new AttributeValue(hash),
                     [nameof(DataOperation.Order)] = new AttributeValue() { N = order.ToString() }
                 },
-                scopedCancellationToken.Token);
+                CancellationToken);
 
             if (response.HttpStatusCode != HttpStatusCode.OK)
             {
@@ -59,9 +53,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
         {
             var lastEvaluatedKey = new Dictionary<string, AttributeValue>();
 
-            while (!scopedCancellationToken.Token.IsCancellationRequested)
+            while (!CancellationToken.IsCancellationRequested)
             {
-                var response = await amazonDynamoDB.QueryAsync(
+                var response = await DynamoDB.QueryAsync(
                     new QueryRequest()
                     {
                         TableName = TableName,
@@ -79,7 +73,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                             ? lastEvaluatedKey
                             : null
                     },
-                    scopedCancellationToken.Token);
+                    CancellationToken);
 
                 if (response.HttpStatusCode != HttpStatusCode.OK)
                 {
@@ -102,48 +96,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             }
         }
 
-        public async Task UploadOperationsAsync(params DataOperation[] operations)
-        {
-            if (operations.Length == 1)
-            {
-                var attributes = DynamoDbConvert.Serialize(operations.Single());
-
-                var response = await amazonDynamoDB.PutItemAsync(
-                    TableName,
-                    attributes,
-                    scopedCancellationToken.Token);
-
-                if (response.HttpStatusCode != HttpStatusCode.OK)
-                {
-                    throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
-                }
-            }
-            else
-            {
-                for (int skip = 0; skip < operations.Length; skip += MaxBatchWrites)
-                {
-                    var items = operations
-                        .Skip(skip)
-                        .Take(MaxBatchWrites)
-                        .Select(DynamoDbConvert.Serialize);
-
-                    var response = await amazonDynamoDB.BatchWriteItemAsync(
-                        new Dictionary<string, List<WriteRequest>>()
-                        {
-                            [TableName] = items
-                                .Select(attributes => new WriteRequest(new PutRequest(attributes)))
-                                .ToList()
-                        },
-                        scopedCancellationToken.Token);
-
-                    if (response.HttpStatusCode != HttpStatusCode.OK)
-                    {
-                        throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
-                    }
-                }
-            }
-        }
-
         public IAsyncEnumerable<EthereumTransactionHash> ListInboundHashesAsync(EthereumAddress address, string type)
         {
             return ListAddressHashesAsync(address, type, InboundIndexName, nameof(DataOperation.Recipient));
@@ -154,6 +106,31 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             return ListAddressHashesAsync(address, type, OutboundIndexName, nameof(DataOperation.Sender));
         }
 
+        protected sealed override DataOperation Map(Dictionary<string, AttributeValue> attributes)
+        {
+            return new DataOperation()
+            {
+                Hash = attributes[nameof(DataOperation.Hash)].S,
+                Order = int.Parse(attributes[nameof(DataOperation.Order)].N),
+                Type = attributes[nameof(DataOperation.Type)].S,
+                Address = attributes[nameof(DataOperation.Address)].S,
+                Sender = attributes[nameof(DataOperation.Sender)].S,
+                Recipient = attributes[nameof(DataOperation.Recipient)].S,
+                Addresses = attributes[nameof(DataOperation.Addresses)].SS,
+                IsEth = attributes[nameof(DataOperation.IsEth)].BOOL,
+                Price = decimal.Parse(attributes[nameof(DataOperation.Price)].N),
+                Value = attributes[nameof(DataOperation.Value)].S,
+                Priority = int.Parse(attributes[nameof(DataOperation.Priority)].N),
+                ContractAddress = attributes[nameof(DataOperation.ContractAddress)].S,
+                ContractSymbol = attributes[nameof(DataOperation.ContractSymbol)].S,
+                ContractDecimals = int.Parse(attributes[nameof(DataOperation.ContractDecimals)].N),
+                ContractHolders = long.Parse(attributes[nameof(DataOperation.ContractHolders)].N),
+                ContractIssuances = long.Parse(attributes[nameof(DataOperation.ContractIssuances)].N),
+                ContractLink = attributes[nameof(DataOperation.ContractLink)].S,
+                ContractName = attributes[nameof(DataOperation.ContractName)].S
+            };
+        }
+
         private async IAsyncEnumerable<EthereumTransactionHash> ListAddressHashesAsync(
             EthereumAddress address,
             string type,
@@ -162,9 +139,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
         {
             var lastEvaluatedKey = new Dictionary<string, AttributeValue>();
 
-            while (!scopedCancellationToken.Token.IsCancellationRequested)
+            while (!CancellationToken.IsCancellationRequested)
             {
-                var response = await amazonDynamoDB.QueryAsync(
+                var response = await DynamoDB.QueryAsync(
                     new QueryRequest()
                     {
                         TableName = TableName,
@@ -188,7 +165,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                             ? lastEvaluatedKey
                             : null
                     },
-                    scopedCancellationToken.Token);
+                    CancellationToken);
 
                 if (response.HttpStatusCode != HttpStatusCode.OK)
                 {
@@ -212,31 +189,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                     break;
                 }
             }
-        }
-
-        private DataOperation Map(Dictionary<string, AttributeValue> attributes)
-        {
-            return new DataOperation()
-            {
-                Hash = attributes[nameof(DataOperation.Hash)].S,
-                Order = int.Parse(attributes[nameof(DataOperation.Order)].N),
-                Type = attributes[nameof(DataOperation.Type)].S,
-                Address = attributes[nameof(DataOperation.Address)].S,
-                Sender = attributes[nameof(DataOperation.Sender)].S,
-                Recipient = attributes[nameof(DataOperation.Recipient)].S,
-                Addresses = attributes[nameof(DataOperation.Addresses)].SS,
-                IsEth = attributes[nameof(DataOperation.IsEth)].BOOL,
-                Price = decimal.Parse(attributes[nameof(DataOperation.Price)].N),
-                Value = attributes[nameof(DataOperation.Value)].S,
-                Priority = int.Parse(attributes[nameof(DataOperation.Priority)].N),
-                ContractAddress = attributes[nameof(DataOperation.ContractAddress)].S,
-                ContractSymbol = attributes[nameof(DataOperation.ContractSymbol)].S,
-                ContractDecimals = int.Parse(attributes[nameof(DataOperation.ContractDecimals)].N),
-                ContractHolders = long.Parse(attributes[nameof(DataOperation.ContractHolders)].N),
-                ContractIssuances = long.Parse(attributes[nameof(DataOperation.ContractIssuances)].N),
-                ContractLink = attributes[nameof(DataOperation.ContractLink)].S,
-                ContractName = attributes[nameof(DataOperation.ContractName)].S
-            };
         }
     }
 }

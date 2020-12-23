@@ -68,6 +68,14 @@ namespace Microsoft.Extensions.DependencyInjection
             return container;
         }
 
+        public static IServiceCollection AddCoinGeckoClient(this IServiceCollection container)
+        {
+            container.AddScoped<ICoinGeckoClient, CoinGeckoClient>()
+                .AddHttpClient(nameof(CoinGeckoClient), (sp, client) => ConfigureHttpClient(sp, client, d => d.CoinGecko));
+
+            return container;
+        }
+
         private static Dependency<TSettings> ConfigureHttpClient<TSettings>(
             IServiceProvider serviceProvider, HttpClient client, Func<Dependencies, Dependency<TSettings>> selector)
             where TSettings : DependencySettings, new()

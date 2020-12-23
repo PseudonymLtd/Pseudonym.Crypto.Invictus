@@ -73,10 +73,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 yield return new ApiPerformance()
                 {
                     Date = perf.Date,
-                    NetAssetValue = perf.NetValue,
                     NetAssetValuePerToken = perf.NetAssetValuePerToken,
                     MarketCap = perf.MarketCap,
-                    MarketValuePerToken = perf.MarketAssetValuePerToken
+                    MarketValuePerToken = perf.MarketAssetValuePerToken,
+                    Volume = perf.Volume
                 };
             }
         }

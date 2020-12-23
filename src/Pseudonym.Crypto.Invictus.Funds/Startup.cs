@@ -24,6 +24,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business;
+using Pseudonym.Crypto.Invictus.Funds.Business.Json;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Data;
 using Pseudonym.Crypto.Invictus.Funds.Hosting;
@@ -58,7 +59,11 @@ namespace Pseudonym.Crypto.Invictus.Funds
                 {
                     options.SerializerSettings.Converters.Add(new StringEnumConverter());
                     options.SerializerSettings.Converters.Add(new VersionConverter());
-                    options.SerializerSettings.DateFormatString = "yyyy-MM-ddTHH:mm:ss";
+                    options.SerializerSettings.Converters.Add(new DateTimeOffsetConvertor());
+                    options.SerializerSettings.Converters.Add(new DateTimeOffsetNullableConvertor());
+                    options.SerializerSettings.Converters.Add(new TimeSpanConverter());
+                    options.SerializerSettings.Converters.Add(new TimeSpanNullableConvertor());
+                    options.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
                     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                     options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                     options.SerializerSettings.Formatting = Formatting.Indented;
@@ -223,6 +228,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
             // Clients
             container
                 .AddBloxyClient()
+                .AddCoinGeckoClient()
                 .AddEthplorerClient()
                 .AddInfuraClient()
                 .AddLightstreamClient()
@@ -235,6 +241,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
 
             container.AddScoped<ITransactionRepository, TransactionRepository>();
             container.AddScoped<IOperationRepository, OperationRepository>();
+            container.AddScoped<IFundPerformanceRepository, FundPerformanceRepository>();
 
             container.AddDefaultAWSOptions(Configuration.GetAWSOptions());
             container.AddScoped<IAmazonDynamoDB>(sp =>
@@ -261,6 +268,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
             if (appSettings.CachingEnabled)
             {
                 container.AddHostedService<TransactionCachingService>();
+                container.AddHostedService<InvictusFundMarketCachingService>();
             }
         }
 

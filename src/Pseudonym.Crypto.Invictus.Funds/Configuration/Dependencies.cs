@@ -4,6 +4,8 @@
     {
         public Dependency<ApiKeyDependencySettings> Bloxy { get; set; }
 
+        public Dependency<DependencySettings> CoinGecko { get; set; }
+
         public Dependency<ApiKeyDependencySettings> Ethplorer { get; set; }
 
         public Dependency<DependencySettings> Invictus { get; set; }

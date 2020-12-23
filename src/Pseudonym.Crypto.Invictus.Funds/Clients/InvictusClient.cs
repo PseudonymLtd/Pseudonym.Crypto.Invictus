@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
@@ -40,13 +39,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             }
         }
 
-        public async IAsyncEnumerable<InvictusPerformanceSummary> ListPerformanceAsync(Symbol symbol, DateTime from, DateTime to)
+        public async IAsyncEnumerable<InvictusPerformance> ListPerformanceAsync(Symbol symbol, DateTimeOffset from, DateTimeOffset to)
         {
             var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
             if (fundInfo != null)
             {
                 var response = await GetAsync<ListPerformanceResponse>(
-                    $"/v2/funds/{fundInfo.FundName}/history?start={from:yyyy-MM-dd}&end={to:yyyy-MM-dd}T23:59:00");
+                    $"/v2/funds/{fundInfo.FundName}/history?start={from.ToISO8601String()}&end={to.AddDays(1).ToISO8601String()}");
 
                 if (response.Performance.Any())
                 {
@@ -71,7 +70,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
                             {
                                 response.Performance.Add(new InvictusPerformance()
                                 {
-                                    Date = start,
+                                    Date = new DateTimeOffset(start.AddHours(12), TimeSpan.Zero),
                                     NetValue = previousDate.NetValue,
                                     NetAssetValuePerToken = previousDate.NetAssetValuePerToken
                                 });
@@ -80,16 +79,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
                             {
                                 response.Performance.Add(new InvictusPerformance()
                                 {
-                                    Date = start,
+                                    Date = new DateTimeOffset(start.AddHours(12), TimeSpan.Zero),
                                     NetValue = nextDate.NetValue,
                                     NetAssetValuePerToken = nextDate.NetAssetValuePerToken
                                 });
                             }
-                            else if (previousDate != null && nextDate != null)
+                            else
                             {
                                 response.Performance.Add(new InvictusPerformance()
                                 {
-                                    Date = start,
+                                    Date = new DateTimeOffset(start.AddHours(12), TimeSpan.Zero),
                                     NetValue = ((nextDate.NetValue.FromPythonString() + previousDate.NetValue.FromPythonString()) / 2).ToString(),
                                     NetAssetValuePerToken = ((nextDate.NetAssetValuePerToken.FromPythonString() + previousDate.NetAssetValuePerToken.FromPythonString()) / 2).ToString()
                                 });
@@ -100,26 +99,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
                     }
                 }
 
-                foreach (var itemGroup in response.Performance
-                    .GroupBy(x => x.Date.Date)
-                    .Where(x => x.Key >= from.Date)
+                foreach (var perfSet in response.Performance
+                    .Where(x => x.Date >= from && x.Date <= to)
+                    .GroupBy(x => new DateTimeOffset(x.Date.Year, x.Date.Month, x.Date.Day, x.Date.Hour, 0, 0, TimeSpan.Zero))
                     .OrderBy(x => x.Key))
                 {
-                    var values = itemGroup.Select(x => new
+                    yield return new InvictusPerformance()
                     {
-                        x.Date,
-                        Nav = x.NetAssetValuePerToken.FromPythonString(),
-                    });
-
-                    yield return new InvictusPerformanceSummary()
-                    {
-                        Date = itemGroup.Key,
-                        NetValue = itemGroup.Average(x => x.NetValue.FromPythonString()),
-                        Average = values.Average(x => x.Nav),
-                        Open = values.OrderBy(x => x.Date).First().Nav,
-                        Close = values.OrderBy(x => x.Date).Last().Nav,
-                        High = values.Select(x => x.Nav).Max(),
-                        Low = values.Select(x => x.Nav).Min()
+                        Date = perfSet.Key,
+                        NetValue = perfSet.Average(x => x.NetValue.FromPythonString()).ToString(),
+                        NetAssetValuePerToken = perfSet.Average(x => x.NetAssetValuePerToken.FromPythonString()).ToString()
                     };
                 }
             }
@@ -157,7 +146,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
 
                 var json = await response.Content.ReadAsStringAsync();
 
-                return JsonConvert.DeserializeObject<TResponse>(json);
+                return json.Deserialize<TResponse>();
             }
             catch (HttpRequestException e)
             {

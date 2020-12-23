@@ -10,6 +10,7 @@ using Pseudonym.Crypto.Invictus.Funds.Business.Models;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Ethplorer;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
+using Pseudonym.Crypto.Invictus.Funds.Data.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
@@ -21,12 +22,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
     {
         private readonly IInvictusClient invictusClient;
         private readonly IEthplorerClient ethplorerClient;
+        private readonly IFundPerformanceRepository fundPerformanceRepository;
 
         public FundService(
             IOptions<AppSettings> appSettings,
             IInvictusClient invictusClient,
             IEthplorerClient ethplorerClient,
             ICurrencyConverter currencyConverter,
+            IFundPerformanceRepository fundPerformanceRepository,
             ITransactionRepository transactionRepository,
             IOperationRepository operationRepository,
             IHttpContextAccessor httpContextAccessor,
@@ -35,6 +38,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
         {
             this.invictusClient = invictusClient;
             this.ethplorerClient = ethplorerClient;
+            this.fundPerformanceRepository = fundPerformanceRepository;
         }
 
         public async IAsyncEnumerable<IFund> ListFundsAsync(CurrencyCode currencyCode)
@@ -71,25 +75,66 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
         {
             var fundInfo = GetFundInfo(symbol);
 
-            var priceData = fundInfo.Tradable
-                ? await ethplorerClient.GetTokenPricingAsync(fundInfo.Address)
-                : null;
+            var perfs = await fundPerformanceRepository
+                .ListPerformancesAsync(fundInfo.Address, from, to)
+                .ToListAsync(CancellationToken);
 
-            await foreach (var perf in invictusClient
-                .ListPerformanceAsync(symbol, from, to)
-                .WithCancellation(CancellationToken))
+            if (priceMode == PriceMode.Raw)
             {
-                var marketData = priceData?.Prices?.SingleOrDefault(x => x.Date.Date == perf.Date.Date)
-                    ?? priceData?.Prices?.OrderBy(x => x.Date)?.FirstOrDefault();
+                foreach (var perf in perfs)
+                {
+                    yield return new BusinessPerformance()
+                    {
+                        Date = perf.Date,
+                        NetAssetValuePerToken = CurrencyConverter.Convert(perf.Nav, currencyCode),
+                        MarketCap = CurrencyConverter.Convert(
+                            perf.MarketCap != -1
+                                ? perf.MarketCap
+                                : default(decimal?),
+                            currencyCode),
+                        MarketAssetValuePerToken = CurrencyConverter.Convert(
+                            perf.Price != -1
+                                ? perf.Price
+                                : default(decimal?),
+                            currencyCode),
+                        Volume = CurrencyConverter.Convert(
+                            perf.Volume != -1
+                                ? perf.Volume
+                                : default(decimal?),
+                            currencyCode),
+                    };
+                }
 
+                yield break;
+            }
+
+            foreach (var perfGroup in perfs.GroupBy(p => p.Date.Date))
+            {
                 yield return new BusinessPerformance()
                 {
-                    Date = perf.Date,
-                    NetValue = CurrencyConverter.Convert(perf.NetValue, currencyCode),
-                    NetAssetValuePerToken = CurrencyConverter.Convert(perf.GetNav(priceMode), currencyCode),
-                    MarketCap = CurrencyConverter.Convert(marketData?.MarketCap, currencyCode),
-                    MarketAssetValuePerToken = CurrencyConverter.Convert(marketData?.GetMarketPrice(priceMode), currencyCode),
+                    Date = perfGroup.Key,
+                    NetAssetValuePerToken = CurrencyConverter.Convert(FormatData(perfGroup, x => x.Nav, priceMode).Value, currencyCode),
+                    MarketCap = CurrencyConverter.Convert(FormatData(perfGroup, x => x.MarketCap, priceMode), currencyCode),
+                    MarketAssetValuePerToken = CurrencyConverter.Convert(FormatData(perfGroup, x => x.Price, priceMode), currencyCode),
+                    Volume = CurrencyConverter.Convert(FormatData(perfGroup, x => x.Volume, priceMode), currencyCode),
                 };
+            }
+
+            decimal? FormatData(IEnumerable<DataFundPerformance> data, Func<DataFundPerformance, decimal> selector, PriceMode mode)
+            {
+                var val = priceMode switch
+                {
+                    PriceMode.Avg => data.Average(selector),
+                    PriceMode.Open => data.OrderBy(x => x.Date).Select(selector).First(),
+                    PriceMode.Close => data.OrderBy(x => x.Date).Select(selector).Last(),
+                    PriceMode.High => data.Select(selector).Max(),
+                    PriceMode.Low => data.Select(selector).Min(),
+                    _ => throw new ArgumentException($"Arg not handled: {priceMode}", nameof(priceMode)),
+                };
+
+                return val != -1
+                    ? val
+                    : default(decimal?);
             }
         }
 
@@ -158,12 +203,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 {
                     IsTradable = priceData != null,
                     Cap = priceData?.MarketCap ?? 0,
-                    Total = CurrencyConverter.Convert(priceData?.MarketValuePerToken * circulatingSupply, currencyCode),
-                    PricePerToken = CurrencyConverter.Convert(priceData?.MarketValuePerToken, currencyCode),
+                    Total = CurrencyConverter.Convert((priceData?.MarketValuePerToken ?? 0) * circulatingSupply, currencyCode),
+                    PricePerToken = CurrencyConverter.Convert(priceData?.MarketValuePerToken ?? 0, currencyCode),
                     DiffDaily = priceData?.DiffDaily ?? 0,
                     DiffWeekly = priceData?.DiffWeekly ?? 0,
                     DiffMonthly = priceData?.DiffMonthly ?? 0,
-                    Volume = CurrencyConverter.Convert(priceData?.Volume, currencyCode),
+                    Volume = CurrencyConverter.Convert(priceData?.Volume ?? 0, currencyCode),
                     VolumeDiffDaily = priceData?.VolumeDiffDaily ?? 0,
                     VolumeDiffWeekly = priceData?.VolumeDiffWeekly ?? 0,
                     VolumeDiffMonthly = priceData?.VolumeDiffMonthly ?? 0

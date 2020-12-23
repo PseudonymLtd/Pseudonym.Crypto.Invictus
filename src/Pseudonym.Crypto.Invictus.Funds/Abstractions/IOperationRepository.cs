@@ -15,6 +15,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
 
         IAsyncEnumerable<EthereumTransactionHash> ListOutboundHashesAsync(EthereumAddress address, string type);
 
-        Task UploadOperationsAsync(params DataOperation[] operations);
+        Task UploadItemsAsync(params DataOperation[] operations);
     }
 }

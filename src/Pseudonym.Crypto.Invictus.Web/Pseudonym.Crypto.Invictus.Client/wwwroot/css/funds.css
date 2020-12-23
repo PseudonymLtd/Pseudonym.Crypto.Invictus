@@ -18,6 +18,26 @@
         border-color: #cf2127 !important;
     }
 
+.icap {
+    color: white !important;
+    background-color: #cf2127 !important;
+    border-color: #cf2127 !important;
+}
+
+    .icap:hover {
+        color: white !important
+    }
+
+.icap-text {
+    color: #cf2127 !important;
+}
+
+    .icap-text:hover {
+        color: white !important;
+        background-color: #cf2127 !important;
+        border-color: #cf2127 !important;
+    }
+
 .iba {
     color: white !important;
     background-color: #f67a06 !important;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
@@ -34,7 +33,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
 
                 var json = await response.Content.ReadAsStringAsync();
 
-                return JsonConvert.DeserializeObject<CurrencyRates>(json);
+                return json.Deserialize<CurrencyRates>();
             }
             catch (HttpRequestException e)
             {

@@ -187,6 +187,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Utils
             {
                 return new AttributeValue(d.ToISO8601String());
             }
+            else if (value is DateTimeOffset doff)
+            {
+                return new AttributeValue(doff.UtcDateTime.ToISO8601String());
+            }
             else if (NumberTypes.Contains(type))
             {
                 return new AttributeValue()

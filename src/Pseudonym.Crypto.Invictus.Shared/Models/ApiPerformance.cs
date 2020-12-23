@@ -11,10 +11,6 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         public DateTime Date { get; set; }
 
         [Required]
-        [JsonProperty("net_value")]
-        public decimal NetAssetValue { get; set; }
-
-        [Required]
         [JsonProperty("market_cap")]
         public decimal? MarketCap { get; set; }
 
@@ -25,5 +21,9 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [Required]
         [JsonProperty("market_value_per_token")]
         public decimal? MarketValuePerToken { get; set; }
+
+        [Required]
+        [JsonProperty("volume")]
+        public decimal? Volume { get; set; }
     }
 }

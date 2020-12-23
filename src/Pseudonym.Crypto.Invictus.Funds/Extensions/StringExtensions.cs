@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using System.Text.RegularExpressions;
 using Nethereum.Web3;
+using Pseudonym.Crypto.Invictus.Funds.Business.Json;
 
 namespace System
 {
@@ -57,6 +58,16 @@ namespace System
             }
 
             return FromPythonString(s);
+        }
+
+        public static string Serialize<T>(this T item)
+        {
+            return Json.Serialize(item);
+        }
+
+        public static T Deserialize<T>(this string json)
+        {
+            return Json.Deserialize<T>(json);
         }
     }
 }

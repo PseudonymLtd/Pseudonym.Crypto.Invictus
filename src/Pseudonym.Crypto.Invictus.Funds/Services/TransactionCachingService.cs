@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Bloxy;
@@ -14,76 +13,56 @@ using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Services
 {
-    internal sealed class TransactionCachingService : BackgroundService
+    internal sealed class TransactionCachingService : BaseCachingService
     {
-        private static readonly DateTime InvictusStartDate = new DateTime(2018, 01, 01);
-
-        private readonly IOptions<AppSettings> appSettings;
-        private readonly IServiceProvider serviceProvider;
-
         public TransactionCachingService(
             IOptions<AppSettings> appSettings,
             IServiceProvider serviceProvider)
+            : base(appSettings, serviceProvider)
         {
-            this.appSettings = appSettings;
-            this.serviceProvider = serviceProvider;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+        protected override TimeSpan Interval => TimeSpan.FromHours(1);
+
+        protected override async Task ProcessAsync(IServiceScope scope, CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            var bloxyClient = scope.ServiceProvider.GetRequiredService<IBloxyClient>();
+            var ethplorerClient = scope.ServiceProvider.GetRequiredService<IEthplorerClient>();
+            var transactionService = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
+            var operationService = scope.ServiceProvider.GetRequiredService<IOperationRepository>();
+
+            foreach (var fund in AppSettings.Funds)
             {
                 try
                 {
-                    using var scope = serviceProvider.CreateScope(cancellationToken);
+                    var latestDate = await transactionService.GetLatestDateAsync(fund.Address)
+                        ?? InvictusStartDate;
 
-                    var bloxyClient = scope.ServiceProvider.GetRequiredService<IBloxyClient>();
-                    var ethplorerClient = scope.ServiceProvider.GetRequiredService<IEthplorerClient>();
-                    var transactionService = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
-                    var operationService = scope.ServiceProvider.GetRequiredService<IOperationRepository>();
+                    await UpdateTransactionAsync(
+                        ethplorerClient,
+                        bloxyClient,
+                        transactionService,
+                        operationService,
+                        fund.Address,
+                        latestDate.AddDays(-7),
+                        DateTime.UtcNow);
 
-                    foreach (var fund in appSettings.Value.Funds)
-                    {
-                        try
-                        {
-                            var latestDate = await transactionService.GetLatestDateAsync(fund.Address)
-                                ?? InvictusStartDate;
+                    var lowestDate = await transactionService.GetLowestDateAsync(fund.Address)
+                        ?? DateTime.UtcNow;
 
-                            await UpdateTransactionAsync(
-                                ethplorerClient,
-                                bloxyClient,
-                                transactionService,
-                                operationService,
-                                fund.Address,
-                                latestDate.AddDays(-7),
-                                DateTime.UtcNow);
-
-                            var lowestDate = await transactionService.GetLowestDateAsync(fund.Address)
-                                ?? DateTime.UtcNow;
-
-                            await UpdateTransactionAsync(
-                                ethplorerClient,
-                                bloxyClient,
-                                transactionService,
-                                operationService,
-                                fund.Address,
-                                InvictusStartDate,
-                                lowestDate.AddDays(1));
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine($"Error getting transactions for {fund.Symbol}.");
-                            Console.WriteLine(e);
-                        }
-                    }
+                    await UpdateTransactionAsync(
+                        ethplorerClient,
+                        bloxyClient,
+                        transactionService,
+                        operationService,
+                        fund.Address,
+                        InvictusStartDate,
+                        lowestDate.AddDays(1));
                 }
                 catch (Exception e)
                 {
+                    Console.WriteLine($"Error getting transactions for {fund.Symbol}.");
                     Console.WriteLine(e);
-                }
-                finally
-                {
-                    await Task.Delay(TimeSpan.FromHours(1), cancellationToken);
                 }
             }
         }
@@ -110,13 +89,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
 
                     var dynamoTransaction = MapTransaction(hash, contractAddress, transactionSummary, transaction);
 
-                    await transactionService.UploadTransactionAsync(dynamoTransaction);
+                    await transactionService.UploadItemsAsync(dynamoTransaction);
 
                     var dynamoOperations = Enumerable.Range(0, transaction.Operations.Count)
                         .Select(i => MapOperation(hash, transaction.Operations[i], i))
                         .ToArray();
 
-                    await operationService.UploadOperationsAsync(dynamoOperations);
+                    await operationService.UploadItemsAsync(dynamoOperations);
                 }
             }
 

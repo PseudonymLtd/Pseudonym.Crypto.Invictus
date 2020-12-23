@@ -8,10 +8,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         decimal NetAssetValuePerToken { get; }
 
-        decimal NetValue { get; }
-
         decimal? MarketAssetValuePerToken { get; }
 
         decimal? MarketCap { get; }
+
+        decimal? Volume { get; }
     }
 }

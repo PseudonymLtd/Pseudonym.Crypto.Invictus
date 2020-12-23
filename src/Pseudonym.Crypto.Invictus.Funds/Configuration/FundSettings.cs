@@ -15,11 +15,15 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public Symbol Symbol { get; set; }
 
+        public DateTimeOffset InceptionDate { get; set; }
+
         public int Decimals { get; set; }
 
         public bool Tradable { get; set; }
 
         public string ContractAddress { get; set; }
+
+        public string CoinGeckoId { get; set; }
 
         public FundLinks Links { get; set; }
 

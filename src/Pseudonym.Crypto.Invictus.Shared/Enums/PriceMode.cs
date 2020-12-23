@@ -6,6 +6,7 @@
         Open,
         Close,
         High,
-        Low
+        Low,
+        Raw
     }
 }

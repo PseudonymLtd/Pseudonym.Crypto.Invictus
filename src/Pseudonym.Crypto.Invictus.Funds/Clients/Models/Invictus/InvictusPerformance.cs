@@ -5,8 +5,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus
 {
     public sealed class InvictusPerformance
     {
+        private DateTimeOffset date;
+
         [JsonProperty("x")]
-        public DateTime Date { get; set; }
+        public DateTimeOffset Date
+        {
+            get => date;
+            set => date = value.Round();
+        }
 
         [JsonProperty("token_y")]
         public string NetAssetValuePerToken { get; set; }

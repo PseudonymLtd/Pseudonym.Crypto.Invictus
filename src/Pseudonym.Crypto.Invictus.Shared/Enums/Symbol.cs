@@ -8,6 +8,7 @@
         IML,
         EMS,
         IGP,
-        IBA
+        IBA,
+        ICAP
     }
 }

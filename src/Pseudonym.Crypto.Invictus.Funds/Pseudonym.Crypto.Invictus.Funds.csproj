@@ -16,6 +16,7 @@
     <None Remove="Resources\EMS.png" />
     <None Remove="Resources\favicon.png" />
     <None Remove="Resources\IBA.png" />
+    <None Remove="Resources\ICAP.png" />
     <None Remove="Resources\IGP.png" />
     <None Remove="Resources\IHF.png" />
     <None Remove="Resources\IML.png" />
@@ -32,6 +33,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\favicon.png" />
+    <EmbeddedResource Include="Resources\ICAP.png" />
     <EmbeddedResource Include="Resources\logo.png" />
     <EmbeddedResource Include="Resources\pseudonym-swagger-ui.css" />
     <EmbeddedResource Include="Resources\pseudonym-swagger-ui.js" />

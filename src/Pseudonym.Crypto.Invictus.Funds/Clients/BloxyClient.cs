@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Bloxy;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
@@ -69,7 +68,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
 
                 var json = await response.Content.ReadAsStringAsync();
 
-                return JsonConvert.DeserializeObject<TResponse>(json);
+                return json.Deserialize<TResponse>();
             }
             catch (HttpRequestException e)
             {

@@ -6,6 +6,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
     {
         decimal Convert(decimal amount, CurrencyCode currencyCode);
 
-        decimal Convert(decimal? amount, CurrencyCode currencyCode);
+        decimal? Convert(decimal? amount, CurrencyCode currencyCode);
     }
 }

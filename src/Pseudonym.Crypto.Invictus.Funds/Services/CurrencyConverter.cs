@@ -15,7 +15,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             rates = new Dictionary<CurrencyCode, decimal>();
         }
 
-        public decimal Convert(decimal? amount, CurrencyCode currencyCode)
+        public decimal? Convert(decimal? amount, CurrencyCode currencyCode)
         {
             if (!amount.HasValue)
             {
