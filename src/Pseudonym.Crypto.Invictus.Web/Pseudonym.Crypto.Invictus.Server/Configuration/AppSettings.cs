@@ -10,7 +10,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Server.Configuration
 
         public string ServiceName { get; set; }
 
-        public Version Version { get; set; }
+        public string Version { get; set; }
 
         public Uri HostUrl { get; set; }
     }

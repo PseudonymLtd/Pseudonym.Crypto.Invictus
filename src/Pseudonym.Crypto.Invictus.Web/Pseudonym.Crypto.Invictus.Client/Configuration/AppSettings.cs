@@ -9,5 +9,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Configuration
         public string ServiceName { get; set; }
 
         public string Version { get; set; }
+
+        public string StakingAddress { get; set; }
     }
 }

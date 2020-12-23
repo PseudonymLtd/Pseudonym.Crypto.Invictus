@@ -40,7 +40,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Server.Business
                 client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.Origin, appSettings.HostUrl.OriginalString);
                 client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.CorrelationId, scopedCorrelation.CorrelationId);
                 client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.ApiKey, appSettings.ApiKey);
-                client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(appSettings.ServiceName, $"v{appSettings.Version.ToString(3)}"));
+                client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(appSettings.ServiceName, $"v{appSettings.Version}"));
 
                 var response = await client.GetAsync(new Uri("/api/v1/auth", UriKind.Relative), scopedCancellationToken.Token);
 

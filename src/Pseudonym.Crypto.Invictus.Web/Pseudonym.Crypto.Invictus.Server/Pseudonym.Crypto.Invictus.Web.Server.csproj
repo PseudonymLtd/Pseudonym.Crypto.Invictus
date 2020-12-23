@@ -21,5 +21,39 @@
     <ProjectReference Include="..\..\Pseudonym.Crypto.Invictus.Shared\Pseudonym.Crypto.Invictus.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="aws-ecs-tools-defaults.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <UsingTask TaskName="ReplaceFileText" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <InputFilename ParameterType="System.String" Required="true" />
+      <OutputFilename ParameterType="System.String" Required="true" />
+      <MatchExpression ParameterType="System.String" Required="true" />
+      <ReplacementText ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[  
+          File.WriteAllText(
+            OutputFilename,
+            Regex.Replace(File.ReadAllText(InputFilename), MatchExpression, ReplacementText)
+            );
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="ApplyVersion" AfterTargets="PostBuildEvent">
+    <PropertyGroup>
+      <CurrentDate>$([System.DateTime]::UtcNow.ToString(yyyyMMddhhmmss))</CurrentDate>
+    </PropertyGroup>
+    <ReplaceFileText InputFilename="$(OutputPath)appsettings.json" OutputFilename="$(OutputPath)appsettings.json" MatchExpression="__version__" ReplacementText="$(CurrentDate)" />
+  </Target>
 
 </Project>
