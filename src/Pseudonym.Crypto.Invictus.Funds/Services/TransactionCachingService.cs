@@ -38,7 +38,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                     var latestDate = await transactionService.GetLatestDateAsync(fund.Address)
                         ?? InvictusStartDate;
 
-                    await UpdateTransactionAsync(
+                    await SyncTransactionsAsync(
                         ethplorerClient,
                         bloxyClient,
                         transactionService,
@@ -50,7 +50,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                     var lowestDate = await transactionService.GetLowestDateAsync(fund.Address)
                         ?? DateTime.UtcNow;
 
-                    await UpdateTransactionAsync(
+                    await SyncTransactionsAsync(
                         ethplorerClient,
                         bloxyClient,
                         transactionService,
@@ -67,7 +67,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             }
         }
 
-        private async Task UpdateTransactionAsync(
+        private async Task SyncTransactionsAsync(
             IEthplorerClient ethplorerClient,
             IBloxyClient bloxyClient,
             ITransactionRepository transactionService,
@@ -121,6 +121,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                 Recipient = string.IsNullOrWhiteSpace(transaction.To)
                     ? EthereumAddress.Empty.Address
                     : transaction.To,
+                Input = transaction.Input,
                 Gas = transaction.GasUsed,
                 GasLimit = transaction.GasLimit,
                 Eth = transaction.Value,

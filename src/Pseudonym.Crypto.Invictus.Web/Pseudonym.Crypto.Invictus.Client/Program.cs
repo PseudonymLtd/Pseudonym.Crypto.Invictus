@@ -47,6 +47,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client
             container.AddSingleton<ISessionStore, SessionStore>();
             container.AddSingleton(sp =>
             {
+                var appSettings = sp.GetRequiredService<IOptions<AppSettings>>();
                 var sessionStore = sp.GetRequiredService<ISessionStore>();
                 var cookieManager = sp.GetRequiredService<ICookieManager>();
 
@@ -57,14 +58,18 @@ namespace Pseudonym.Crypto.Invictus.Web.Client
                 var addr = cookieManager.Get<string>(CookieKeys.WalletAddresses);
                 var secondaryAddresses = cookieManager.Get<string>(CookieKeys.SecondaryWalletAddresses)
                     ?.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    ?.Select(x => x.ToLower())
                     ?.ToList()
                     ?? new List<string>();
 
-                return new UserSettings(funds, secondaryAddresses)
+                var settings = new UserSettings(appSettings, funds, secondaryAddresses)
                 {
-                    WalletAddress = addr,
                     CurrencyCode = currencyCode
                 };
+
+                settings.SetAddress(addr);
+
+                return settings;
             });
 
             container.AddSingleton<IUserSettings>(sp => sp.GetRequiredService<UserSettings>());

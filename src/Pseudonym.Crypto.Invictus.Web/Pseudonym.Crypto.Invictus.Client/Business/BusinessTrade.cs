@@ -45,5 +45,9 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
         public bool IsInbound { get; set; }
 
         public bool IsTradeable { get; set; }
+
+        public bool IsStake { get; set; }
+
+        public bool IsOwned { get; set; }
     }
 }

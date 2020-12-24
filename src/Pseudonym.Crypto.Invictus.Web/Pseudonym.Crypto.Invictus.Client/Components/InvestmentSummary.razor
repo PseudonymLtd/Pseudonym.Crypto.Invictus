@@ -61,6 +61,7 @@
                             <small style="font-weight: bold;">Additional Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                             <div>
                                 <Money Value="Investment.SubInvestments.Sum(si => si.MarketValue)" CurrencyCode="UserSettings.CurrencyCode" />
+                                <Help Title="Additional Value" Content="Additional Value is the combined total of any assets this fund holds that you also hold as an individual investment external to the fund." />
                             </div>
                         </div>
                     }
@@ -104,12 +105,12 @@
 
     protected decimal? NetProfit => Transactions
         ?.Where(x => x.Price != null)
-        ?.Select(t => t.GetTrade(Investment.Fund))
+        ?.Select(t => t.GetTrade(Investment.Fund, UserSettings))
         ?.Sum(t => t.NetDiff);
 
     protected decimal? MarketProfit => Transactions
         ?.Where(x => x.Price != null)
-        ?.Select(t => t.GetTrade(Investment.Fund))
+        ?.Select(t => t.GetTrade(Investment.Fund, UserSettings))
         ?.Sum(t => t.MarketDiff ?? decimal.Zero);
 
     public async Task StateHasChangedAsync()

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Net.Http;
 using System.Numerics;
+using System.Reflection;
 using System.Threading.Tasks;
+using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.JsonRpc.Client;
-using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Web3;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
@@ -65,11 +67,38 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             return Web3.Convert.FromWei(balance, decimals);
         }
 
-        public Task<TransactionReceipt> GetTransactionAsync(EthereumTransactionHash hash)
+        public Task<TFunction> GetDataAsync<TFunction>(EthereumAddress contractAddress, string data)
+            where TFunction : class, new()
         {
             return ExecuteAsync(web3 =>
             {
-                return web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(hash.Hash);
+                var outputs = web3.Eth
+                    .GetContractHandler(contractAddress)
+                    .GetFunction<TFunction>()
+                    .DecodeInput(data);
+
+                if (outputs != null)
+                {
+                    var t = typeof(TFunction);
+                    var function = new TFunction();
+
+                    foreach (var prop in t.GetProperties().Where(x => x.CanWrite))
+                    {
+                        var attr = prop.GetCustomAttribute<ParameterAttribute>(true);
+                        if (attr != null)
+                        {
+                            var output = outputs.SingleOrDefault(x => x.Parameter.Name.Equals(attr.Name, StringComparison.OrdinalIgnoreCase));
+                            if (output != null)
+                            {
+                                prop.SetMethod.Invoke(function, new object[] { output.Result });
+                            }
+                        }
+                    }
+
+                    return Task.FromResult(function);
+                }
+
+                return Task.FromResult(default(TFunction));
             });
         }
 

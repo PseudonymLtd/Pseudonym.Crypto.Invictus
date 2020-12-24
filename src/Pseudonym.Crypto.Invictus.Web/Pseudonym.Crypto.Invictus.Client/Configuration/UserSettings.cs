@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
 
@@ -14,16 +15,23 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Configuration
 
         private readonly Dictionary<Symbol, FundInfo> funds;
         private readonly List<string> secondaryAddresses;
+        private readonly IOptions<AppSettings> appSettings;
 
-        public UserSettings(Dictionary<Symbol, FundInfo> funds, List<string> secondaryAddresses)
+        public UserSettings(
+            IOptions<AppSettings> appSettings,
+            Dictionary<Symbol, FundInfo> funds,
+            List<string> secondaryAddresses)
         {
+            this.appSettings = appSettings;
             this.funds = funds;
             this.secondaryAddresses = secondaryAddresses;
         }
 
         public CurrencyCode CurrencyCode { get; set; } = CurrencyCode.USD;
 
-        public string WalletAddress { get; set; }
+        public string WalletAddress { get; private set; }
+
+        public string StakingAddress => appSettings.Value.StakingAddress;
 
         public IReadOnlyList<string> SecondaryWalletAddresses => secondaryAddresses;
 
@@ -55,11 +63,19 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Configuration
             }
         }
 
+        public void SetAddress(string address)
+        {
+            if (!secondaryAddresses.Contains(address) && IsValidAddress(address))
+            {
+                WalletAddress = address.ToLower();
+            }
+        }
+
         public void AddSecondaryAddress(string address)
         {
             if (!secondaryAddresses.Contains(address) && IsValidAddress(address))
             {
-                secondaryAddresses.Add(address);
+                secondaryAddresses.Add(address.ToLower());
             }
         }
 

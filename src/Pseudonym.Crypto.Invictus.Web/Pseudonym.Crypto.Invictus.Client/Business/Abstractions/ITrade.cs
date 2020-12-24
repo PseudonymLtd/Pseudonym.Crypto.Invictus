@@ -33,5 +33,9 @@
         bool IsInbound { get; }
 
         bool IsTradeable { get; }
+
+        bool IsStake { get; }
+
+        bool IsOwned { get; }
     }
 }

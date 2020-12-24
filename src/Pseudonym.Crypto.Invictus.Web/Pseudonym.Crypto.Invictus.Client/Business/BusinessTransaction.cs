@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 using Pseudonym.Crypto.Invictus.Shared.Models;
+using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
 using Pseudonym.Crypto.Invictus.Web.Client.Business.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Web.Client.Business
@@ -55,14 +56,14 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
         [Required]
         public BusinessPrice Price { get; set; }
 
-        public ITrade GetTrade(ApiFund fund)
+        public ITrade GetTrade(ApiFund fund, IUserSettings settings)
         {
             return IsSwap()
                 ? GetSwapData(fund)
-                : GetTradeData(fund);
+                : GetTradeData(fund, settings);
         }
 
-        public BusinessTrade GetTradeData(ApiFund fund)
+        public BusinessTrade GetTradeData(ApiFund fund, IUserSettings settings)
         {
             if (!IsSwap())
             {
@@ -78,7 +79,9 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         : default(decimal?),
                     MarketSnapshotPricePerToken = fund.Market.IsTradeable
                         ? GetTransferPricePerToken(TransferAction)
-                        : default(decimal?)
+                        : default(decimal?),
+                    IsStake = Recipient.Equals(settings.StakingAddress, StringComparison.OrdinalIgnoreCase),
+                    IsOwned = settings.SecondaryWalletAddresses.Contains(Recipient) || settings.SecondaryWalletAddresses.Contains(Sender)
                 };
             }
             else
@@ -119,7 +122,9 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         : default(decimal?),
                     MarketSnapshotPricePerToken = fund.Market.IsTradeable
                         ? fundOp.PricePerToken
-                        : default(decimal?)
+                        : default(decimal?),
+                    IsStake = false,
+                    IsOwned = false
                 };
             }
             else

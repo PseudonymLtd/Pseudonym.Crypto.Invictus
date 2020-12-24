@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
@@ -55,6 +56,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
         protected Uri HostUrl => appSettings.HostUrl;
 
+        protected EthereumAddress StakingAddress => new EthereumAddress(appSettings.StakingAddress);
+
+        protected IReadOnlyList<FundSettings> GetFunds()
+        {
+            return appSettings.Funds;
+        }
+
         protected FundSettings GetFundInfo(Symbol symbol)
         {
             var fundSettings = appSettings.Funds.Single(x => x.Symbol == symbol);
@@ -88,6 +96,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 BlockNumber = transaction.BlockNumber,
                 Sender = new EthereumAddress(transaction.Sender),
                 Recipient = new EthereumAddress(transaction.Recipient),
+                Input = transaction.Input,
                 ConfirmedAt = transaction.ConfirmedAt,
                 Confirmations = transaction.Confirmations,
                 Eth = transaction.Eth,

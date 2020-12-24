@@ -236,7 +236,8 @@ namespace Pseudonym.Crypto.Invictus.Funds
                 .AddExchangeRateClient();
 
             container.AddTransient<IAuthService, AuthService>();
-            container.AddTransient<IAddressService, AddressService>();
+            container.AddTransient<IStakeService, StakeService>();
+            container.AddTransient<IInvestmentService, InvestmentService>();
             container.AddTransient<IFundService, FundService>();
 
             container.AddScoped<ITransactionRepository, TransactionRepository>();

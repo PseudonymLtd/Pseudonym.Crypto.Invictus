@@ -22,7 +22,7 @@
     {
         Console.WriteLine($"Changing Address to: {e.Value}");
 
-        await UserSettingsHandle.UpdateAsync(us => us.WalletAddress = e.Value.ToString());
+        await UserSettingsHandle.UpdateAsync(us => us.SetAddress(e.Value.ToString()));
 
         AppState.NotifyStateChanged();
     }

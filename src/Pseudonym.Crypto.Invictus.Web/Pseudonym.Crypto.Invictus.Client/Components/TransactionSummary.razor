@@ -42,10 +42,18 @@
                         }
                         else
                         {
-                            var trade = Transaction.GetTradeData(Fund);
+                            var trade = Transaction.GetTradeData(Fund, UserSettings);
 
                             <span>
-                                @(trade.IsInbound ? "Buy" : "Sell")
+                                @(trade.IsInbound
+                                    ? trade.IsOwned 
+                                        ? "Transfer In"
+                                        : "Buy"
+                                    : trade.IsOwned
+                                        ? "Transfer Out"
+                                        : trade.IsStake
+                                            ? "Stake"
+                                            : "Sell")
                                 <LargeNumber Value="trade.Quantity" Decimals="2" ShowZeroValue="true" />
                                 <small>@Fund.Token.Symbol</small>
                             </span>

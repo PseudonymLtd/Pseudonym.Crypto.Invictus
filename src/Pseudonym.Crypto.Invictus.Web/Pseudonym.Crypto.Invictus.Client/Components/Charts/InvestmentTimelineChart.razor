@@ -55,7 +55,7 @@
                 Scales = new Scales()
                 {
                     xAxes = new List<CartesianAxis>()
-                    {
+            {
                         new TimeAxis
                         {
                             Distribution = TimeDistribution.Linear,
@@ -202,11 +202,11 @@
                     x.ContractAddress.Equals(fund.Token.Address, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(t => t.ConfirmedAt)
                 .TakeWhile(t => t.ConfirmedAt < StartDate)
-                .Sum(t => t.GetTrade(fund).SignedQuantity);
+                .Sum(t => t.GetTrade(fund, UserSettings).SignedQuantity);
 
             foreach (var transaction in GetDrawableTransactions(fund))
             {
-                var trade = transaction.GetTrade(fund);
+                var trade = transaction.GetTrade(fund, UserSettings);
 
                 total += trade.SignedQuantity;
 

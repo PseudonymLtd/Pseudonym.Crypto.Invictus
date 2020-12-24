@@ -126,7 +126,7 @@
         {
             Console.WriteLine($"Changing Address to: {e.Value}");
 
-            await UserSettingsHandle.UpdateAsync(us => us.WalletAddress = addr);
+            await UserSettingsHandle.UpdateAsync(us => us.SetAddress(addr));
 
             PrimaryAddressIsValid = true;
 

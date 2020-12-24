@@ -18,7 +18,9 @@
 
     internal string Link => $"https://etherscan.io/address/{Address}";
 
-    internal string Classes => HighlightOwnership && UserSettings.WalletAddress == Address
-        ? "address-owned address-mob wrap"
-        : "address-mob wrap";
+    internal string Classes => HighlightOwnership &&
+        (UserSettings.WalletAddress == Address ||
+         UserSettings.SecondaryWalletAddresses.Contains(Address))
+            ? $"address-owned {(UserSettings.SecondaryWalletAddresses.Contains(Address) ? "address-owned-secondary" : string.Empty)} address-mob wrap"
+            : "address-mob wrap";
 }

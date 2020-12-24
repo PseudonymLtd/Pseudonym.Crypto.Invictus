@@ -22,15 +22,18 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
     [Route("api/v1/addresses")]
     public class AddressController : AbstractController
     {
-        private readonly IAddressService addressService;
+        private readonly IStakeService stakeService;
+        private readonly IInvestmentService addressService;
         private readonly IScopedCancellationToken scopedCancellationToken;
 
         public AddressController(
             IOptions<AppSettings> appSettings,
-            IAddressService addressService,
+            IStakeService stakeService,
+            IInvestmentService addressService,
             IScopedCancellationToken scopedCancellationToken)
             : base(appSettings)
         {
+            this.stakeService = stakeService;
             this.addressService = addressService;
             this.scopedCancellationToken = scopedCancellationToken;
         }
@@ -116,5 +119,38 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 yield return MapTransactionSet(transaction, addr);
             }
         }
+
+        //[HttpGet]
+        //[Route("{address}/stakes")]
+        //[Produces(MediaTypeNames.Application.Json)]
+        //[ProducesResponseType(typeof(List<ApiStake>), StatusCodes.Status200OK)]
+        //public async IAsyncEnumerable<ApiStake> ListStakes(
+        //    [Required, FromRoute, EthereumAddress] string address, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        //{
+        //    await foreach (var stake in stakeService
+        //        .ListStakesAsync(GetAddress(address), queryFilter.CurrencyCode)
+        //        .WithCancellation(scopedCancellationToken.Token))
+        //    {
+        //        yield return new ApiStake()
+        //        {
+
+        //        };
+        //    }
+        //}
+
+        //[HttpGet]
+        //[Route("{address}/stakes/{hash}")]
+        //[Produces(MediaTypeNames.Application.Json)]
+        //[ProducesResponseType(typeof(ApiStake), StatusCodes.Status200OK)]
+        //public async Task<ApiStake> GetStake(
+        //    [Required, FromRoute, EthereumAddress] string address, [Required, FromRoute, TransactionHash] string hash, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        //{
+        //    var stake = await stakeService.GetStakeAsync(GetAddress(address), symbol, queryFilter.CurrencyCode);
+
+        //    return new ApiStake()
+        //    {
+
+        //    };
+        //}
     }
 }

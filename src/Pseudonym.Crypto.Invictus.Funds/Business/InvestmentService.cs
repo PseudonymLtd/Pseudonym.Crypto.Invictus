@@ -16,14 +16,14 @@ using Pseudonym.Crypto.Invictus.Shared.Models;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business
 {
-    internal sealed class AddressService : AbstractService, IAddressService
+    internal sealed class InvestmentService : AbstractService, IInvestmentService
     {
         private readonly IFundService fundService;
         private readonly IEtherClient etherClient;
         private readonly ILightstreamClient lightstreamClient;
         private readonly IEthplorerClient ethplorerClient;
 
-        public AddressService(
+        public InvestmentService(
             IOptions<AppSettings> appSettings,
             IFundService fundService,
             IEtherClient etherClient,

@@ -62,5 +62,13 @@
                 save_image: false,
                 container_id: id
             });
+    },
+    EnableTooltip: function (id) {
+        $('#' + id).tooltip();
+    },
+    EnablePopover: function (id) {
+        $('#' + id).popover({
+            trigger: 'focus'
+        });
     }
 }

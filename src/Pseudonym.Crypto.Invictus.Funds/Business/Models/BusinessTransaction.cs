@@ -20,6 +20,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 
         public EthereumAddress Recipient { get; set; }
 
+        public string Input { get; set; }
+
         public decimal Eth { get; set; }
 
         public long Gas { get; set; }

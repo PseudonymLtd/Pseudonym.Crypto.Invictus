@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using Nethereum.RPC.Eth.DTOs;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
@@ -12,6 +11,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
 
         Task<decimal> GetContractBalanceAsync(EthereumAddress contractAddress, EthereumAddress address, int decimals);
 
-        Task<TransactionReceipt> GetTransactionAsync(EthereumTransactionHash hash);
+        Task<TFunction> GetDataAsync<TFunction>(EthereumAddress contractAddress, string data)
+            where TFunction : class, new();
     }
 }

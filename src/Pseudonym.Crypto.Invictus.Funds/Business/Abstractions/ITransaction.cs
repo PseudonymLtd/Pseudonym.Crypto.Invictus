@@ -19,6 +19,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         EthereumAddress Recipient { get; }
 
+        string Input { get; }
+
         long GasLimit { get; }
 
         long Gas { get; }

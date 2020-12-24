@@ -94,7 +94,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                     },
                     ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
                     {
-                        [$":{nameof(DataTransaction.Address)}Val"] = new AttributeValue { S = contractAddress },
+                        [$":{nameof(DataTransaction.Address)}Val"] = new AttributeValue(contractAddress),
                         [$":{nameof(from)}Val"] = new AttributeValue { S = from.ToISO8601String() }
                     },
                     Limit = PageSize,
@@ -148,14 +148,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             return GetDateAsync(address, false);
         }
 
-        public IAsyncEnumerable<DataTransaction> ListInboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address)
+        public IAsyncEnumerable<DataTransaction> ListInboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address, EthereumAddress? filterAddress = null)
         {
-            return ListAddressTransactionsAsync(contractAddress, address, InboundIndexName, nameof(DataTransaction.Recipient));
+            return ListAddressTransactionsAsync(contractAddress, address, false, filterAddress);
         }
 
-        public IAsyncEnumerable<DataTransaction> ListOutboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address)
+        public IAsyncEnumerable<DataTransaction> ListOutboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address, EthereumAddress? filterAddress = null)
         {
-            return ListAddressTransactionsAsync(contractAddress, address, OutboundIndexName, nameof(DataTransaction.Sender));
+            return ListAddressTransactionsAsync(contractAddress, address, true, filterAddress);
         }
 
         protected sealed override DataTransaction Map(Dictionary<string, AttributeValue> attributes)
@@ -168,6 +168,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                 BlockNumber = long.Parse(attributes[nameof(DataTransaction.BlockNumber)].N),
                 Sender = attributes[nameof(DataTransaction.Sender)].S,
                 Recipient = attributes[nameof(DataTransaction.Recipient)].S,
+                Input = attributes[nameof(DataTransaction.Input)].S,
                 ConfirmedAt = DateTime.Parse(attributes[nameof(DataTransaction.ConfirmedAt)].S),
                 Confirmations = long.Parse(attributes[nameof(DataTransaction.Confirmations)].N),
                 Eth = decimal.Parse(attributes[nameof(DataTransaction.Eth)].N),
@@ -179,39 +180,52 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
         private async IAsyncEnumerable<DataTransaction> ListAddressTransactionsAsync(
             EthereumAddress contractAddress,
             EthereumAddress address,
-            string indexName,
-            string attributeName)
+            bool outbound,
+            EthereumAddress? filterAddress = null)
         {
             var lastEvaluatedKey = new Dictionary<string, AttributeValue>();
+            var attributeName = outbound
+                ? nameof(DataTransaction.Sender)
+                : nameof(DataTransaction.Recipient);
 
             while (!CancellationToken.IsCancellationRequested)
             {
-                var response = await DynamoDB.QueryAsync(
-                    new QueryRequest()
+                var request = new QueryRequest()
+                {
+                    TableName = TableName,
+                    IndexName = outbound ? OutboundIndexName : InboundIndexName,
+                    Select = Select.ALL_ATTRIBUTES,
+                    KeyConditionExpression = string.Format(
+                        "#{0} = :{0}Val AND #{1} = :{1}Val",
+                        attributeName,
+                        nameof(DataTransaction.Address)),
+                    ExpressionAttributeNames = new Dictionary<string, string>()
                     {
-                        TableName = TableName,
-                        IndexName = indexName,
-                        Select = Select.ALL_ATTRIBUTES,
-                        KeyConditionExpression = string.Format(
-                            "#{0} = :{0}Val AND #{1} = :{1}Val",
-                            attributeName,
-                            nameof(DataTransaction.Address)),
-                        ExpressionAttributeNames = new Dictionary<string, string>()
-                        {
-                            [$"#{attributeName}"] = attributeName,
-                            [$"#{nameof(DataTransaction.Address)}"] = nameof(DataTransaction.Address),
-                        },
-                        ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
-                        {
-                            [$":{attributeName}Val"] = new AttributeValue { S = address },
-                            [$":{nameof(DataTransaction.Address)}Val"] = new AttributeValue { S = contractAddress }
-                        },
-                        ExclusiveStartKey = lastEvaluatedKey.Any()
-                            ? lastEvaluatedKey
-                            : null
+                        [$"#{attributeName}"] = attributeName,
+                        [$"#{nameof(DataTransaction.Address)}"] = nameof(DataTransaction.Address),
                     },
-                    CancellationToken);
+                    ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
+                    {
+                        [$":{attributeName}Val"] = new AttributeValue { S = address },
+                        [$":{nameof(DataTransaction.Address)}Val"] = new AttributeValue(contractAddress)
+                    },
+                    ExclusiveStartKey = lastEvaluatedKey.Any()
+                        ? lastEvaluatedKey
+                        : null
+                };
 
+                if (filterAddress.HasValue)
+                {
+                    var filterAttributeName = outbound
+                        ? nameof(DataTransaction.Recipient)
+                        : nameof(DataTransaction.Sender);
+
+                    request.ExpressionAttributeNames.Add($"#{filterAttributeName}", filterAttributeName);
+                    request.ExpressionAttributeValues.Add($":{filterAttributeName}Val", new AttributeValue(filterAddress.Value));
+                    request.FilterExpression = string.Format("#{0} = :{0}Val", filterAttributeName);
+                }
+
+                var response = await DynamoDB.QueryAsync(request, CancellationToken);
                 if (response.HttpStatusCode != HttpStatusCode.OK)
                 {
                     throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
@@ -249,7 +263,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                     },
                     ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
                     {
-                        [$":{nameof(DataTransaction.Address)}Val"] = new AttributeValue { S = address.Address }
+                        [$":{nameof(DataTransaction.Address)}Val"] = new AttributeValue(address.Address)
                     },
                     Limit = 1
                 },
@@ -287,7 +301,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                     },
                     ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
                     {
-                        [$":{nameof(DataTransaction.Address)}Val"] = new AttributeValue { S = address }
+                        [$":{nameof(DataTransaction.Address)}Val"] = new AttributeValue(address)
                     },
                     Limit = 1
                 },

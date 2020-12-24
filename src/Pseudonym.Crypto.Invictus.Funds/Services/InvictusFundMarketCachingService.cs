@@ -39,7 +39,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                     var latestDate = await repository.GetLatestDateAsync(fund.Address)
                         ?? fund.InceptionDate;
 
-                    await UpdatePerformanceAsync(
+                    await SyncPerformanceAsync(
                         coinGeckoClient,
                         invictusClient,
                         repository,
@@ -51,7 +51,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                     var lowestDate = await repository.GetLowestDateAsync(fund.Address)
                         ?? DateTimeOffset.UtcNow.Round();
 
-                    await UpdatePerformanceAsync(
+                    await SyncPerformanceAsync(
                         coinGeckoClient,
                         invictusClient,
                         repository,
@@ -68,7 +68,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             }
         }
 
-        private async Task UpdatePerformanceAsync(
+        private async Task SyncPerformanceAsync(
             ICoinGeckoClient coinGeckoClient,
             IInvictusClient invictusClient,
             IFundPerformanceRepository repository,

@@ -6,7 +6,7 @@ using Pseudonym.Crypto.Invictus.Shared.Enums;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
 {
-    public interface IAddressService
+    public interface IInvestmentService
     {
         IAsyncEnumerable<IInvestment> ListInvestmentsAsync(EthereumAddress address, CurrencyCode currencyCode);
 

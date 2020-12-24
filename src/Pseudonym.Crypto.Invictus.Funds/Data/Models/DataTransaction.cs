@@ -18,6 +18,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data.Models
 
         public string Recipient { get; set; }
 
+        public string Input { get; set; }
+
         public decimal Eth { get; set; }
 
         public long GasLimit { get; set; }

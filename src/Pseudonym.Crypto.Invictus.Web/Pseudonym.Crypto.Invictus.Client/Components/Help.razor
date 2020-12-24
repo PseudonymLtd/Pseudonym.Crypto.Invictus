@@ -1,0 +1,28 @@
+﻿@inject IJSRuntime JsRuntime
+
+<button id="@Id" type="button" class="oi oi-question-mark help" data-toggle="popover" data-trigger="focus" title="@Title" data-content="@Content"></button>
+
+@code {
+    private readonly string Id;
+
+    public Help()
+    {
+        Id = $"H-{Guid.NewGuid()}";
+    }
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public string Content { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("functions.EnablePopover", Id);
+        }
+    }
+}

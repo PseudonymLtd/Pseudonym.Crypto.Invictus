@@ -11,7 +11,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 
         public bool CachingEnabled { get; set; }
 
-        public Version Version { get; set; }
+        public string Version { get; set; }
 
         public Uri HostUrl { get; set; }
 
@@ -22,6 +22,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
         public string JwtAudience { get; set; }
 
         public TimeSpan JwtTimeout { get; set; }
+
+        public string StakingAddress { get; set; }
 
         public List<FundSettings> Funds { get; set; } = new List<FundSettings>();
 

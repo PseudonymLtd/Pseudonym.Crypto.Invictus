@@ -86,7 +86,7 @@ namespace Microsoft.Extensions.DependencyInjection
             client.BaseAddress = dependency.Url;
             client.Timeout = dependency.Settings.Timeout;
             client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.Origin, appSettings.HostUrl.OriginalString);
-            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(appSettings.ServiceName, $"v{appSettings.Version.ToString(3)}"));
+            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(appSettings.ServiceName, $"v{appSettings.Version}"));
 
             return dependency;
         }

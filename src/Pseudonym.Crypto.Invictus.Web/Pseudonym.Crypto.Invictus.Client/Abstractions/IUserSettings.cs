@@ -10,6 +10,8 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Abstractions
 
         string WalletAddress { get; }
 
+        string StakingAddress { get; }
+
         IReadOnlyList<string> SecondaryWalletAddresses { get; }
 
         IReadOnlyDictionary<Symbol, FundInfo> Funds { get; }

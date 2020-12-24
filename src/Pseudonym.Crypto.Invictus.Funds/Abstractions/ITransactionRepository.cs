@@ -17,9 +17,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
             DateTime from,
             DateTime to);
 
-        IAsyncEnumerable<DataTransaction> ListInboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address);
+        IAsyncEnumerable<DataTransaction> ListInboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address, EthereumAddress? filterAddress = null);
 
-        IAsyncEnumerable<DataTransaction> ListOutboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address);
+        IAsyncEnumerable<DataTransaction> ListOutboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address, EthereumAddress? filterAddress = null);
 
         Task UploadItemsAsync(params DataTransaction[] transaction);
 
