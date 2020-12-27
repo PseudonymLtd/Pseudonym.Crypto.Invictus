@@ -70,7 +70,7 @@
         </div>
         @if (ShowGraph)
         {
-            <InvestmentTimelineChart Funds="new List<ApiFund>() { Investment.Fund }" Transactions="Transactions" ClickCallback="ClickCallback" @ref="chart" />
+            <InvestmentTimelineChart Funds="new List<ApiFund>() { Investment.Fund }" Stakes="Investment.Stakes" Transactions="Transactions" ClickCallback="ClickCallback" @ref="chart" />
         }
         @if (Clickable)
         {

@@ -60,7 +60,10 @@
                             <span>
                                 NET
                                 <Money Value="trade.NetSnapshotPrice" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
-                                <ProfitTag Value="trade.NetDiff" Decimals="2" />
+                                @if (!trade.IsStake)
+                                {
+                                    <ProfitTag Value="trade.NetDiff" Decimals="2" />
+                                }
                             </span>
 
                             if (trade.IsTradeable)
@@ -68,7 +71,10 @@
                                 <span>
                                     MKT
                                     <Money Value="trade.MarketSnapshotPrice.Value" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
-                                    <ProfitTag Value="trade.MarketDiff.Value" Decimals="2" />
+                                    @if (!trade.IsStake)
+                                    {
+                                        <ProfitTag Value="trade.MarketDiff.Value" Decimals="2" />
+                                    }
                                 </span>
                             }
                         }

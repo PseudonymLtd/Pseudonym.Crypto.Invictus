@@ -30,6 +30,8 @@
 
 @code {
 
+    private const string StakePrefix = "Staked-";
+
     private readonly LineConfig config;
     private readonly List<LineDataset<TimeTuple<decimal>>> datasets;
     private ChartJsLineChart chart;
@@ -111,10 +113,13 @@
     public string SubTitle { get; set; } = string.Empty;
 
     [Parameter]
-    public List<ApiFund> Funds { get; set; } = new List<ApiFund>();
+    public IReadOnlyList<ApiFund> Funds { get; set; } = new List<ApiFund>();
 
     [Parameter]
-    public List<BusinessTransaction> Transactions { get; set; }
+    public IReadOnlyList<BusinessTransaction> Transactions { get; set; } = new List<BusinessTransaction>();
+
+    [Parameter]
+    public IReadOnlyList<ApiStake> Stakes { get; set; } = new List<ApiStake>();
 
     [Parameter]
     public EventCallback<BusinessTransaction> ClickCallback { get; set; }
@@ -131,7 +136,7 @@
         {
             var data = clickData.First();
 
-            var fund = Funds.Single(f => f.Token.Address.Equals(datasets[data.ParentIndex].Id, StringComparison.OrdinalIgnoreCase));
+            var fund = Funds.Single(f => f.Token.Address.Equals(datasets[data.ParentIndex].Id.Replace(StakePrefix, string.Empty), StringComparison.OrdinalIgnoreCase));
             var transactions = GetDrawableTransactions(fund)
                 .ToList();
 
@@ -147,11 +152,18 @@
         .SkipWhile(t => t.ConfirmedAt < StartDate)
         .TakeWhile(t => t.ConfirmedAt <= EndDate);
 
+    protected IEnumerable<ApiStake> GetDrawableStakes(ApiFund fund) => Stakes
+        .Where(x =>
+            x.ContractAddress.Equals(fund.Token.Address, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(t => t.StakedAt)
+        .SkipWhile(t => t.StakedAt < StartDate)
+        .TakeWhile(t => t.StakedAt <= EndDate);
+
     protected override async Task OnInitializedAsync()
     {
         AppState.Assign(async () => await DrawAsync(false, false));
 
-        datasets.AddRange(Funds.Select(f => new LineDataset<TimeTuple<decimal>>
+        datasets.AddRange(Funds.Select(f => new LineDataset<TimeTuple<decimal>>()
         {
             Id = f.Token.Address,
             Fill = false,
@@ -165,6 +177,23 @@
             Label = f.Token.Symbol.ToString(),
             BackgroundColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(f.Token.Symbol)),
             BorderColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(f.Token.Symbol)),
+            PointHitRadius = 8
+        }));
+
+        datasets.AddRange(Stakes.Select(s => new LineDataset<TimeTuple<decimal>>()
+        {
+            Id = $"{StakePrefix}{s.ContractAddress}",
+            Fill = false,
+            BorderWidth = 2,
+            PointRadius = 4,
+            PointHoverRadius = 6,
+            PointBorderWidth = 1,
+            PointHoverBorderWidth = 1,
+            SteppedLine = SteppedLine.False,
+            LineTension = 0,
+            Label = $"Staked ({UserSettings.Funds.First(kvp => kvp.Value.ContractAddress == s.ContractAddress).Key})",
+            BackgroundColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Symbol.ICAP)),
+            BorderColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Symbol.ICAP)),
             PointHitRadius = 8
         }));
 
@@ -195,22 +224,52 @@
 
         foreach (var dataset in datasets)
         {
-            var fund = Funds.Single(f => dataset.Id.Equals(f.Token.Address, StringComparison.OrdinalIgnoreCase));
-            var total = Transactions
-                .Where(x =>
-                    x.Price != null &&
-                    x.ContractAddress.Equals(fund.Token.Address, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(t => t.ConfirmedAt)
-                .TakeWhile(t => t.ConfirmedAt < StartDate)
-                .Sum(t => t.GetTrade(fund, UserSettings).SignedQuantity);
+            var fund = Funds.Single(f => dataset.Id
+                .Replace(StakePrefix, string.Empty)
+                .Equals(f.Token.Address, StringComparison.OrdinalIgnoreCase));
 
-            foreach (var transaction in GetDrawableTransactions(fund))
+            if (dataset.Id.StartsWith(StakePrefix))
             {
-                var trade = transaction.GetTrade(fund, UserSettings);
+                var total = Stakes
+                    .Where(x =>
+                        x.ContractAddress.Equals(fund.Token.Address, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(t => t.StakedAt)
+                    .TakeWhile(t => t.StakedAt < StartDate)
+                    .Sum(t => t.Quantity);
 
-                total += trade.SignedQuantity;
+                dataset.Add(new TimeTuple<decimal>(new Moment(StartDate.Value.UtcDateTime), total));
 
-                dataset.Add(new TimeTuple<decimal>(new Moment(transaction.ConfirmedAt), total));
+                foreach (var stake in GetDrawableStakes(fund))
+                {
+                    total += stake.Quantity;
+
+                    dataset.Add(new TimeTuple<decimal>(new Moment(stake.StakedAt), total));
+                }
+
+                dataset.Add(new TimeTuple<decimal>(new Moment(EndDate.Value.UtcDateTime), total));
+            }
+            else
+            {
+                var total = Transactions
+                    .Where(x =>
+                        x.Price != null &&
+                        x.ContractAddress.Equals(fund.Token.Address, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(t => t.ConfirmedAt)
+                    .TakeWhile(t => t.ConfirmedAt < StartDate)
+                    .Sum(t => t.GetTrade(fund, UserSettings).SignedQuantity);
+
+                dataset.Add(new TimeTuple<decimal>(new Moment(StartDate.Value.UtcDateTime), total));
+
+                foreach (var transaction in GetDrawableTransactions(fund))
+                {
+                    var trade = transaction.GetTrade(fund, UserSettings);
+
+                    total += trade.SignedQuantity;
+
+                    dataset.Add(new TimeTuple<decimal>(new Moment(transaction.ConfirmedAt), total));
+                }
+
+                dataset.Add(new TimeTuple<decimal>(new Moment(EndDate.Value.UtcDateTime), total));
             }
         }
 

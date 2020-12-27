@@ -6,7 +6,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Utils
 {
     public static class InvictusColours
     {
-        public static Color InvictusRed => Color.FromArgb(1, 207, 33, 39);
+        public static Color ICAP => Color.FromArgb(1, 207, 33, 39);
 
         public static Color IBA => Color.FromArgb(1, 246, 122, 6);
 
@@ -33,7 +33,8 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Utils
                 Symbol.IHF => IHF,
                 Symbol.IGP => IGP,
                 Symbol.EMS => EMS,
-                _ => InvictusRed,
+                Symbol.ICAP => ICAP,
+                _ => RandomColor(),
             };
         }
 
