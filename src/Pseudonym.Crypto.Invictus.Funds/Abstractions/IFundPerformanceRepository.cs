@@ -17,6 +17,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
             DateTime from,
             DateTime to);
 
+        Task<bool> DeletePerformanceAsync(EthereumAddress contractAddress, DateTime date);
+
         Task<DateTime?> GetLatestDateAsync(EthereumAddress address);
 
         Task<DateTime?> GetLowestDateAsync(EthereumAddress address);

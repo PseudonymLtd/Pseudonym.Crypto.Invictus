@@ -76,8 +76,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                         },
                         ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
                         {
-                            [$":{nameof(DataFundPerformance.Address)}Val"] = new AttributeValue { S = contractAddress },
-                            [$":{nameof(from)}Val"] = new AttributeValue { S = from.ToISO8601String() }
+                            [$":{nameof(DataFundPerformance.Address)}Val"] = new AttributeValue(contractAddress),
+                            [$":{nameof(from)}Val"] = new AttributeValue(from.ToISO8601String())
                         },
                         ExclusiveStartKey = lastEvaluatedKey
                     },
@@ -111,14 +111,37 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             }
         }
 
-        public Task<DateTime?> GetLatestDateAsync(EthereumAddress address)
+        public async Task<bool> DeletePerformanceAsync(EthereumAddress contractAddress, DateTime date)
         {
-            return GetDateAsync(address, true);
+            var response = await DynamoDB.DeleteItemAsync(
+                new DeleteItemRequest()
+                {
+                    TableName = TableName,
+                    Key = new Dictionary<string, AttributeValue>()
+                    {
+                        [nameof(DataFundPerformance.Address)] = new AttributeValue(contractAddress),
+                        [nameof(DataFundPerformance.Date)] = new AttributeValue(date.ToISO8601String())
+                    },
+                    ReturnValues = ReturnValue.ALL_OLD
+                },
+                CancellationToken);
+
+            if (response.HttpStatusCode != HttpStatusCode.OK)
+            {
+                throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
+            }
+
+            return response.Attributes.Any();
         }
 
-        public Task<DateTime?> GetLowestDateAsync(EthereumAddress address)
+        public Task<DateTime?> GetLatestDateAsync(EthereumAddress contractAddress)
         {
-            return GetDateAsync(address, false);
+            return GetDateAsync(contractAddress, true);
+        }
+
+        public Task<DateTime?> GetLowestDateAsync(EthereumAddress contractAddress)
+        {
+            return GetDateAsync(contractAddress, false);
         }
 
         protected sealed override DataFundPerformance Map(Dictionary<string, AttributeValue> attributes)
@@ -134,7 +157,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             };
         }
 
-        private async Task<DateTime?> GetDateAsync(EthereumAddress address, bool latest)
+        private async Task<DateTime?> GetDateAsync(EthereumAddress contractAddress, bool latest)
         {
             var response = await DynamoDB.QueryAsync(
                 new QueryRequest()
@@ -149,7 +172,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                     },
                     ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
                     {
-                        [$":{nameof(DataFundPerformance.Address)}Val"] = new AttributeValue { S = address }
+                        [$":{nameof(DataFundPerformance.Address)}Val"] = new AttributeValue(contractAddress)
                     },
                     Limit = 1
                 },

@@ -144,6 +144,17 @@ namespace Pseudonym.Crypto.Invictus.Funds
                     };
                 });
 
+            container.AddAuthorization(options =>
+            {
+                options.AddPolicy(Headers.ApiKey, policy => policy
+                    .AddAuthenticationSchemes(Headers.ApiKey)
+                    .RequireAuthenticatedUser());
+
+                options.AddPolicy(JwtBearerDefaults.AuthenticationScheme, policy => policy
+                    .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                    .RequireAuthenticatedUser());
+            });
+
             container.AddResponseCompression(options =>
             {
                 options.EnableForHttps = true;

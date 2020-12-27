@@ -138,6 +138,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             }
         }
 
+        public Task<bool> DeletePerformanceAsync(Symbol symbol, DateTime date)
+        {
+            var fundInfo = GetFundInfo(symbol);
+
+            return fundPerformanceRepository.DeletePerformanceAsync(fundInfo.Address, date);
+        }
+
         public async Task<ITransactionSet> GetTransactionAsync(Symbol symbol, EthereumTransactionHash hash, CurrencyCode currencyCode)
         {
             var fundInfo = GetFundInfo(symbol);

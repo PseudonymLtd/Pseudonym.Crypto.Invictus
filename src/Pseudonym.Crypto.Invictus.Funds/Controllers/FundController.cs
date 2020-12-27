@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net.Mime;
@@ -11,6 +12,7 @@ using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Controllers.Filters;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
+using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Models;
@@ -79,6 +81,21 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                     Volume = perf.Volume
                 };
             }
+        }
+
+        [HttpDelete]
+        [Authorize(Headers.ApiKey)]
+        [Route("{symbol}/performance/{date}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status208AlreadyReported)]
+        public async Task<IActionResult> DeletePerformance(
+            [Required, FromRoute] Symbol symbol, [Required, FromRoute] DateTime date)
+        {
+            var deleted = await fundService.DeletePerformanceAsync(symbol, date);
+
+            return deleted
+                ? (IActionResult)Ok()
+                : StatusCode(StatusCodes.Status208AlreadyReported, null);
         }
 
         [HttpGet]
