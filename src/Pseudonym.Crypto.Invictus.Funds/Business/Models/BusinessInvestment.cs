@@ -18,5 +18,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
             : default(decimal?);
 
         public IReadOnlyList<ISubInvestment> SubInvestments { get; set; }
+
+        public IReadOnlyList<IStake> Stakes { get; set; }
     }
 }

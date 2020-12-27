@@ -14,6 +14,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         decimal Share { get; }
 
-        IReadOnlyList<ISubInvestment> SubInvestments { get; set; }
+        IReadOnlyList<ISubInvestment> SubInvestments { get; }
+
+        IReadOnlyList<IStake> Stakes { get; }
     }
 }

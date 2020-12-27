@@ -19,6 +19,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
     internal sealed class InvestmentService : AbstractService, IInvestmentService
     {
         private readonly IFundService fundService;
+        private readonly IStakeService stakeService;
         private readonly IEtherClient etherClient;
         private readonly ILightstreamClient lightstreamClient;
         private readonly IEthplorerClient ethplorerClient;
@@ -26,6 +27,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
         public InvestmentService(
             IOptions<AppSettings> appSettings,
             IFundService fundService,
+            IStakeService stakeService,
             IEtherClient etherClient,
             ILightstreamClient lightstreamClient,
             IEthplorerClient ethplorerClient,
@@ -37,6 +39,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             : base(appSettings, currencyConverter, transactionRepository, operationRepository, httpContextAccessor, scopedCancellationToken)
         {
             this.fundService = fundService;
+            this.stakeService = stakeService;
             this.etherClient = etherClient;
             this.lightstreamClient = lightstreamClient;
             this.ethplorerClient = ethplorerClient;
@@ -49,6 +52,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 .WithCancellation(CancellationToken))
             {
                 var tokenCount = await etherClient.GetContractBalanceAsync(fund.Token.ContractAddress, address, fund.Token.Decimals);
+                var stakes = await stakeService.ListStakesAsync(address, fund.Token.Symbol, currencyCode)
+                    .ToListAsync(CancellationToken);
+
+                tokenCount += stakes
+                    .Where(s => s.ExpiresAt > DateTime.UtcNow)
+                    .Sum(s => s.Quantity);
+
                 if (tokenCount > 0)
                 {
                     yield return new BusinessInvestment()
@@ -65,6 +75,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             var fundInfo = GetFundInfo(symbol);
             var fund = await fundService.GetFundAsync(symbol, currencyCode);
             var tokenCount = await etherClient.GetContractBalanceAsync(fundInfo.Address, address, fund.Token.Decimals);
+            var stakes = await stakeService.ListStakesAsync(address, fund.Token.Symbol, currencyCode)
+                .ToListAsync(CancellationToken);
+
+            tokenCount += stakes
+                .Where(s => s.ExpiresAt > DateTime.UtcNow)
+                .Sum(s => s.Quantity);
 
             var subInvestments = new List<ISubInvestment>();
 
@@ -111,7 +127,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             {
                 Fund = fund,
                 Held = tokenCount,
-                SubInvestments = subInvestments
+                SubInvestments = subInvestments,
+                Stakes = stakes
             };
         }
 

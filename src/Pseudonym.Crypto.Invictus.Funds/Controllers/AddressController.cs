@@ -77,6 +77,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 Share = investment.Share,
                 RealValue = investment.RealValue,
                 MarketValue = investment.MarketValue,
+                Stakes = investment.Stakes.Select(MapStake).ToList(),
                 SubInvestments = investment.SubInvestments
                     .Select(i => new ApiSubInvestment()
                     {
