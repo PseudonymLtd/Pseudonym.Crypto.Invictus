@@ -187,13 +187,18 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             var attributeName = outbound
                 ? nameof(DataTransaction.Sender)
                 : nameof(DataTransaction.Recipient);
+            var filterAttributeName = outbound
+                ? nameof(DataTransaction.Recipient)
+                : nameof(DataTransaction.Sender);
 
             while (!CancellationToken.IsCancellationRequested)
             {
                 var request = new QueryRequest()
                 {
                     TableName = TableName,
-                    IndexName = outbound ? OutboundIndexName : InboundIndexName,
+                    IndexName = outbound
+                        ? OutboundIndexName
+                        : InboundIndexName,
                     Select = Select.ALL_ATTRIBUTES,
                     KeyConditionExpression = string.Format(
                         "#{0} = :{0}Val AND #{1} = :{1}Val",
@@ -206,24 +211,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                     },
                     ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
                     {
-                        [$":{attributeName}Val"] = new AttributeValue { S = address },
+                        [$":{attributeName}Val"] = new AttributeValue(address),
                         [$":{nameof(DataTransaction.Address)}Val"] = new AttributeValue(contractAddress)
                     },
                     ExclusiveStartKey = lastEvaluatedKey.Any()
                         ? lastEvaluatedKey
                         : null
                 };
-
-                if (filterAddress.HasValue)
-                {
-                    var filterAttributeName = outbound
-                        ? nameof(DataTransaction.Recipient)
-                        : nameof(DataTransaction.Sender);
-
-                    request.ExpressionAttributeNames.Add($"#{filterAttributeName}", filterAttributeName);
-                    request.ExpressionAttributeValues.Add($":{filterAttributeName}Val", new AttributeValue(filterAddress.Value));
-                    request.FilterExpression = string.Format("#{0} = :{0}Val", filterAttributeName);
-                }
 
                 var response = await DynamoDB.QueryAsync(request, CancellationToken);
                 if (response.HttpStatusCode != HttpStatusCode.OK)
@@ -235,7 +229,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                     lastEvaluatedKey = response.LastEvaluatedKey;
                 }
 
-                foreach (var attributes in response.Items)
+                foreach (var attributes in response.Items
+                    .Where(x =>
+                        !filterAddress.HasValue ||
+                        filterAddress.Value.Address.Equals(x[filterAttributeName].S, StringComparison.OrdinalIgnoreCase)))
                 {
                     yield return Map(attributes);
                 }

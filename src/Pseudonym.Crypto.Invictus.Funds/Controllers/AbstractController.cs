@@ -191,5 +191,24 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 return TransferAction.None;
             }
         }
+
+        protected ApiStake MapStake(IStake stake)
+        {
+            return new ApiStake()
+            {
+                Hash = stake.Hash,
+                ContractAddress = stake.ContractAddress,
+                StakedAt = stake.StakedAt,
+                Duration = stake.Duration,
+                ExpiresAt = stake.ExpiresAt,
+                PricePerToken = stake.PricePerToken != default
+                    ? stake.PricePerToken
+                    : default(decimal?),
+                Quantity = stake.Quantity,
+                Total = stake.PricePerToken != default
+                    ? stake.PricePerToken * stake.Quantity
+                    : default(decimal?)
+            };
+        }
     }
 }

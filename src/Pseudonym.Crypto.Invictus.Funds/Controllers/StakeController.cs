@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
-using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Controllers.Filters;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
@@ -73,25 +72,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
             var stake = await stakeService.GetStakeAsync(symbol, new EthereumTransactionHash(hash), queryFilter.CurrencyCode);
 
             return MapStake(stake);
-        }
-
-        private ApiStake MapStake(IStake stake)
-        {
-            return new ApiStake()
-            {
-                Hash = stake.Hash,
-                ContractAddress = stake.ContractAddress,
-                StakedAt = stake.StakedAt,
-                Duration = stake.Duration,
-                ExpiresAt = stake.ExpiresAt,
-                PricePerToken = stake.PricePerToken != default
-                    ? stake.PricePerToken
-                    : default(decimal?),
-                Quantity = stake.Quantity,
-                Total = stake.PricePerToken != default
-                    ? stake.PricePerToken * stake.Quantity
-                    : default(decimal?)
-            };
         }
     }
 }

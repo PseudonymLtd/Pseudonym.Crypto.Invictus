@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Controllers.Filters;
+using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Models;
@@ -120,37 +121,47 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
             }
         }
 
-        //[HttpGet]
-        //[Route("{address}/stakes")]
-        //[Produces(MediaTypeNames.Application.Json)]
-        //[ProducesResponseType(typeof(List<ApiStake>), StatusCodes.Status200OK)]
-        //public async IAsyncEnumerable<ApiStake> ListStakes(
-        //    [Required, FromRoute, EthereumAddress] string address, [FromQuery] ApiCurrencyQueryFilter queryFilter)
-        //{
-        //    await foreach (var stake in stakeService
-        //        .ListStakesAsync(GetAddress(address), queryFilter.CurrencyCode)
-        //        .WithCancellation(scopedCancellationToken.Token))
-        //    {
-        //        yield return new ApiStake()
-        //        {
+        [HttpGet]
+        [Route("{address}/stakes")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(List<ApiStake>), StatusCodes.Status200OK)]
+        public async IAsyncEnumerable<ApiStake> ListStakes(
+            [Required, FromRoute, EthereumAddress] string address, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        {
+            await foreach (var stake in stakeService
+                .ListStakesAsync(GetAddress(address), queryFilter.CurrencyCode)
+                .WithCancellation(scopedCancellationToken.Token))
+            {
+                yield return MapStake(stake);
+            }
+        }
 
-        //        };
-        //    }
-        //}
+        [HttpGet]
+        [Route("{address}/stakes/{symbol}")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(ApiStake), StatusCodes.Status200OK)]
+        public async IAsyncEnumerable<ApiStake> GetStake(
+            [Required, FromRoute, EthereumAddress] string address, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        {
+            await foreach (var stake in stakeService
+                .ListStakesAsync(GetAddress(address), symbol, queryFilter.CurrencyCode)
+                .WithCancellation(scopedCancellationToken.Token))
+            {
+                yield return MapStake(stake);
+            }
+        }
 
-        //[HttpGet]
-        //[Route("{address}/stakes/{hash}")]
-        //[Produces(MediaTypeNames.Application.Json)]
-        //[ProducesResponseType(typeof(ApiStake), StatusCodes.Status200OK)]
-        //public async Task<ApiStake> GetStake(
-        //    [Required, FromRoute, EthereumAddress] string address, [Required, FromRoute, TransactionHash] string hash, [FromQuery] ApiCurrencyQueryFilter queryFilter)
-        //{
-        //    var stake = await stakeService.GetStakeAsync(GetAddress(address), symbol, queryFilter.CurrencyCode);
+        [HttpGet]
+        [Route("{address}/stakes/{symbol}/{hash}")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(ApiStake), StatusCodes.Status200OK)]
+        public async Task<ApiStake> GetStake(
+            [Required, FromRoute, EthereumAddress] string address, [Required, FromRoute] Symbol symbol, [Required, FromRoute, TransactionHash] string hash, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        {
+            var txHash = new EthereumTransactionHash(hash);
+            var stake = await stakeService.GetStakeAsync(GetAddress(address), symbol, txHash, queryFilter.CurrencyCode);
 
-        //    return new ApiStake()
-        //    {
-
-        //    };
-        //}
+            return MapStake(stake);
+        }
     }
 }
