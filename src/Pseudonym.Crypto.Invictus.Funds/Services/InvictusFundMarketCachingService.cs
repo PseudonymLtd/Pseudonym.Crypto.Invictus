@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Data.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
+using Pseudonym.Crypto.Invictus.Funds.Utils;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Services
 {
@@ -99,29 +101,21 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
 
                 if (invictusNavs.Any())
                 {
-                    if (fund.Tradable)
+                    var marketPrices = fund.Tradable
+                        ? await coinGeckoClient
+                            .ListCoinPerformanceAsync(fund.CoinGeckoId, start.AddDays(-1), end.AddDays(1))
+                            .ToListAsync(cancellationToken)
+                        : new List<CoinGeckoCoinPerformance>();
+
+                    foreach (var nav in invictusNavs)
                     {
-                        await foreach (var marketPrice in coinGeckoClient
-                            .ListCoinPerformanceAsync(fund.CoinGeckoId, start, end)
-                            .WithCancellation(cancellationToken))
-                        {
-                            var closestNav = invictusNavs
-                                .OrderBy(i => Math.Abs(i.Date.ToUnixTimeSeconds() - marketPrice.Date.ToUnixTimeSeconds()))
-                                .First();
+                        var closestPrice = marketPrices
+                            .OrderBy(i => Math.Abs(i.Date.ToUnixTimeSeconds() - nav.Date.ToUnixTimeSeconds()))
+                            .FirstOrDefault();
 
-                            var perf = MapPerformance(fund.Address, closestNav, marketPrice);
+                        var perf = MapPerformance(fund.Address, nav, closestPrice);
 
-                            await repository.UploadItemsAsync(perf);
-                        }
-                    }
-                    else
-                    {
-                        foreach (var nav in invictusNavs)
-                        {
-                            var perf = MapPerformance(fund.Address, nav, null);
-
-                            await repository.UploadItemsAsync(perf);
-                        }
+                        await repository.UploadItemsAsync(perf);
                     }
                 }
 
