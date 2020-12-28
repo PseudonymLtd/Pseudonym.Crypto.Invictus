@@ -190,6 +190,8 @@
             PointBorderWidth = 1,
             PointHoverBorderWidth = 1,
             SteppedLine = SteppedLine.False,
+            BorderDash = new int[] { 3, 1 },
+            BorderDashOffset = 1,
             LineTension = 0,
             Label = $"Staked ({UserSettings.Funds.First(kvp => kvp.Value.ContractAddress == s.ContractAddress).Key})",
             BackgroundColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Symbol.ICAP)),
@@ -237,10 +239,13 @@
                     .TakeWhile(t => t.StakedAt < StartDate)
                     .Sum(t => t.Quantity);
 
-                dataset.Add(new TimeTuple<decimal>(new Moment(StartDate.Value.UtcDateTime), total));
-
                 foreach (var stake in GetDrawableStakes(fund))
                 {
+                    if (total == default)
+                    {
+                        dataset.Add(new TimeTuple<decimal>(new Moment(stake.StakedAt), total));
+                    }
+
                     total += stake.Quantity;
 
                     dataset.Add(new TimeTuple<decimal>(new Moment(stake.StakedAt), total));
@@ -257,8 +262,6 @@
                     .OrderBy(t => t.ConfirmedAt)
                     .TakeWhile(t => t.ConfirmedAt < StartDate)
                     .Sum(t => t.GetTrade(fund, UserSettings).SignedQuantity);
-
-                dataset.Add(new TimeTuple<decimal>(new Moment(StartDate.Value.UtcDateTime), total));
 
                 foreach (var transaction in GetDrawableTransactions(fund))
                 {
