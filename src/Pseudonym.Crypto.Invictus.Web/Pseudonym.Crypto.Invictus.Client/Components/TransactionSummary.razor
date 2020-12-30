@@ -7,24 +7,56 @@
             <blockquote class="blockquote">
                 <h4 style="padding-bottom: 0px; margin-bottom: 0px;">
                     <img src="images/funds/@FundImageName" class="mr-1 mb-1" height="50" width="50" alt="@Fund.DisplayName">
-                    <span style="padding-left: 2px;">Tx @Transaction.ConfirmedAt.ToString("F", DateTimeFormatInfo.InvariantInfo)</span>
-                    <TransactionStatus Success="Transaction.Success" Confirmations="Transaction.Confirmations" />
+                    <small style="padding-left: 3px; position: absolute; font-size: x-small; color: #6c757d;">@Transaction.ConfirmedAt.ToString("F", DateTimeFormatInfo.InvariantInfo)</small>
+                    <span style="padding-left: 2px;">
+                        @if (Transaction.Price != null)
+                        {
+                            if (Transaction.IsSwap())
+                            {
+                                var swap = Transaction.GetSwapData(Fund);
+
+                                <span>Swap</span>
+                                <LargeNumber Value="swap.OutboundQuantity" Decimals="2" ShowZeroValue="true" />
+                                <small>@swap.OutboundSymbol</small>
+                                <span>&rarr;</span>
+                                <LargeNumber Value="swap.InboundQuantity" Decimals="2" ShowZeroValue="true" />
+                                <small>@swap.InboundSymbol</small>
+                            }
+                            else
+                            {
+                                var trade = Transaction.GetTradeData(Fund, UserSettings);
+
+                                <span>
+                                    @(trade.IsInbound
+                                        ? trade.IsOwned
+                                            ? "Transfer In"
+                                            : "Buy"
+                                        : trade.IsOwned
+                                            ? "Transfer Out"
+                                            : trade.IsStake
+                                                ? "Stake"
+                                                : "Sell")
+                                </span>
+                                <LargeNumber Value="trade.Quantity" Decimals="2" ShowZeroValue="true" />
+                                <small>@Fund.Token.Symbol</small>
+
+                            }
+                        }
+                        else
+                        {
+                            <span>Tx </span>
+                            <Awaiting Symbol="Fund.Token.Symbol" />
+                        }
+                    </span>
                 </h4>
                 <footer class="blockquote-footer">
+                    <TransactionStatus Success="Transaction.Success" Confirmations="Transaction.Confirmations" />
                     @if (Transaction.Price != null)
                     {
                         if (Transaction.IsSwap())
                         {
                             var swap = Transaction.GetSwapData(Fund);
 
-                            <span>
-                                Swap
-                                <LargeNumber Value="swap.OutboundQuantity" Decimals="2" ShowZeroValue="true" />
-                                <small>@swap.OutboundSymbol</small>
-                                &rarr;
-                                <LargeNumber Value="swap.InboundQuantity" Decimals="2" ShowZeroValue="true" />
-                                <small>@swap.InboundSymbol</small>
-                            </span>
                             <span>
                                 NET
                                 <Money Value="swap.NetSnapshotPrice" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
@@ -44,19 +76,6 @@
                         {
                             var trade = Transaction.GetTradeData(Fund, UserSettings);
 
-                            <span>
-                                @(trade.IsInbound
-                                    ? trade.IsOwned 
-                                        ? "Transfer In"
-                                        : "Buy"
-                                    : trade.IsOwned
-                                        ? "Transfer Out"
-                                        : trade.IsStake
-                                            ? "Stake"
-                                            : "Sell")
-                                <LargeNumber Value="trade.Quantity" Decimals="2" ShowZeroValue="true" />
-                                <small>@Fund.Token.Symbol</small>
-                            </span>
                             <span>
                                 NET
                                 <Money Value="trade.NetSnapshotPrice" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
@@ -78,10 +97,6 @@
                                 </span>
                             }
                         }
-                    }
-                    else
-                    {
-                        <Awaiting Symbol="Fund.Token.Symbol" />
                     }
                 </footer>
             </blockquote>

@@ -21,9 +21,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         decimal CirculatingSupply { get; set; }
 
-        decimal NetValue { get; }
-
-        decimal NetAssetValuePerToken { get; }
+        INav Nav { get; }
 
         IMarket Market { get; }
 

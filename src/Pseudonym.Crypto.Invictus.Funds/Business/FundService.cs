@@ -49,11 +49,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 {
                     var fundInfo = GetFundInfo(symbol);
 
-                    var priceData = fundInfo.Tradable
-                        ? await ethplorerClient.GetTokenInfoAsync(fundInfo.Address)
-                        : null;
-
-                    yield return MapFund(fund, priceData, symbol, currencyCode);
+                    yield return await GetFundAsync(fundInfo, fund, currencyCode);
                 }
             }
         }
@@ -64,11 +60,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
             var fund = await invictusClient.GetFundAsync(symbol);
 
-            var priceData = fundInfo.Tradable
-                ? await ethplorerClient.GetTokenInfoAsync(fundInfo.Address)
-                : null;
-
-            return MapFund(fund, priceData, symbol, currencyCode);
+            return await GetFundAsync(fundInfo, fund, currencyCode);
         }
 
         public async IAsyncEnumerable<IPerformance> ListPerformanceAsync(Symbol symbol, PriceMode priceMode, DateTime from, DateTime to, CurrencyCode currencyCode)
@@ -81,7 +73,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
             if (priceMode == PriceMode.Raw)
             {
-                foreach (var perf in perfs)
+                foreach (var perf in perfs.OrderBy(x => x.Date))
                 {
                     yield return new BusinessPerformance()
                     {
@@ -108,7 +100,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 yield break;
             }
 
-            foreach (var perfGroup in perfs.GroupBy(p => p.Date.Date))
+            foreach (var perfGroup in perfs.GroupBy(p => p.Date.Date).OrderBy(x => x.Key))
             {
                 yield return new BusinessPerformance()
                 {
@@ -184,8 +176,31 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             }
         }
 
-        private IFund MapFund(InvictusFund fund, EthplorerPriceSummary priceData, Symbol symbol, CurrencyCode currencyCode)
+        private async Task<IFund> GetFundAsync(FundSettings settings, InvictusFund fund, CurrencyCode currencyCode)
         {
+            var now = DateTime.UtcNow;
+
+            var priceData = settings.Tradable
+                ? await ethplorerClient.GetTokenInfoAsync(settings.Address)
+                : null;
+
+            var navData = await ListPerformanceAsync(settings.Symbol, PriceMode.Raw, now.AddDays(-29), now, currencyCode)
+                .ToListAsync(CancellationToken);
+
+            return MapFund(
+                fund,
+                navData
+                    .Select(x => x.NetAssetValuePerToken)
+                    .ToList(),
+                priceData,
+                settings.Symbol,
+                currencyCode);
+        }
+
+        private IFund MapFund(InvictusFund fund, IReadOnlyList<decimal> navs, EthplorerPriceSummary priceData, Symbol symbol, CurrencyCode currencyCode)
+        {
+            var dailyNavs = navs.TakeLast(2);
+            var weeklyNavs = navs.TakeLast(8);
             var netVal = fund.NetValue.FromPythonString();
             var circulatingSupply = fund.CirculatingSupply.FromPythonString();
             var fundInfo = GetFundInfo(symbol);
@@ -204,8 +219,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     Decimals = fundInfo.Decimals
                 },
                 CirculatingSupply = circulatingSupply,
-                NetValue = CurrencyConverter.Convert(netVal, currencyCode),
-                NetAssetValuePerToken = CurrencyConverter.Convert(fund.NetAssetValuePerToken.FromPythonString(), currencyCode),
+                Nav = new BusinessNav()
+                {
+                    Value = CurrencyConverter.Convert(netVal, currencyCode),
+                    ValuePerToken = CurrencyConverter.Convert(fund.NetAssetValuePerToken.FromPythonString(), currencyCode),
+                    DiffDaily = dailyNavs.First().PercentageDiff(dailyNavs.Last()),
+                    DiffWeekly = weeklyNavs.First().PercentageDiff(weeklyNavs.Last()),
+                    DiffMonthly = navs.First().PercentageDiff(navs.Last()),
+                },
                 Market = new BusinessMarket()
                 {
                     IsTradable = priceData != null,

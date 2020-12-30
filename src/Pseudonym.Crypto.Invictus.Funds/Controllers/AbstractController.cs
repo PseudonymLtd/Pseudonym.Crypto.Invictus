@@ -51,8 +51,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                     Address = fund.Token.ContractAddress.Address
                 },
                 CirculatingSupply = fund.CirculatingSupply,
-                NetAssetValue = fund.NetValue,
-                NetAssetValuePerToken = fund.NetAssetValuePerToken,
+                Nav = new ApiNav()
+                {
+                    Value = fund.Nav.Value,
+                    ValuePerToken = fund.Nav.ValuePerToken,
+                    DiffDaily = fund.Nav.DiffDaily,
+                    DiffWeekly = fund.Nav.DiffWeekly,
+                    DiffMonthly = fund.Nav.DiffMonthly
+                },
                 Market = new ApiMarket()
                 {
                     IsTradeable = fund.Market.IsTradable,

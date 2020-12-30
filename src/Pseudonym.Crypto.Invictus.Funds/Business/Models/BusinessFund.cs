@@ -32,9 +32,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 
         public decimal CirculatingSupply { get; set; }
 
-        public decimal NetValue { get; set; }
-
-        public decimal NetAssetValuePerToken { get; set; }
+        public INav Nav { get; set; }
 
         public IMarket Market { get; set; }
 

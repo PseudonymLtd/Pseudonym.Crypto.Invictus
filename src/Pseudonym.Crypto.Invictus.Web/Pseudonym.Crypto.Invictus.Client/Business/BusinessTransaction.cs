@@ -72,7 +72,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                     IsTradeable = fund.Market.IsTradeable,
                     IsInbound = IsInbound(),
                     Quantity = GetTransferQuantity(TransferAction),
-                    NetCurrentPricePerToken = fund.NetAssetValuePerToken,
+                    NetCurrentPricePerToken = fund.Nav.ValuePerToken,
                     NetSnapshotPricePerToken = Price.NetAssetValuePerToken,
                     MarketCurrentPricePerToken = fund.Market.IsTradeable
                         ? fund.Market.PricePerToken
@@ -115,7 +115,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                     IsTradeable = fund.Market.IsTradeable,
                     IsInbound = isInbound,
                     Quantity = fundOp.Quantity,
-                    NetCurrentPricePerToken = fund.NetAssetValuePerToken,
+                    NetCurrentPricePerToken = fund.Nav.ValuePerToken,
                     NetSnapshotPricePerToken = Price.NetAssetValuePerToken,
                     MarketCurrentPricePerToken = fund.Market.IsTradeable
                         ? fund.Market.PricePerToken

@@ -27,13 +27,10 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         public decimal CirculatingSupply { get; set; }
 
         [Required]
-        [JsonProperty("net_value")]
-        public decimal NetAssetValue { get; set; }
+        [JsonProperty("nav")]
+        public ApiNav Nav { get; set; }
 
         [Required]
-        [JsonProperty("nav_per_token")]
-        public decimal NetAssetValuePerToken { get; set; }
-
         [JsonProperty("market")]
         public ApiMarket Market { get; set; }
 

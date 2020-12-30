@@ -115,7 +115,7 @@ else
                         transaction.ConfirmedAt.Date == now
                         ? new ApiPerformance()
                         {
-                            NetAssetValuePerToken = investment.Fund.NetAssetValuePerToken,
+                            NetAssetValuePerToken = investment.Fund.Nav.ValuePerToken,
                             MarketValuePerToken = investment.Fund.Market.PricePerToken
                         }
                         : null));

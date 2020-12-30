@@ -49,5 +49,25 @@ namespace System
                 return "-";
             }
         }
+
+        public static decimal PercentageDiff(this decimal a, decimal b)
+        {
+            if (a == default)
+            {
+                return 0;
+            }
+
+            return (b - a) / a * 100;
+        }
+
+        public static decimal Diff(this decimal a, decimal b)
+        {
+            if (a == default)
+            {
+                return 0;
+            }
+
+            return (b - a) / a;
+        }
     }
 }

@@ -11,7 +11,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 
         public decimal Share => Held / Fund.CirculatingSupply * 100;
 
-        public decimal RealValue => Fund.NetAssetValuePerToken * Held;
+        public decimal RealValue => Fund.Nav.ValuePerToken * Held;
 
         public decimal? MarketValue => Fund.Market.IsTradable
             ? Fund.Market.PricePerToken * Held

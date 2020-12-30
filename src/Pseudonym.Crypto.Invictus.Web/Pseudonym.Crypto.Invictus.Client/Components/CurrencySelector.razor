@@ -3,14 +3,14 @@
 
 <div class="dropdown">
     <button class="btn btn-danger dropdown-toggle currency-selector" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-describedby="currencyCodeHelp" style="width: 350px;">
-        @UserSettingsHandle.Settings.CurrencyCode.GetName()
+        @UserSettingsHandle.Settings.CurrencyCode.GetDescription()
     </button>
     <div class="dropdown-menu currency-selector" aria-labelledby="dropdownMenuButton" style="overflow-y: scroll; max-height: 250px; z-index: 10000; width: 350px;">
-        @foreach (var item in Enum.GetValues(typeof(CurrencyCode)).Cast<CurrencyCode>().OrderBy(x => x.GetName()))
+        @foreach (var item in Enum.GetValues(typeof(CurrencyCode)).Cast<CurrencyCode>().OrderBy(x => x.GetDescription()))
         {
             <span class="dropdown-item text-mob-xs" @onclick="@(async (e) => await ChangeCurrencyCodeAsync(item))">
                 <img src="images/locale/@($"{item.ToString()}.png")" class="flag mr-1" width="50" height="30">
-                @item.GetName()
+                @item.GetDescription()
             </span>
         }
     </div>

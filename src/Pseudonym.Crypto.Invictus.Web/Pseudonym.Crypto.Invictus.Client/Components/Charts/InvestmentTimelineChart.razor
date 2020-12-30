@@ -17,10 +17,10 @@
     </div>
     <div style="max-width: 100%; max-height: @($"{Height}px"); margin-bottom: 40px;">
         <div style="position: relative;">
-            @if (!datasets.Any(d => d.Data.Any()))
+            @if (rendering)
             {
                 <div style="position: absolute; width: 100%; height: 100%; text-align: center; padding: 100px 0;">
-                    <Loading />
+                    <Awaiting Symbol="@(Funds.Count == 1 ? Funds.Single().Token.Symbol : Symbol.ICAP)" />
                 </div>
             }
             <ChartJsLineChart Config="config" Width="Width" Height="Height" @ref="chart" />
@@ -35,9 +35,11 @@
     private readonly LineConfig config;
     private readonly List<LineDataset<TimeTuple<decimal>>> datasets;
     private ChartJsLineChart chart;
+    private bool rendering;
 
     public InvestmentTimelineChart()
     {
+        rendering = true;
         EndDate = DateTimeOffset.UtcNow;
         StartDate = EndDate.Value.AddYears(-1);
 
@@ -57,20 +59,20 @@
                 Scales = new Scales()
                 {
                     xAxes = new List<CartesianAxis>()
-            {
+                    {
                         new TimeAxis
                         {
                             Distribution = TimeDistribution.Linear,
                             Ticks = new TimeTicks
                             {
-                                Source = TickSource.Data
+                                Source = TickSource.Auto
                             },
                             Time = new TimeOptions
                             {
                                 Unit = TimeMeasurement.Day,
                                 Round = TimeMeasurement.Second,
                                 MinUnit = TimeMeasurement.Second,
-                                TooltipFormat = "DD-MM-YYYY HH:mm:ss",
+                                TooltipFormat = "YYYY-MM-DD HH:mm:ss",
                                 DisplayFormats = TimeDisplayFormats.DE_CH
                             },
                             ScaleLabel = new ScaleLabel()
@@ -209,13 +211,19 @@
 
     public async Task DrawAsync(bool firstRender, bool transactionsLoaded)
     {
+        rendering = true;
+
         if (!firstRender)
         {
             datasets.ForEach(d => d.RemoveAll(x => true));
+
+            StateHasChanged();
         }
 
         if (transactionsLoaded)
         {
+            rendering = false;
+
             StartDate = Transactions.OrderBy(t => t.ConfirmedAt).FirstOrDefault()?.ConfirmedAt.Date ?? DateTimeOffset.UtcNow.AddYears(-1);
         }
 
@@ -279,6 +287,11 @@
         if (chart != null)
         {
             await chart.Update();
+        }
+
+        if (!firstRender)
+        {
+            rendering = false;
         }
 
         StateHasChanged();

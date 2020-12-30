@@ -1,19 +1,7 @@
-﻿using System.ComponentModel;
-using System.Linq;
-using System.Reflection;
-
-namespace Pseudonym.Crypto.Invictus.Shared.Enums
+﻿namespace Pseudonym.Crypto.Invictus.Shared.Enums
 {
     public static class CurrencyCodeExtensions
     {
-        public static string GetName(this CurrencyCode currencyCode)
-        {
-            var t = typeof(CurrencyCode).GetMember(currencyCode.ToString())
-                .Single();
-
-            return t.GetCustomAttribute<DescriptionAttribute>().Description;
-        }
-
         public static string GetSymbol(this CurrencyCode currencyCode)
         {
             switch (currencyCode)

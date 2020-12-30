@@ -177,3 +177,23 @@
         background-color: #0c3b59 !important;
         border-color: #0c3b59 !important;
     }
+
+.neutral {
+    color: white !important;
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+    .neutral:hover {
+        color: white !important
+    }
+
+.neutral-text {
+    color: #6c757d !important;
+}
+
+    .neutral-text:hover {
+        color: white !important;
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+    }

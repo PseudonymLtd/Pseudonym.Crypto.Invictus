@@ -1,86 +1,68 @@
 ﻿@inject IAppState AppState
 @inject IUserSettings UserSettings
-@inject NavigationManager NavigationManager
 
-<div class="jumbotron jumbotron-fluid">
-    <div class="container">
-        <div class="media" style="margin-top: auto; margin-bottom: auto; padding-bottom: 6px;">
-            <img src="images/funds/@FundImageName" class="mr-3" alt="@Investment.Fund.DisplayName">
-            <h1 class="display-4">@Investment.Fund.DisplayName</h1>
-            <a class="badge badge-secondary" href="@Investment.Fund.Links.Lite" style="float: right; margin-left: 5px;" target="_blank">Lite</a>
-            <a class="badge @Investment.Fund.Token.Symbol.ToString().ToLower()" href="@Investment.Fund.Links.Fact" style="float: right; margin-left: 5px;" target="_blank">Fact</a>
-        </div>
-        <p class="lead">@Investment.Fund.Description</p>
-        <div class="media" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
-            <div class="container-fluid" style="max-width: none">
-                <div class="row">
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                        <small style="font-weight: bold;">Token</small>
-                        <div>
-                            <Token Symbol="@Investment.Fund.Token.Symbol.ToString()" ContractAddress="@Investment.Fund.Token.Address" />
-                        </div>
+<Header Fund="Investment.Fund" Link="Link" ShowGraph="ShowGraph">
+    <Content>
+        <div class="container-fluid" style="max-width: none">
+            <div class="row">
+                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <small style="font-weight: bold;">Token</small>
+                    <div>
+                        <Token Symbol="@Investment.Fund.Token.Symbol.ToString()" ContractAddress="@Investment.Fund.Token.Address" />
                     </div>
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                        <small style="font-weight: bold;">Held</small>
-                        <div>
-                            <LargeNumber Value="Investment.Held" Decimals="2" />
-                        </div>
+                </div>
+                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <small style="font-weight: bold;">Held</small>
+                    <div>
+                        <LargeNumber Value="Investment.Held" Decimals="2" />
                     </div>
+                </div>
+                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <small style="font-weight: bold;">Net Value (@UserSettings.CurrencyCode.GetSymbol())</small>
+                    <div>
+                        <Money Value="Investment.RealValue" CurrencyCode="UserSettings.CurrencyCode" />
+                        @if (NetProfit.HasValue)
+                        {
+                            <ProfitTag Value="NetProfit.Value" Decimals="2" />
+                        }
+                    </div>
+                </div>
+                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <small style="font-weight: bold;">Share</small>
+                    <div>
+                        <LargeNumber Value="Investment.Share" Decimals="2" Suffix="%" />
+                    </div>
+                </div>
+                @if (Investment.Fund.Market.IsTradeable)
+                {
                     <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                        <small style="font-weight: bold;">Net Value (@UserSettings.CurrencyCode.GetSymbol())</small>
+                        <small style="font-weight: bold;">Market Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                         <div>
-                            <Money Value="Investment.RealValue" CurrencyCode="UserSettings.CurrencyCode" />
-                            @if (NetProfit.HasValue)
+                            <Money Value="Investment.MarketValue ?? 0" CurrencyCode="UserSettings.CurrencyCode" />
+                            @if (MarketProfit.HasValue)
                             {
-                                <ProfitTag Value="NetProfit.Value" Decimals="2" />
+                                <ProfitTag Value="MarketProfit.Value" Decimals="2" />
                             }
                         </div>
                     </div>
+                }
+                @if (Investment.SubInvestments.Any())
+                {
                     <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                        <small style="font-weight: bold;">Held</small>
+                        <small style="font-weight: bold;">Additional Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                         <div>
-                            <LargeNumber Value="Investment.Share" Decimals="2" Suffix="%" />
+                            <Money Value="Investment.SubInvestments.Sum(si => si.MarketValue)" CurrencyCode="UserSettings.CurrencyCode" />
+                            <Help Title="Additional Value" Content="Additional Value is the combined total of any assets this fund holds that you also hold as an individual investment external to the fund." />
                         </div>
                     </div>
-                    @if (Investment.Fund.Market.IsTradeable)
-                    {
-                        <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                            <small style="font-weight: bold;">Market Value (@UserSettings.CurrencyCode.GetSymbol())</small>
-                            <div>
-                                <Money Value="Investment.MarketValue ?? 0" CurrencyCode="UserSettings.CurrencyCode" />
-                                @if (MarketProfit.HasValue)
-                                {
-                                    <ProfitTag Value="MarketProfit.Value" Decimals="2" />
-                                }
-                            </div>
-                        </div>
-                    }
-                    @if (Investment.SubInvestments.Any())
-                    {
-                        <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
-                            <small style="font-weight: bold;">Additional Value (@UserSettings.CurrencyCode.GetSymbol())</small>
-                            <div>
-                                <Money Value="Investment.SubInvestments.Sum(si => si.MarketValue)" CurrencyCode="UserSettings.CurrencyCode" />
-                                <Help Title="Additional Value" Content="Additional Value is the combined total of any assets this fund holds that you also hold as an individual investment external to the fund." />
-                            </div>
-                        </div>
-                    }
-                </div>
+                }
             </div>
         </div>
-        @if (ShowGraph)
-        {
-            <InvestmentTimelineChart Funds="new List<ApiFund>() { Investment.Fund }" Stakes="Investment.Stakes" Transactions="Transactions" ClickCallback="ClickCallback" @ref="chart" />
-        }
-        @if (Clickable)
-        {
-            <a href="investments/@Investment.Fund.Token.Symbol"
-               class="btn btn-primary btn-lg @Investment.Fund.Token.Symbol.ToString().ToLower()"
-               role="button"
-               style="margin-left: auto; margin-right: 0; display: block; max-width: 150px;">View Details</a>
-        }
-    </div>
-</div>
+    </Content>
+    <Chart>
+        <InvestmentTimelineChart Funds="new List<ApiFund>() { Investment.Fund }" Stakes="Investment.Stakes" Transactions="Transactions" ClickCallback="ClickCallback" @ref="chart" />
+    </Chart>
+</Header>
 
 @code {
 
@@ -101,17 +83,21 @@
     [Parameter]
     public EventCallback<BusinessTransaction> ClickCallback { get; set; }
 
-    protected string FundImageName => $"{Investment.Fund.Token.Symbol}.png";
-
     protected decimal? NetProfit => Transactions
         ?.Where(x => x.Price != null)
         ?.Select(t => t.GetTrade(Investment.Fund, UserSettings))
+        ?.Where(t => !t.IsStake)
         ?.Sum(t => t.NetDiff);
 
     protected decimal? MarketProfit => Transactions
         ?.Where(x => x.Price != null)
         ?.Select(t => t.GetTrade(Investment.Fund, UserSettings))
+        ?.Where(t => !t.IsStake)
         ?.Sum(t => t.MarketDiff ?? decimal.Zero);
+
+    protected Uri Link => Clickable
+        ? new Uri($"investments/{Investment.Fund.Token.Symbol}", UriKind.Relative)
+        : null;
 
     public async Task StateHasChangedAsync()
     {
