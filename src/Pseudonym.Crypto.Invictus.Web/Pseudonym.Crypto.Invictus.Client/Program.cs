@@ -55,6 +55,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client
                     ?? new Dictionary<Symbol, FundInfo>();
 
                 var currencyCode = cookieManager.Get<CurrencyCode>(CookieKeys.CurrencyCode);
+                var durationMode = cookieManager.Get<DurationMode>(CookieKeys.DurationMode);
                 var addr = cookieManager.Get<string>(CookieKeys.WalletAddresses);
                 var secondaryAddresses = cookieManager.Get<string>(CookieKeys.SecondaryWalletAddresses)
                     ?.Split(',', StringSplitOptions.RemoveEmptyEntries)
@@ -64,7 +65,8 @@ namespace Pseudonym.Crypto.Invictus.Web.Client
 
                 var settings = new UserSettings(appSettings, funds, secondaryAddresses)
                 {
-                    CurrencyCode = currencyCode
+                    CurrencyCode = currencyCode,
+                    DurationMode = durationMode
                 };
 
                 settings.SetAddress(addr);

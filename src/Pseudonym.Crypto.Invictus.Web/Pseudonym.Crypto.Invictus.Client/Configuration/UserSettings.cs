@@ -29,6 +29,8 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Configuration
 
         public CurrencyCode CurrencyCode { get; set; } = CurrencyCode.USD;
 
+        public DurationMode DurationMode { get; set; } = DurationMode.Monthly;
+
         public string WalletAddress { get; private set; }
 
         public string StakingAddress => appSettings.Value.StakingAddress;

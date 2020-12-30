@@ -326,11 +326,11 @@ app {
         display: none;
     }
 
-    .currency-selector {
+    .selector {
         width: 100% !important;
     }
 
-        .currency-selector .dropdown-item .flag {
+        .selector .dropdown-item .flag {
             width: 25px !important;
             height: 15px !important;
         }

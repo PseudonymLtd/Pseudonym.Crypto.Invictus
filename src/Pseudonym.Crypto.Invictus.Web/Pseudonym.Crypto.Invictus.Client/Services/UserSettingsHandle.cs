@@ -30,6 +30,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Services
             await cookieManager.SetAsync(CookieKeys.WalletAddresses, userSettings.WalletAddress, 90);
             await cookieManager.SetAsync(CookieKeys.SecondaryWalletAddresses, string.Join(",", userSettings.SecondaryWalletAddresses), 90);
             await cookieManager.SetAsync(CookieKeys.CurrencyCode, userSettings.CurrencyCode, 90);
+            await cookieManager.SetAsync(CookieKeys.DurationMode, userSettings.DurationMode, 90);
             await sessionStore.SetAsync(StoreKeys.Funds, userSettings.Funds);
         }
     }

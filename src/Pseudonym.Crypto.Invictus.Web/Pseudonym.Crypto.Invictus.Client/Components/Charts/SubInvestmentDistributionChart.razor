@@ -50,16 +50,18 @@ else
     public void InstanceClickHandler(object sender, object args)
     {
         var clickData = JsonConvert.DeserializeObject<List<JPieClickData>>(args.ToString())
-            .First();
+            .FirstOrDefault();
 
-        var subInvestment = SubInvestments.SingleOrDefault(a => a.Coin.Name.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
-        if (subInvestment != null)
+        if (clickData != null)
         {
-            Runtime.InvokeAsync<object>("open", subInvestment.Coin.Links.Link.OriginalString, "_blank")
-                .GetAwaiter()
-                .GetResult();
+            var subInvestment = SubInvestments.SingleOrDefault(a => a.Coin.Name.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
+            if (subInvestment != null)
+            {
+                Runtime.InvokeAsync<object>("open", subInvestment.Coin.Links.Link.OriginalString, "_blank")
+                    .GetAwaiter()
+                    .GetResult();
+            }
         }
-
     }
 
     protected override void OnInitialized()

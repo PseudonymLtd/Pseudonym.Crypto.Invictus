@@ -48,14 +48,17 @@ else
     public void InstanceClickHandler(object sender, object args)
     {
         var clickData = JsonConvert.DeserializeObject<List<JPieClickData>>(args.ToString())
-            .First();
+            .FirstOrDefault();
 
-        var investment = Investments.SingleOrDefault(i =>
-            i.Fund.DisplayName.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
-
-        if (investment != null)
+        if (clickData != null)
         {
-            NavigationManager.NavigateTo($"/funds/{investment.Fund.Token.Symbol}");
+            var investment = Investments.SingleOrDefault(i =>
+                i.Fund.DisplayName.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
+
+            if (investment != null)
+            {
+                NavigationManager.NavigateTo($"/funds/{investment.Fund.Token.Symbol}");
+            }
         }
     }
 

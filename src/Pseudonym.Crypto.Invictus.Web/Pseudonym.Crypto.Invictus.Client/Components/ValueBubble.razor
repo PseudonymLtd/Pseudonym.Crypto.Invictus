@@ -1,11 +1,12 @@
 ﻿@inject IAppState AppState
+@inject IUserSettings UserSettings
 
-<div class="badge @(Symbol.HasValue ? Symbol.Value.ToString().ToLower() : "neutral")" style="font-weight: bold; color: white;">
+<span class="badge @(Symbol.HasValue ? Symbol.Value.ToString().ToLower() : "neutral")" style="font-weight: bold; color: white;">
     <span>@Type </span>
     <LargeNumber Value="Math.Abs(displayValue)" Decimals="Decimals" ShowZeroValue="true" Suffix="@Suffix" />
     <span class="oi @(displayValue < 0 ? "oi-arrow-circle-bottom" : "oi-arrow-circle-top")"></span>
-    <span>@DurationMode.GetDescription()</span>
-</div>
+    <small>@UserSettings.DurationMode.GetDescription()</small>
+</span>
 
 @code {
     private decimal displayValue;
@@ -25,8 +26,6 @@
     [Parameter]
     public Symbol? Symbol { get; set; }
 
-    protected DurationMode DurationMode { get; set; } = DurationMode.Monthly;
-
     protected override void OnInitialized()
     {
         AppState.Assign(StateHasChanged);
@@ -36,7 +35,7 @@
 
     private void SetValue()
     {
-        displayValue = DurationMode switch
+        displayValue = UserSettings.DurationMode switch
         {
             DurationMode.Daily => Pricing.DiffDaily,
             DurationMode.Weekly => Pricing.DiffWeekly,

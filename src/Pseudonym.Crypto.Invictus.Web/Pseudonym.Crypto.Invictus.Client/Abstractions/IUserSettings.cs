@@ -8,6 +8,8 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Abstractions
     {
         CurrencyCode CurrencyCode { get; }
 
+        DurationMode DurationMode { get; }
+
         string WalletAddress { get; }
 
         string StakingAddress { get; }

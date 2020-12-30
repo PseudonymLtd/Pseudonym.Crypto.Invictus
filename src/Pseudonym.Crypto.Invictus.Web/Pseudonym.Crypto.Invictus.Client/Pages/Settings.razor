@@ -36,6 +36,33 @@
         </div>
         <div class="alert alert-secondary mt-4" role="alert">
             <h3>
+                <span class="oi oi-monitor mr-2" style="font-size: 1.5rem;" aria-hidden="true"></span>
+                Display
+            </h3>
+            <div class="form-group">
+                <blockquote class="blockquote" for="dropdownMenuButton" style="font-size: 1rem;">
+                    Price Action Duration
+                    <footer id="durationModeHelp" class="blockquote-footer">
+                        Controls whether price action is displayed through the site as daily, weekly or monthly gains/losses.
+                    </footer>
+                </blockquote>
+                <div class="dropdown">
+                    <button class="btn btn-danger dropdown-toggle selector" type="button" id="durationMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-describedby="currencyCodeHelp" style="width: 350px;">
+                        @UserSettingsHandle.Settings.DurationMode
+                    </button>
+                    <div class="dropdown-menu selector" aria-labelledby="durationMenuButton" style="overflow-y: scroll; max-height: 250px; z-index: 10000; width: 350px;">
+                        @foreach (var item in Enum.GetValues(typeof(DurationMode)).Cast<DurationMode>())
+                        {
+                            <span class="dropdown-item text-mob-xs" @onclick="@(async (e) => await ChangeDurationModeAsync(item))">
+                                @item
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="alert alert-secondary mt-4" role="alert">
+            <h3>
                 <span class="oi oi-fork mr-2" style="font-size: 1.5rem;" aria-hidden="true"></span>
                 Addresses
             </h3>
@@ -70,14 +97,14 @@
                 <div style="padding-bottom: 12px;">
                     @foreach (var item in UserSettingsHandle.Settings.SecondaryWalletAddresses)
                     {
-                    <div style="padding: 2px 0; width: 100%;">
-                        <span class="badge badge-secondary text-wrap">
-                            <EthAddress Address="@item" HighlightOwnership="false" />
-                        </span>
-                        <span class="badge badge-danger" style="cursor: pointer;" @onclick="(e) => OnDeleteSecondaryWalletAddressAsync(item, e)">
-                            &times;
-                        </span>
-                    </div>
+                        <div style="padding: 2px 0; width: 100%;">
+                            <span class="badge badge-secondary text-wrap">
+                                <EthAddress Address="@item" HighlightOwnership="false" />
+                            </span>
+                            <span class="badge badge-danger" style="cursor: pointer;" @onclick="(e) => OnDeleteSecondaryWalletAddressAsync(item, e)">
+                                &times;
+                            </span>
+                        </div>
                     }
                 </div>
                 <div class="input-group mb-3">
@@ -88,7 +115,7 @@
                            aria-describedby="secondaryWalletAddressFeedback"
                            style="border-color: #dc3545; font-size: small;"
                            value="@SecondaryAddressInput"
-                           @onchange="ChangeSecondaryWalletAddress"/>
+                           @onchange="ChangeSecondaryWalletAddress" />
                     <div class="input-group-append" style="height: 34px;">
                         <button class="btn btn-danger" type="button" @onclick="OnAddSecondaryWalletAddressAsync">Add</button>
                     </div>
@@ -175,6 +202,15 @@
         Console.WriteLine($"Removing Secondary Address: {address}");
 
         await UserSettingsHandle.UpdateAsync(us => us.RemoveSecondaryAddress(address));
+
+        AppState.NotifyStateChanged();
+    }
+
+    private async Task ChangeDurationModeAsync(DurationMode durationMode)
+    {
+        Console.WriteLine($"Changing duration mode to DurationMode: {durationMode}");
+
+        await UserSettingsHandle.UpdateAsync(us => us.DurationMode = durationMode);
 
         AppState.NotifyStateChanged();
     }

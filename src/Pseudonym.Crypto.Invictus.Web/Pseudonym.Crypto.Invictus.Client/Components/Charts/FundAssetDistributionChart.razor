@@ -50,26 +50,28 @@ else
     public void InstanceClickHandler(object sender, object args)
     {
         var clickData = JsonConvert.DeserializeObject<List<JPieClickData>>(args.ToString())
-            .First();
+            .FirstOrDefault();
 
-        var fund = UserSettings.Funds.SingleOrDefault(f =>
-        f.Value.DisplayName.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
+        if (clickData != null)
+        {
+            var fund = UserSettings.Funds.SingleOrDefault(f =>
+                f.Value.DisplayName.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
 
-        if (!fund.Equals(default(KeyValuePair<Symbol, FundInfo>)))
-        {
-            NavigationManager.NavigateTo($"/funds/{fund.Key}", true);
-        }
-        else
-        {
-            var asset = Fund.Assets.SingleOrDefault(a => a.Coin.Name.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
-            if (asset != null)
+            if (!fund.Equals(default(KeyValuePair<Symbol, FundInfo>)))
             {
-                Runtime.InvokeAsync<object>("open", asset.Coin.Links.Link.OriginalString, "_blank")
-                    .GetAwaiter()
-                    .GetResult();
+                NavigationManager.NavigateTo($"/funds/{fund.Key}", true);
+            }
+            else
+            {
+                var asset = Fund.Assets.SingleOrDefault(a => a.Coin.Name.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
+                if (asset != null)
+                {
+                    Runtime.InvokeAsync<object>("open", asset.Coin.Links.Link.OriginalString, "_blank")
+                        .GetAwaiter()
+                        .GetResult();
+                }
             }
         }
-
     }
 
     protected override void OnInitialized()

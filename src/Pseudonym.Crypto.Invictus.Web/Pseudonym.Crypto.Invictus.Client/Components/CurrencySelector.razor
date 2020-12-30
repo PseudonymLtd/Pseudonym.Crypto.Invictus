@@ -2,10 +2,10 @@
 @inject IAppState AppState
 
 <div class="dropdown">
-    <button class="btn btn-danger dropdown-toggle currency-selector" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-describedby="currencyCodeHelp" style="width: 350px;">
+    <button class="btn btn-danger dropdown-toggle selector" type="button" id="@Id" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-describedby="currencyCodeHelp" style="width: 350px;">
         @UserSettingsHandle.Settings.CurrencyCode.GetDescription()
     </button>
-    <div class="dropdown-menu currency-selector" aria-labelledby="dropdownMenuButton" style="overflow-y: scroll; max-height: 250px; z-index: 10000; width: 350px;">
+    <div class="dropdown-menu selector" aria-labelledby="@Id" style="overflow-y: scroll; max-height: 250px; z-index: 10000; width: 350px;">
         @foreach (var item in Enum.GetValues(typeof(CurrencyCode)).Cast<CurrencyCode>().OrderBy(x => x.GetDescription()))
         {
             <span class="dropdown-item text-mob-xs" @onclick="@(async (e) => await ChangeCurrencyCodeAsync(item))">
@@ -17,6 +17,14 @@
 </div>
 
 @code {
+
+    private readonly string Id;
+
+    public CurrencySelector()
+    {
+        Id = $"CS-{Guid.NewGuid()}";
+    }
+
     protected override void OnInitialized()
     {
         AppState.Assign(StateHasChanged);
