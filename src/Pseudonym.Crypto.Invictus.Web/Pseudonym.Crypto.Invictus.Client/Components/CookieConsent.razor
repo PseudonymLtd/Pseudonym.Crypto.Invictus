@@ -1,0 +1,37 @@
+﻿@inject ICookieManager CookieManager
+
+@if (!CookieManager.Consented)
+{
+    <div class="jumbotron jumbotron-fluid" style="bottom: 0px; position: fixed; left: 0px; width: 100%; padding-top: 10px; padding-bottom: 10px; background-color: #212529; border: 1px solid; z-index: 9999;">
+        <div class="container">
+            <div class="row">
+                <div class="col-8 px-1">
+                    <blockquote class="blockquote">
+                        Cookies
+                        <footer class="blockquote-footer">
+                            This site uses cookies to store only functionally essential data.
+                            There are no third party, marketing or tracking cookies active on this site, except from cookies enabled via iframe content from tradingview, which fuels our market graphs.
+                            Please consent to the storage of these cookies to use this website effectively.
+                        </footer>
+                    </blockquote>
+                </div>
+                <div class="col-2 px-1">
+                    <button class="btn btn-danger" role="button"
+                            style="width: 100px; position: relative; top: 50%; left: 50%; margin-left: -50px; margin-top: -20px;"
+                            @onclick="OnConsentClickedAsync">
+                        Consent
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private async Task OnConsentClickedAsync(MouseEventArgs e)
+    {
+        await CookieManager.ConsentAsync();
+
+        StateHasChanged();
+    }
+}

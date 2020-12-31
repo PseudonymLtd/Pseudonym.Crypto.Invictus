@@ -83,13 +83,21 @@ else
             Responsive = true,
             Tooltips = new Tooltips()
             {
-                DisplayColors = true,
+                DisplayColors = true
             },
             MaintainAspectRatio = true,
             Title = new OptionsTitle()
             {
                 Display = !string.IsNullOrEmpty(SubTitle),
                 Text = new IndexableOption<string>(SubTitle),
+                FontColor = ColorUtil.FromDrawingColor(Color.White)
+            },
+            Legend = new Legend()
+            {
+                Labels = new LegendLabelConfiguration()
+                {
+                    FontColor = ColorUtil.FromDrawingColor(Color.White)
+                }
             },
             Animation = new ArcAnimation()
             {

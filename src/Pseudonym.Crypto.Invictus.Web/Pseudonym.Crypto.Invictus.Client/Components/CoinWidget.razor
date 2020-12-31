@@ -5,22 +5,22 @@
 <div>
     @if (coin != null)
     {
-        <div style="color:#333; background: #fff; font-family: Helvetica,Arial,sans-serif; min-width:285px;">
+        <div style="min-width: 285px;">
             <div>
                 <div style="float:right; width:67%; border: none; text-align:left; padding:5px 0px; line-height:25px;">
-                    <span style="font-size: 17px; text-decoration: none; color: #333;font-weight: bold">
+                    <span style="font-size: 17px; text-decoration: none; font-weight: bold">
                         @(CoinName ?? coin.Name)
                         <span style="font-size: 10px;padding-left: 5px">@coin.Symbol</span>
                     </span>
-                    <div style="font-size: 16px;color:#333">
+                    <div style="font-size: 16px;">
                         <Money Value="@(decimal.TryParse(coin.PriceUSD, out decimal price) ? price : decimal.Zero)" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
                         <ProfitTag Value="@(decimal.TryParse(coin.PercentChangeHourly, out decimal hourlyVal) ? hourlyVal : decimal.Zero)" Decimals="2" Suffix="%" />
                     </div>
-                    <div style="font-size: 12px; color:#959595">
+                    <div style="font-size: 12px;">
                         @coin.PriceBTC BTC
                     </div>
                 </div>
-                <div style="text-align:center;padding:5px 0px;width:33%;">
+                <div style="text-align: center; padding: 5px 0px; width: 33%;">
                     <img src="@ImageLink.OriginalString" onerror="this.attributes.getNamedItem('src').value = 'images/default.png'"  width="64" height="64" style="margin: 0 auto;">
                 </div>
             </div>

@@ -11,6 +11,7 @@
                          StartDate="StartDate"
                          EndDate="EndDate"
                          Culture="CultureInfo.CurrentUICulture"
+                         CancelButtonClasses="neutral"
                          ApplyButtonClasses="invictus"
                          OnRangeSelect="OnRangeSelectAsync"
                          class="form-control form-control-sm date-picker" />
@@ -58,6 +59,24 @@
                 },
                 Scales = new Scales()
                 {
+                    yAxes = new List<CartesianAxis>()
+                    {
+                        new LinearCartesianAxis()
+                        {
+                            Ticks = new LinearCartesianTicks()
+                            {
+                                BeginAtZero = true,
+                                FontColor = ColorUtil.FromDrawingColor(Color.White),
+                                Precision = 0
+                            },
+                            ScaleLabel = new ScaleLabel()
+                            {
+                                LabelString = "Token Count",
+                                FontColor = ColorUtil.FromDrawingColor(Color.White),
+                                Display = true,
+                            }
+                        }
+                    },
                     xAxes = new List<CartesianAxis>()
                     {
                         new TimeAxis
@@ -65,7 +84,8 @@
                             Distribution = TimeDistribution.Linear,
                             Ticks = new TimeTicks
                             {
-                                Source = TickSource.Auto
+                                Source = TickSource.Auto,
+                                FontColor = ColorUtil.FromDrawingColor(Color.White)
                             },
                             Time = new TimeOptions
                             {
@@ -73,9 +93,14 @@
                                 Round = TimeMeasurement.Second,
                                 MinUnit = TimeMeasurement.Second,
                                 TooltipFormat = "YYYY-MM-DD HH:mm:ss",
-                                DisplayFormats = TimeDisplayFormats.DE_CH
+                                DisplayFormats = TimeDisplayFormats.DE_CH,
                             },
                             ScaleLabel = new ScaleLabel()
+                            {
+                                LabelString = "Time",
+                                FontColor = ColorUtil.FromDrawingColor(Color.White),
+                                Display = true,
+                            }
                         }
                     }
                 },
@@ -86,11 +111,19 @@
                     Intersect = false,
                     Mode = InteractionMode.Nearest,
                 },
+                Legend = new Legend()
+                {
+                    Labels = new LegendLabelConfiguration()
+                    {
+                        FontColor = ColorUtil.FromDrawingColor(Color.White)
+                    }
+                },
                 MaintainAspectRatio = false,
                 Title = new OptionsTitle()
                 {
                     Display = !string.IsNullOrEmpty(SubTitle),
                     Text = new IndexableOption<string>(SubTitle),
+                    FontColor = ColorUtil.FromDrawingColor(Color.White)
                 },
                 Animation = new Animation()
                 {

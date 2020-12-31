@@ -1,11 +1,29 @@
 ﻿@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
+::-webkit-scrollbar {
+    width: 14px;
+}
+
+::-webkit-scrollbar-track {
+    background: #212529;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2d3238;
+}
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #4f5863;
+    }
+
 *[id] {
     scroll-margin-top: 5rem;
 }
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: white;
+    background-color: #212529;
 }
 
 a:hover, .btn-link:hover {
@@ -16,17 +34,81 @@ a, .btn-link {
     color: #cf2127;
 }
 
-.form-control:focus {
-    color: #495057;
-    background-color: #fff;
+.form-control {
+    background-color: #2d3238;
+    color: white;
     border-color: #cf2127;
-    box-shadow: 0 0 0 0.2rem rgba(33, 37, 41, 0.25);
+}
+
+    .form-control:focus {
+        color: white;
+        background-color: #2d3238;
+        border-color: #cf2127;
+        box-shadow: 0 0 0 0.2rem rgba(33, 37, 41, 0.25);
+    }
+
+select {
+    background-color: #212529;
+    color: white;
+}
+
+.jumbotron {
+    background-color: #2d3238;
+}
+
+.dropdown-menu {
+    background-color: #212529;
+    color: white;
+}
+
+.dropdown-item {
+    color: white;
+}
+
+    .dropdown-item:hover {
+        background-color: #2d3238;
+        color: white;
+    }
+
+.flag {
+    border: white solid 1px;
+}
+
+.popover {
+    background-color: transparent;
+}
+
+.popover-header {
+    border-bottom-width: 0px;
+    background-color: #212529;
+    color: white;
+}
+
+.popover-body {
+    background-color: #2d3238;
+    color: white;
+}
+
+.modal-header {
+    border-bottom-width: 0px;
+    background-color: #212529;
+    color: white;
+}
+
+.modal-body {
+    background-color: #2d3238;
+    color: white;
+}
+
+.modal-footer {
+    background-color: #2d3238;
+    color: white;
 }
 
 .address-owned {
     font-weight: bold;
     color: #cf2127;
-    border-bottom: 1px dashed black;
+    border-bottom: 1px dashed white;
 }
 
 .address-owned-secondary {
@@ -41,11 +123,46 @@ a, .btn-link {
     width: 170px;
     margin-left: -9px;
     margin-bottom: calc(-1.5em + -0.5rem - 2px);
+    border: 1px solid #cf2127;
 }
 
-.flag {
-    border: #797979 solid 1px;
+.daterangepicker {
+    background-color: #212529 !important;
+    color: white !important;
+    border: 1px solid white !important;
 }
+        .daterangepicker .drp-calendar .calendar-table {
+            background-color: #2d3238;
+            border-width: 0px;
+            color: white;
+        }
+
+            .daterangepicker .drp-calendar .calendar-table .next:hover {
+                background-color: #2d3238 !important;
+            }
+
+    .daterangepicker .drp-buttons {
+        border-width: 0px !important;
+    }
+
+    .daterangepicker td {
+        background-color: #2d3238 !important;
+        border-color: transparent !important;
+        color: #fff !important;
+    }
+
+        .daterangepicker td.in-range {
+            background-color: #212529 !important;
+            border-color: transparent !important;
+            color: #fff !important;
+        }
+
+        .daterangepicker td.active,
+        .daterangepicker td.active:hover {
+            background-color: #cf2127 !important;
+            border-color: transparent !important;
+            color: #fff !important;
+        }
 
 .price-mode {
     justify-content: flex-end !important;
@@ -83,8 +200,7 @@ app {
 }
 
     .main .top-row {
-        background-color: white;
-        border-bottom: 1px solid #cf2127;
+        background-color: #2d3238;
         justify-content: flex-end;
         z-index: 1040;
     }
@@ -109,8 +225,7 @@ app {
         background-size: 200px;
         background-position-x: center;
         background-position-y: center;
-        background-color: white;
-        border-bottom: 1px solid #cf2127;
+        background-color: #2d3238;
     }
 
     .sidebar .navbar-brand {
@@ -168,6 +283,12 @@ app {
                 background-color: rgba(255,255,255,0.1);
                 color: white;
             }
+
+.alert {
+    color: white;
+    background-color: #212529;
+    border-color: white;
+}
 
 .content {
     padding-top: 1.1rem;
@@ -233,7 +354,7 @@ app {
     font-size: 10px;
     width: 20px;
     height: 20px;
-    background: #3f548e;
+    background: #cf2127;
     color: white;
     border: 1px solid white;
     border-radius: 70px;
@@ -248,13 +369,13 @@ app {
 .carousel-control-next {
     right: -5% !important;
     width: 5% !important;
-    background-color: #1a2f42;
+    background-color: #212529;
 }
 
 .carousel-control-prev {
     left: -5% !important;
     width: 5% !important;
-    background-color: #1a2f42;
+    background-color: #212529;
 }
 
 @media (max-width: 450px) {

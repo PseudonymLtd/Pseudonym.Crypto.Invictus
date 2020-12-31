@@ -78,6 +78,14 @@ else
             {
                 Display = !string.IsNullOrEmpty(SubTitle),
                 Text = new IndexableOption<string>(SubTitle),
+                FontColor = ColorUtil.FromDrawingColor(Color.White)
+            },
+            Legend = new Legend()
+            {
+                Labels = new LegendLabelConfiguration()
+                {
+                    FontColor = ColorUtil.FromDrawingColor(Color.White)
+                }
             },
             Animation = new ArcAnimation()
             {

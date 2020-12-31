@@ -9,33 +9,53 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Hosting
 {
     internal sealed class CookieManager : JService, ICookieManager
     {
+        private const string ReadFuncName = "functions.ReadCookie";
+        private const string WriteFuncName = "functions.WriteCookie";
+
         public CookieManager(IJSRuntime jsRuntime)
             : base(jsRuntime)
         {
         }
 
+        public bool Consented => Get<bool>(CookieKeys.Consented);
+
+        public async Task ConsentAsync()
+        {
+            await Runtime.InvokeAsync<object>(
+                WriteFuncName,
+                CookieKeys.Consented,
+                JsonConvert.SerializeObject(true, SerializerSettings),
+                168);
+        }
+
         public void Set<T>(string key, T data, int days)
         {
-            if (string.IsNullOrEmpty(key))
+            if (Consented)
             {
-                throw new ArgumentNullException(nameof(key));
+                if (string.IsNullOrEmpty(key))
+                {
+                    throw new ArgumentNullException(nameof(key));
+                }
+
+                var serialisedData = JsonConvert.SerializeObject(data, SerializerSettings);
+
+                Runtime.Invoke<object>(WriteFuncName, key, serialisedData, days);
             }
-
-            var serialisedData = JsonConvert.SerializeObject(data, SerializerSettings);
-
-            Runtime.Invoke<object>("functions.WriteCookie", key, serialisedData, days);
         }
 
         public async Task SetAsync<T>(string key, T data, int days)
         {
-            if (string.IsNullOrEmpty(key))
+            if (Consented)
             {
-                throw new ArgumentNullException(nameof(key));
+                if (string.IsNullOrEmpty(key))
+                {
+                    throw new ArgumentNullException(nameof(key));
+                }
+
+                var serialisedData = JsonConvert.SerializeObject(data, SerializerSettings);
+
+                await Runtime.InvokeAsync<object>(WriteFuncName, key, serialisedData, days);
             }
-
-            var serialisedData = JsonConvert.SerializeObject(data, SerializerSettings);
-
-            await Runtime.InvokeAsync<object>("functions.WriteCookie", key, serialisedData, days);
         }
 
         public T Get<T>(string key)
@@ -45,7 +65,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Hosting
                 throw new ArgumentNullException(nameof(key));
             }
 
-            var serialisedData = Runtime.Invoke<string>("functions.ReadCookie", key);
+            var serialisedData = Runtime.Invoke<string>(ReadFuncName, key);
             if (serialisedData == null)
             {
                 return default;
@@ -61,7 +81,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Hosting
                 throw new ArgumentNullException(nameof(key));
             }
 
-            var serialisedData = await Runtime.InvokeAsync<string>("functions.ReadCookie", key);
+            var serialisedData = await Runtime.InvokeAsync<string>(ReadFuncName, key);
             if (serialisedData == null)
             {
                 return default;
