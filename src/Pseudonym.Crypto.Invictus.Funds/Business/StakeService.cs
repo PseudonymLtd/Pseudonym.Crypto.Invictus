@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
@@ -9,6 +10,8 @@ using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business.Models;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
+using Pseudonym.Crypto.Invictus.Funds.Configuration.Abstractions;
+using Pseudonym.Crypto.Invictus.Funds.Data.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum.Functions;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
@@ -20,17 +23,18 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 {
     internal sealed class StakeService : AbstractService, IStakeService
     {
-        private static readonly IReadOnlyList<Symbol> StakeableSymbols = Enum.GetValues(typeof(Symbol))
-            .Cast<Symbol>()
-            .Where(x => x != Symbol.ICAP)
-            .ToList();
-
         private readonly IEtherClient etherClient;
+        private readonly IGraphClient graphClient;
+        private readonly IEthplorerClient ethplorerClient;
+        private readonly IStakingPowerRepository stakingPowerRepository;
 
         public StakeService(
             IOptions<AppSettings> appSettings,
             IEtherClient etherClient,
+            IGraphClient graphClient,
+            IEthplorerClient ethplorerClient,
             ICurrencyConverter currencyConverter,
+            IStakingPowerRepository stakingPowerRepository,
             ITransactionRepository transactionRepository,
             IOperationRepository operationRepository,
             IHttpContextAccessor httpContextAccessor,
@@ -38,84 +42,269 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             : base(appSettings, currencyConverter, transactionRepository, operationRepository, httpContextAccessor, scopedCancellationToken)
         {
             this.etherClient = etherClient;
+            this.graphClient = graphClient;
+            this.ethplorerClient = ethplorerClient;
+            this.stakingPowerRepository = stakingPowerRepository;
         }
 
         public async IAsyncEnumerable<IStake> ListStakesAsync(CurrencyCode currencyCode)
         {
-            foreach (var symbol in StakeableSymbols)
+            foreach (var stakeAddress in GetStakes().Select(x => x.Symbol))
             {
-                await foreach (var stake in ListStakesAsync(symbol, currencyCode))
-                {
-                    yield return stake;
-                }
+                yield return await GetStakeAsync(stakeAddress, currencyCode);
             }
         }
 
-        public async IAsyncEnumerable<IStake> ListStakesAsync(EthereumAddress address, CurrencyCode currencyCode)
+        public async Task<IStake> GetStakeAsync(Symbol stakeSymbol, CurrencyCode currencyCode)
         {
-            foreach (var symbol in StakeableSymbols)
+            var stakeInfo = GetStakeInfo(stakeSymbol);
+
+            var stakePower = await stakingPowerRepository.GetLatestAsync(stakeInfo.ContractAddress);
+            var tokenInfo = await ethplorerClient.GetTokenInfoAsync(stakeInfo.ContractAddress);
+            var tokenPair = await graphClient.GetUniswapPairAsync(stakeInfo.PoolAddress);
+
+            var circulatingSupply = tokenInfo.TotalSupply.FromBigInteger(int.Parse(tokenInfo.Decimals));
+            var token = tokenPair.Tokens
+                .First(x => !x.Symbol.Equals(stakeInfo.Symbol.ToString(), StringComparison.OrdinalIgnoreCase));
+
+            return new BusinessStake()
             {
-                await foreach (var stake in ListStakesAsync(address, symbol, currencyCode))
+                Name = stakeInfo.Name,
+                Description = stakeInfo.Description,
+                InvictusUri = stakeInfo.Links.External,
+                FactSheetUri = stakeInfo.Links.Fact,
+                PoolUri = new Uri(string.Format(PoolTemplate, stakeInfo.PoolAddress), UriKind.Absolute),
+                Token = new BusinessToken()
+                {
+                    Symbol = stakeInfo.Symbol,
+                    ContractAddress = stakeInfo.ContractAddress,
+                    Decimals = stakeInfo.Decimals
+                },
+                CirculatingSupply = circulatingSupply,
+                Market = new BusinessMarket()
+                {
+                    IsTradable = true,
+                    Cap = decimal.Zero,
+                    PricePerToken = CurrencyConverter.Convert(token.PricePerToken, currencyCode),
+                    Total = CurrencyConverter.Convert(circulatingSupply * token.PricePerToken, currencyCode),
+                    DiffDaily = decimal.Zero,
+                    DiffWeekly = decimal.Zero,
+                    DiffMonthly = decimal.Zero,
+                    Volume = CurrencyConverter.Convert(tokenPair.Volume, currencyCode),
+                    VolumeDiffDaily = decimal.Zero,
+                    VolumeDiffWeekly = decimal.Zero,
+                    VolumeDiffMonthly = decimal.Zero
+                },
+                StakingAddress = stakeInfo.StakingAddress,
+                FundMultipliers = stakeInfo.FundMultipliers,
+                TimeMultipliers = stakeInfo.TimeMultipliers
+                    .Select(tm => new BusinessTimeMultiplier()
+                    {
+                        RangeMin = tm.RangeMin,
+                        RangeMax = tm.RangeMax,
+                        Multiplier = tm.Multiplier
+                    })
+                    .ToList(),
+                Power = MapStakingPower(stakeInfo, stakePower, currencyCode)
+            };
+        }
+
+        public async IAsyncEnumerable<IStakingPower> ListStakePowersAsync(Symbol stakeSymbol, PriceMode priceMode, DateTime from, DateTime to, CurrencyCode currencyCode)
+        {
+            var stakeInfo = GetStakeInfo(stakeSymbol);
+
+            var start = from < stakeInfo.InceptionDate
+                ? stakeInfo.InceptionDate
+                : from;
+
+            if (to <= stakeInfo.InceptionDate)
+            {
+                yield break;
+            }
+
+            if (priceMode == PriceMode.Raw)
+            {
+                await foreach (var stakePower in stakingPowerRepository
+                    .ListStakingPowersAsync(stakeInfo.ContractAddress, start, to)
+                    .WithCancellation(CancellationToken))
+                {
+                    yield return MapStakingPower(stakeInfo, stakePower, currencyCode);
+                }
+
+                yield break;
+            }
+
+            var stakePowers = await stakingPowerRepository
+                .ListStakingPowersAsync(stakeInfo.ContractAddress, start, to)
+                .ToListAsync(CancellationToken);
+
+            foreach (var stakePowerGroup in stakePowers.GroupBy(p => p.Date.Date).OrderBy(x => x.Key))
+            {
+                var mapped = stakePowerGroup
+                    .Select(sp => MapStakingPower(stakeInfo, sp, currencyCode))
+                    .ToList();
+
+                yield return new BusinessStakingPower()
+                {
+                    Symbol = stakeInfo.Symbol,
+                    Date = stakePowerGroup.Key,
+                    Power = CurrencyConverter.Convert(Aggregate(stakePowerGroup, x => x.Power, priceMode) ?? decimal.Zero, currencyCode),
+                    Summary = mapped.Last().Summary
+                        .Select(fs =>
+                        {
+                            var fund = GetFunds().Single(x => x.Symbol == fs.Symbol);
+
+                            return new BusinessStakingPowerSummary()
+                            {
+                                Symbol = fund.Symbol,
+                                Power = CurrencyConverter.Convert(
+                                    Aggregate(
+                                         stakePowerGroup,
+                                         x => x.Summary
+                                            .SingleOrDefault(y => y.ContractAddress.Equals(fund.ContractAddress.Address, StringComparison.OrdinalIgnoreCase))
+                                            ?.Power ?? decimal.Zero,
+                                         priceMode),
+                                    currencyCode)
+                                        ?? decimal.Zero
+                            };
+                        })
+                        .ToList()
+                    ?? new List<BusinessStakingPowerSummary>()
+                };
+            }
+        }
+
+        public async IAsyncEnumerable<IStakeEvent> ListStakeEventsAsync(Symbol stakeSymbol, DateTime from, DateTime to)
+        {
+            var stakeInfo = GetStakeInfo(stakeSymbol);
+
+            foreach (var symbol in stakeInfo.FundMultipliers.Keys)
+            {
+                await foreach (var stake in ListStakeEventsAsync(stakeSymbol, symbol, from, to))
                 {
                     yield return stake;
                 }
             }
         }
 
-        public async IAsyncEnumerable<IStake> ListStakesAsync(Symbol symbol, CurrencyCode currencyCode)
+        public async IAsyncEnumerable<IStakeEvent> ListStakeEventsAsync(Symbol stakeSymbol, EthereumAddress address)
+        {
+            var stakeInfo = GetStakeInfo(stakeSymbol);
+
+            foreach (var symbol in stakeInfo.FundMultipliers.Keys)
+            {
+                await foreach (var stake in ListStakeEventsAsync(stakeSymbol, address, symbol))
+                {
+                    yield return stake;
+                }
+            }
+        }
+
+        public async IAsyncEnumerable<IStakeEvent> ListStakeEventsAsync(Symbol stakeSymbol, Symbol symbol, DateTime from, DateTime to)
         {
             var fundInfo = GetFundInfo(symbol);
+            var stakeInfo = GetStakeInfo(stakeSymbol);
+
+            var stakeEvents = new List<IStakeEvent>();
 
             await foreach (var transaction in Transactions
-                .ListInboundTransactionsAsync(fundInfo.Address, StakingAddress)
+                .ListInboundTransactionsAsync(fundInfo.ContractAddress, stakeInfo.StakingAddress, from: from, to: to)
                 .WithCancellation(CancellationToken))
             {
                 var businessTransaction = MapTransaction<BusinessTransaction>(transaction);
 
-                var stake = await GetStakeAsync(null, fundInfo.Address, businessTransaction, currencyCode);
+                var stake = await GetStakeLockupAsync(fundInfo, stakeInfo, businessTransaction)
+                    ?? await GetStakeReleaseAsync(fundInfo, stakeInfo, businessTransaction);
+
                 if (stake != null)
                 {
-                    yield return stake;
+                    stakeEvents.Add(stake);
                 }
             }
-        }
-
-        public async IAsyncEnumerable<IStake> ListStakesAsync(EthereumAddress address, Symbol symbol, CurrencyCode currencyCode)
-        {
-            var fundInfo = GetFundInfo(symbol);
 
             await foreach (var transaction in Transactions
-                .ListOutboundTransactionsAsync(fundInfo.Address, address, StakingAddress)
+                .ListOutboundTransactionsAsync(fundInfo.ContractAddress, stakeInfo.StakingAddress, from: from, to: to)
                 .WithCancellation(CancellationToken))
             {
                 var businessTransaction = MapTransaction<BusinessTransaction>(transaction);
 
-                var stake = await GetStakeAsync(address, fundInfo.Address, businessTransaction, currencyCode);
+                var stake = await GetStakeReleaseAsync(fundInfo, stakeInfo, businessTransaction);
                 if (stake != null)
                 {
-                    yield return stake;
+                    stakeEvents.Add(stake);
                 }
+            }
+
+            foreach (var stakeEvent in stakeEvents.OrderBy(x => x.ConfirmedAt))
+            {
+                yield return stakeEvent;
             }
         }
 
-        public Task<IStake> GetStakeAsync(Symbol symbol, EthereumTransactionHash hash, CurrencyCode currencyCode)
-        {
-            return GetStakeAsync(null, symbol, hash, currencyCode);
-        }
-
-        public Task<IStake> GetStakeAsync(EthereumAddress address, Symbol symbol, EthereumTransactionHash hash, CurrencyCode currencyCode)
-        {
-            return GetStakeAsync(address, symbol, hash, currencyCode);
-        }
-
-        public async Task<IStake> GetStakeAsync(EthereumAddress? address, Symbol symbol, EthereumTransactionHash hash, CurrencyCode currencyCode)
+        public async IAsyncEnumerable<IStakeEvent> ListStakeEventsAsync(Symbol stakeSymbol, EthereumAddress address, Symbol symbol)
         {
             var fundInfo = GetFundInfo(symbol);
+            var stakeInfo = GetStakeInfo(stakeSymbol);
 
-            var transaction = await Transactions.GetTransactionAsync(fundInfo.Address, hash);
+            var stakeEvents = new List<IStakeEvent>();
+
+            await foreach (var transaction in Transactions
+                .ListOutboundTransactionsAsync(fundInfo.ContractAddress, address, stakeInfo.StakingAddress)
+                .WithCancellation(CancellationToken))
+            {
+                var businessTransaction = MapTransaction<BusinessTransaction>(transaction);
+
+                var stake = await GetStakeLockupAsync(fundInfo, stakeInfo, businessTransaction)
+                    ?? await GetStakeReleaseAsync(fundInfo, stakeInfo, businessTransaction);
+
+                if (stake != null)
+                {
+                    stakeEvents.Add(stake);
+                }
+            }
+
+            await foreach (var transaction in Transactions
+                .ListInboundTransactionsAsync(fundInfo.ContractAddress, address, stakeInfo.StakingAddress)
+                .WithCancellation(CancellationToken))
+            {
+                var businessTransaction = MapTransaction<BusinessTransaction>(transaction);
+
+                var stake = await GetStakeReleaseAsync(fundInfo, stakeInfo, businessTransaction);
+                if (stake != null)
+                {
+                    stakeEvents.Add(stake);
+                }
+            }
+
+            foreach (var stakeEvent in stakeEvents.OrderBy(x => x.ConfirmedAt))
+            {
+                yield return stakeEvent;
+            }
+        }
+
+        public Task<IStakeEvent> GetStakeEventAsync(Symbol stakeSymbol, Symbol symbol, EthereumTransactionHash hash)
+        {
+            return GetStakeEventAsync(stakeSymbol, null, symbol, hash);
+        }
+
+        public Task<IStakeEvent> GetStakeEventAsync(Symbol stakeSymbol, EthereumAddress address, Symbol symbol, EthereumTransactionHash hash)
+        {
+            return GetStakeEventAsync(stakeSymbol, new EthereumAddress?(address), symbol, hash);
+        }
+
+        public async Task<IStakeEvent> GetStakeEventAsync(Symbol stakeSymbol, EthereumAddress? address, Symbol symbol, EthereumTransactionHash hash)
+        {
+            var fundInfo = GetFundInfo(symbol);
+            var stakeInfo = GetStakeInfo(stakeSymbol);
+
+            var transaction = await Transactions.GetTransactionAsync(fundInfo.ContractAddress, hash);
             if (transaction != null)
             {
-                var stake = await GetStakeAsync(address, fundInfo.Address, MapTransaction<BusinessTransaction>(transaction), currencyCode);
+                var stake = transaction.Sender.Equals(stakeInfo.StakingAddress, StringComparison.OrdinalIgnoreCase)
+                    ? await GetStakeReleaseAsync(fundInfo, stakeInfo, MapTransaction<BusinessTransaction>(transaction))
+                    : await GetStakeLockupAsync(fundInfo, stakeInfo, MapTransaction<BusinessTransaction>(transaction))
+                        ?? await GetStakeReleaseAsync(fundInfo, stakeInfo, MapTransaction<BusinessTransaction>(transaction));
+
                 if (stake != null)
                 {
                     return stake;
@@ -125,45 +314,108 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             throw new PermanentException($"No transaction found with hash {hash}{(address.HasValue ? $" for address {address}." : ".")}");
         }
 
-        private async Task<IStake> GetStakeAsync(
-            EthereumAddress? address, EthereumAddress contractAddress, ITransaction transaction, CurrencyCode currencyCode)
+        private async Task<IStakeEvent> GetStakeLockupAsync(IFundSettings fundSettings, IStakeSettings stakeSettings, ITransaction transaction)
         {
-            var operations = await Operations
-                .ListOperationsAsync(transaction.Hash)
-                .ToListAsync(CancellationToken);
-
-            var operation = operations.LastOrDefault(x =>
-                x.Type == OperationTypes.Transfer &&
-                x.Recipient.Equals(StakingAddress, StringComparison.OrdinalIgnoreCase) &&
-                (!address.HasValue || x.Sender.Equals(address, StringComparison.OrdinalIgnoreCase)));
-
-            if (operation != null)
+            var stakeData = await etherClient.GetDataAsync<StakeFunction>(stakeSettings.StakingAddress, transaction.Input);
+            if (stakeData != null)
             {
-                var businessOperation = MapOperation(operation, currencyCode);
-                var duration = await GetStakeDurationAsync(contractAddress, transaction.Input);
+                var seconds = (double)Web3.Convert.FromWei(stakeData.Length, 0);
+                var quantity = Web3.Convert.FromWei(stakeData.Quantity, fundSettings.Decimals);
 
-                return new BusinessStake()
+                return new BusinessStakeEvent()
                 {
                     Hash = transaction.Hash,
-                    ContractAddress = contractAddress,
-                    StakedAt = transaction.ConfirmedAt,
-                    Duration = duration,
-                    ExpiresAt = transaction.ConfirmedAt.Add(duration).Round(),
-                    PricePerToken = businessOperation.PricePerToken,
-                    Quantity = businessOperation.Quantity
+                    ConfirmedAt = transaction.ConfirmedAt,
+                    UserAddress = transaction.Sender,
+                    StakeAddress = stakeSettings.ContractAddress,
+                    ContractAddress = fundSettings.ContractAddress,
+                    Type = StakeEventType.Lockup,
+                    Lock = new BusinessStakeLock()
+                    {
+                        Duration = TimeSpan.FromSeconds(seconds),
+                        ExpiresAt = transaction.ConfirmedAt.AddSeconds(seconds),
+                        Quantity = quantity,
+                    }
                 };
             }
 
             return null;
         }
 
-        private async Task<TimeSpan> GetStakeDurationAsync(EthereumAddress contractAddress, string data)
+        private async Task<IStakeEvent> GetStakeReleaseAsync(IFundSettings fundSettings, IStakeSettings stakeSettings, ITransaction transaction)
         {
-            var stake = await etherClient.GetDataAsync<StakeFunction>(contractAddress, data);
+            var operations = await Operations
+                .ListOperationsAsync(transaction.Hash)
+                .ToListAsync(CancellationToken);
 
-            var seconds = (double)Web3.Convert.FromWei(stake.Length, 0);
+            var feeOperation = operations.SingleOrDefault(x =>
+                x.Type == OperationTypes.Transfer &&
+                x.Sender.Equals(stakeSettings.StakingAddress, StringComparison.OrdinalIgnoreCase) &&
+                stakeSettings.FeeAddresses.Select(x => x.Address.ToLower()).Contains(x.Recipient.ToLower()));
 
-            return TimeSpan.FromSeconds(seconds);
+            var releaseOperation = operations.LastOrDefault(x =>
+                x.Type == OperationTypes.Transfer &&
+                x.Sender.Equals(stakeSettings.StakingAddress, StringComparison.OrdinalIgnoreCase) &&
+                (feeOperation == null || x.Order != feeOperation.Order));
+
+            if (releaseOperation != null)
+            {
+                return new BusinessStakeEvent()
+                {
+                    Hash = transaction.Hash,
+                    ConfirmedAt = transaction.ConfirmedAt,
+                    UserAddress = new EthereumAddress(releaseOperation.Recipient),
+                    StakeAddress = stakeSettings.ContractAddress,
+                    ContractAddress = fundSettings.ContractAddress,
+                    Type = feeOperation != null
+                        ? StakeEventType.EarlyWithdrawal
+                        : StakeEventType.Release,
+                    Release = new BusinessStakeRelease()
+                    {
+                        Quantity = Web3.Convert.FromWei(BigInteger.Parse(releaseOperation.Value), fundSettings.Decimals),
+                        FeeQuantity = feeOperation != null
+                            ? Web3.Convert.FromWei(BigInteger.Parse(feeOperation.Value), fundSettings.Decimals)
+                            : default(decimal?)
+                    }
+                };
+            }
+
+            return null;
+        }
+
+        private IStakingPower MapStakingPower(IStakeSettings stakeInfo, DataStakingPower stakePower, CurrencyCode currencyCode)
+        {
+            return new BusinessStakingPower()
+            {
+                Symbol = stakeInfo.Symbol,
+                Date = stakePower?.Date ?? stakeInfo.InceptionDate,
+                Power = CurrencyConverter.Convert(stakePower?.Power ?? decimal.Zero, currencyCode),
+                Summary = stakePower?.Summary
+                    .Select(fs => new BusinessStakingPowerSummary()
+                    {
+                        Symbol = GetFunds()
+                            .Single(x =>
+                                x.ContractAddress.Address.Equals(fs.ContractAddress, StringComparison.OrdinalIgnoreCase))
+                            .Symbol,
+                        Power = CurrencyConverter.Convert(fs.Power, currencyCode),
+                    })
+                    .ToList()
+                    ?? new List<BusinessStakingPowerSummary>(),
+                Breakdown = stakePower?.Breakdown
+                    .Select(fp => new BusinessStakingPowerFund()
+                    {
+                        Symbol = GetFunds()
+                            .Single(x =>
+                                x.ContractAddress.Address.Equals(fp.ContractAddress, StringComparison.OrdinalIgnoreCase))
+                            .Symbol,
+                        FundModifier = fp.FundModifier,
+                        Quantity = fp.Events.Sum(x => x.Quantity),
+                        ModifiedQuantity = fp.Events.Sum(x => x.Quantity * x.TimeModifier * fp.FundModifier),
+                        Power = CurrencyConverter.Convert(fp.PricePerToken * fp.Events.Sum(x => x.Quantity * x.TimeModifier * fp.FundModifier), currencyCode),
+                    })
+                    .ToList()
+                    ?? new List<BusinessStakingPowerFund>()
+            };
         }
     }
 }

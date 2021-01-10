@@ -6,8 +6,10 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.JsonRpc.Client;
+using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Web3;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
+using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Rpc;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum.Functions;
 using Pseudonym.Crypto.Invictus.Shared.Exceptions;
@@ -30,27 +32,47 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             this.useAuthHeader = useAuthHeader;
         }
 
-        public async Task<long> GetCurrentBlockNumberAsync()
+        public async Task<ulong> GetCurrentBlockNumberAsync()
         {
             var block = await ExecuteAsync(web3 =>
             {
                 return web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
             });
 
-            return long.Parse(block.Value.ToString());
+            return ulong.Parse(block.Value.ToString());
         }
 
-        public async Task<decimal> GetEthBalanceAsync(EthereumAddress address)
+        public async Task<EthereumBlock> GetBlockAsync(ulong blockNumber)
+        {
+            var block = await ExecuteAsync(web3 =>
+            {
+                return web3.Eth.Blocks.GetBlockWithTransactionsHashesByNumber.SendRequestAsync(new BlockParameter(blockNumber));
+            });
+
+            var sdasblock = Web3.Convert.FromWei(block.Timestamp.Value, 0);
+
+            return new EthereumBlock()
+            {
+                Hash = block.BlockHash,
+                MinedAt = DateTimeOffset.FromUnixTimeSeconds((long)Web3.Convert.FromWei(block.Timestamp.Value, 0)).UtcDateTime,
+                Number = blockNumber,
+                Miner = block.Miner
+            };
+        }
+
+        public async Task<decimal> GetEthBalanceAsync(EthereumAddress address, ulong? blockNumber = null)
         {
             var balance = await ExecuteAsync(web3 =>
             {
-                return web3.Eth.GetBalance.SendRequestAsync(address);
+                return blockNumber.HasValue
+                    ? web3.Eth.GetBalance.SendRequestAsync(address, new BlockParameter(blockNumber.Value))
+                    : web3.Eth.GetBalance.SendRequestAsync(address);
             });
 
             return Web3.Convert.FromWei(balance.Value);
         }
 
-        public async Task<decimal> GetContractBalanceAsync(EthereumAddress contractAddress, EthereumAddress address, int decimals)
+        public async Task<decimal> GetContractBalanceAsync(EthereumAddress contractAddress, EthereumAddress address, int decimals, ulong? blockNumber = null)
         {
             var function = new BalanceOfFunction()
             {
@@ -61,7 +83,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             {
                 var balanceHandler = web3.Eth.GetContractQueryHandler<BalanceOfFunction>();
 
-                return balanceHandler.QueryAsync<BigInteger>(contractAddress, function);
+                return blockNumber.HasValue
+                    ? balanceHandler.QueryAsync<BigInteger>(contractAddress, function, new BlockParameter(blockNumber.Value))
+                    : balanceHandler.QueryAsync<BigInteger>(contractAddress, function);
             });
 
             return Web3.Convert.FromWei(balance, decimals);

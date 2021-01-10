@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Pseudonym.Crypto.Invictus.Funds.Configuration.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 {
-    public sealed class FundSettings
+    public sealed class FundSettings : IFundSettings
     {
         public string FundName { get; set; }
 
@@ -21,6 +22,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 
         public bool Tradable { get; set; }
 
+        public bool Burnable { get; set; }
+
         public string ContractAddress { get; set; }
 
         public string CoinGeckoId { get; set; }
@@ -30,7 +33,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
         public List<FundAsset> Assets { get; set; } = new List<FundAsset>();
 
         [JsonIgnore]
-        internal EthereumAddress Address => new EthereumAddress(ContractAddress);
+        EthereumAddress IFundSettings.ContractAddress => new EthereumAddress(ContractAddress);
+
+        [JsonIgnore]
+        IReadOnlyList<FundAsset> IFundSettings.Assets => Assets;
 
         public sealed class FundAsset
         {
@@ -41,6 +47,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
             public decimal Value { get; set; }
 
             public bool Tradable { get; set; }
+
+            public bool IsCoin { get; set; }
 
             public string ContractAddress { get; set; }
 

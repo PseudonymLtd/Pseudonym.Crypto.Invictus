@@ -4,13 +4,15 @@ using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 {
-    internal sealed class BusinessCoin : ICoin
+    internal sealed class BusinessHolding : IHolding
     {
         public string Name { get; set; }
 
         public string Symbol { get; set; }
 
         public int? Decimals { get; set; }
+
+        public bool IsCoin { get; set; }
 
         public EthereumAddress? ContractAddress { get; set; }
 

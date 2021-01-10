@@ -23,6 +23,14 @@
     <None Remove="Resources\logo.png" />
     <None Remove="Resources\pseudonym-swagger-ui.css" />
     <None Remove="Resources\pseudonym-swagger-ui.js" />
+    <None Remove="Resources\USD.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\USD.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

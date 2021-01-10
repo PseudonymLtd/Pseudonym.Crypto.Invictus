@@ -9,17 +9,17 @@ using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.CoinGecko;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
+using Pseudonym.Crypto.Invictus.Funds.Configuration.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Data.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
-using Pseudonym.Crypto.Invictus.Funds.Utils;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Services
 {
-    internal sealed class InvictusFundMarketCachingService : BaseCachingService
+    internal sealed class FundPerformanceCachingService : BaseCachingService
     {
         private const int MaxDays = 7;
 
-        public InvictusFundMarketCachingService(
+        public FundPerformanceCachingService(
             IOptions<AppSettings> appSettings,
             IServiceProvider serviceProvider)
             : base(appSettings, serviceProvider)
@@ -34,11 +34,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             var coinGeckoClient = scope.ServiceProvider.GetRequiredService<ICoinGeckoClient>();
             var invictusClient = scope.ServiceProvider.GetRequiredService<IInvictusClient>();
 
-            foreach (var fund in AppSettings.Funds)
+            foreach (var fund in AppSettings.Funds.Cast<IFundSettings>())
             {
                 try
                 {
-                    var latestDate = await repository.GetLatestDateAsync(fund.Address)
+                    var latestDate = await repository.GetLatestDateAsync(fund.ContractAddress)
                         ?? fund.InceptionDate;
 
                     await SyncPerformanceAsync(
@@ -50,7 +50,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                         DateTimeOffset.UtcNow.AddDays(1).Round(),
                         cancellationToken);
 
-                    var lowestDate = await repository.GetLowestDateAsync(fund.Address)
+                    var lowestDate = await repository.GetLowestDateAsync(fund.ContractAddress)
                         ?? DateTimeOffset.UtcNow.Round();
 
                     await SyncPerformanceAsync(
@@ -74,7 +74,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             ICoinGeckoClient coinGeckoClient,
             IInvictusClient invictusClient,
             IFundPerformanceRepository repository,
-            FundSettings fund,
+            IFundSettings fund,
             DateTimeOffset startDate,
             DateTimeOffset endDate,
             CancellationToken cancellationToken)
@@ -93,7 +93,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                     ? endDate
                     : end;
 
-                Console.WriteLine($"[{fund.Address}] Processing Batch: {start} -> {end}");
+                Console.WriteLine($"[{fund.ContractAddress}] Processing Batch: {start} -> {end}");
 
                 var invictusNavs = await invictusClient
                     .ListPerformanceAsync(fund.Symbol, start, end)
@@ -113,13 +113,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                             .OrderBy(i => Math.Abs(i.Date.ToUnixTimeSeconds() - nav.Date.ToUnixTimeSeconds()))
                             .FirstOrDefault();
 
-                        var perf = MapPerformance(fund.Address, nav, closestPrice);
+                        var perf = MapPerformance(fund.ContractAddress, nav, closestPrice);
 
                         await repository.UploadItemsAsync(perf);
                     }
                 }
 
-                Console.WriteLine($"[{fund.Address}] Finished Batch: {start} -> {end}");
+                Console.WriteLine($"[{fund.ContractAddress}] Finished Batch: {start} -> {end}");
 
                 if (end >= endDate)
                 {
@@ -140,7 +140,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             return new DataFundPerformance()
             {
                 Address = address,
-                Date = marketData?.Date.UtcDateTime ?? navData.Date.UtcDateTime,
+                Date = navData.Date.UtcDateTime,
                 Nav = navData.NetAssetValuePerToken.FromPythonString(),
                 Price = marketData?.Price ?? -1,
                 MarketCap = marketData?.MarketCap ?? -1,

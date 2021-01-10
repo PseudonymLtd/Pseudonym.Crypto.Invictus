@@ -128,5 +128,20 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
 
             return MapTransactionSet(transactionSet);
         }
+
+        [HttpGet]
+        [Route("{symbol}/burns")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(List<ApiTransaction>), StatusCodes.Status200OK)]
+        public async IAsyncEnumerable<ApiTransactionSet> ListBurns(
+            [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        {
+            await foreach (var transaction in fundService
+                .ListBurnsAsync(symbol, queryFilter.CurrencyCode)
+                .WithCancellation(scopedCancellationToken.Token))
+            {
+                yield return MapTransactionSet(transaction);
+            }
+        }
     }
 }

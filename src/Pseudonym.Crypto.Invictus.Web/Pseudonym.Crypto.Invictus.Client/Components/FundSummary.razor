@@ -4,26 +4,26 @@
 <Header Fund="Fund" Link="Link" ShowGraph="ShowGraph">
     <Content>
         <div class="container-fluid" style="max-width: none">
-            <div class="row">
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+            <div class="row justify-content-sm-between" style="justify-content: space-evenly;">
+                <div class="col-xs-2 pr-sm-5 py-1">
                     <small style="font-weight: bold; color: #cf2127;">Token</small>
                     <div>
                         <Token Symbol="@Fund.Token.Symbol.ToString()" ContractAddress="@Fund.Token.Address" />
                     </div>
                 </div>
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                <div class="col-xs-2 px-2 pl-sm-0 pr-sm-5 py-1">
                     <small style="font-weight: bold; color: #cf2127;">Circ. Supply</small>
                     <div>
                         <LargeNumber Value="Fund.CirculatingSupply" Decimals="2" />
                     </div>
                 </div>
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                <div class="col-xs-2 px-2 pl-sm-0 pr-sm-5 py-1">
                     <small style="font-weight: bold; color: #cf2127;">Net Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                     <div>
                         <Money Value="@Fund.Nav.Value" CurrencyCode="UserSettings.CurrencyCode" />
                     </div>
                 </div>
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                <div class="col-xs-2 @(Fund.Market.IsTradeable ? "px-2 pl-sm-0" : string.Empty) pr-sm-5 py-1">
                     <small style="font-weight: bold; color: #cf2127;">Nav (@UserSettings.CurrencyCode.GetSymbol())</small>
                     <div>
                         <Money Value="@Fund.Nav.ValuePerToken" CurrencyCode="UserSettings.CurrencyCode" />
@@ -31,16 +31,22 @@
                 </div>
                 @if (Fund.Market.IsTradeable)
                 {
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <div class="col-xs-2 px-2 pl-sm-0 pr-sm-5 py-1">
                         <small style="font-weight: bold; color: #cf2127;">Market Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                         <div>
                             <Money Value="Fund.Market.Total" CurrencyCode="UserSettings.CurrencyCode" />
                         </div>
                     </div>
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <div class="col-xs-2 px-2 pl-sm-0 pr-sm-5 py-1">
                         <small style="font-weight: bold; color: #cf2127;">Price (@UserSettings.CurrencyCode.GetSymbol())</small>
                         <div>
                             <Money Value="Fund.Market.PricePerToken" CurrencyCode="UserSettings.CurrencyCode" />
+                        </div>
+                    </div>
+                    <div class="col-xs-2 pr-sm-5 py-1">
+                        <small style="font-weight: bold; color: #cf2127;">Volume (@UserSettings.CurrencyCode.GetSymbol())</small>
+                        <div>
+                            <Money Value="Fund.Market.Volume" CurrencyCode="UserSettings.CurrencyCode" />
                         </div>
                     </div>
                 }

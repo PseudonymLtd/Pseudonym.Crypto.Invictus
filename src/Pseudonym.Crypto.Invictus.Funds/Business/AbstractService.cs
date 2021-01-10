@@ -9,11 +9,14 @@ using Nethereum.Web3;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Business.Models;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
+using Pseudonym.Crypto.Invictus.Funds.Configuration.Abstractions;
+using Pseudonym.Crypto.Invictus.Funds.Data.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Data.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Shared;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
+using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 using Pseudonym.Crypto.Invictus.Shared.Models;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business
@@ -24,6 +27,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
         protected const string LinkTemplate = "https://coinmarketcap.com/currencies/{0}";
         protected const string ImageTemplate = "https://c2.coinlore.com/img/{0}.png";
         protected const string MarketTemplate = "https://widget.coinlore.com/widgets/new-single/?id={0}&cur={1}";
+        protected const string PoolTemplate = "https://info.uniswap.org/pair/{0}";
 
         private readonly AppSettings appSettings;
         private readonly IHttpContextAccessor httpContextAccessor;
@@ -56,33 +60,66 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
         protected Uri HostUrl => appSettings.HostUrl;
 
-        protected EthereumAddress StakingAddress => new EthereumAddress(appSettings.StakingAddress);
-
-        protected IReadOnlyList<FundSettings> GetFunds()
+        protected IReadOnlyList<IFundSettings> GetFunds()
         {
             return appSettings.Funds;
         }
 
-        protected FundSettings GetFundInfo(Symbol symbol)
+        protected IReadOnlyList<IStakeSettings> GetStakes()
         {
-            var fundSettings = appSettings.Funds.Single(x => x.Symbol == symbol);
+            return appSettings.Stakes;
+        }
 
-            if (httpContextAccessor.HttpContext.Response.Headers.ContainsKey(Headers.Contract))
+        protected IFundSettings GetFundInfo(Symbol symbol)
+        {
+            var fundSettings = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol)
+                ?? throw new PermanentException($"Symbol `{symbol}` is not a fund contract");
+
+            if (httpContextAccessor.HttpContext != null)
             {
-                httpContextAccessor.HttpContext.Response.Headers[Headers.Contract] = fundSettings.ContractAddress;
-            }
-            else
-            {
-                httpContextAccessor.HttpContext.Response.Headers.Add(Headers.Contract, fundSettings.ContractAddress);
+                if (httpContextAccessor.HttpContext.Response.Headers.ContainsKey(Headers.Contract))
+                {
+                    httpContextAccessor.HttpContext.Response.Headers[Headers.Contract] = fundSettings.ContractAddress;
+                }
+                else
+                {
+                    httpContextAccessor.HttpContext.Response.Headers.Add(Headers.Contract, fundSettings.ContractAddress);
+                }
             }
 
             return fundSettings;
         }
 
-        protected AssetSettings GetAssetInfo(string symbol)
+        protected IStakeSettings GetStakeInfo(Symbol symbol)
+        {
+            var stakeSettings = appSettings.Stakes.SingleOrDefault(x => x.Symbol == symbol)
+                ?? throw new PermanentException($"Address `{symbol}` is not a stake contract");
+
+            if (httpContextAccessor.HttpContext != null)
+            {
+                if (httpContextAccessor.HttpContext.Response.Headers.ContainsKey(Headers.StakeContract))
+                {
+                    httpContextAccessor.HttpContext.Response.Headers[Headers.StakeContract] = stakeSettings.ContractAddress;
+                }
+                else
+                {
+                    httpContextAccessor.HttpContext.Response.Headers.Add(Headers.StakeContract, stakeSettings.ContractAddress);
+                }
+            }
+
+            return stakeSettings;
+        }
+
+        protected IAssetSettings GetAssetInfo(string symbol)
         {
             return appSettings.Assets.SingleOrDefault(a =>
                 a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
+        }
+
+        protected IHoldingSettings GetHoldingInfo(string symbol)
+        {
+            return appSettings.Holdings.SingleOrDefault(h =>
+                h.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
         }
 
         protected TBusinessTransaction MapTransaction<TBusinessTransaction>(DataTransaction transaction)
@@ -107,7 +144,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
         protected BusinessOperation MapOperation(DataOperation operation, CurrencyCode currencyCode)
         {
-            var sanitisedId = operation.ContractName.Replace(" ", "-").Replace(".", "-").ToLower().Trim();
+            var sanitisedId = operation.ContractName?.Replace(" ", "-").Replace(".", "-").ToLower().Trim() ?? string.Empty;
             var coinloreId = GetAssetInfo(operation.ContractSymbol)?.CoinLore ?? sanitisedId;
             var coinMarketCapId = GetAssetInfo(operation.ContractSymbol)?.CoinMarketCap ?? sanitisedId;
             var fund = Enum.TryParse(operation.ContractSymbol, out Symbol symbol)
@@ -134,7 +171,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 IsEth = operation.IsEth,
                 PricePerToken = CurrencyConverter.Convert(operation.Price, currencyCode),
                 Quantity = operation.Type == OperationTypes.Transfer
-                    ? Web3.Convert.FromWei(BigInteger.Parse(operation.Value))
+                    ? Web3.Convert.FromWei(BigInteger.Parse(operation.Value), fund?.Decimals ?? 18)
                     : 0,
                 Value = operation.Value,
                 Priority = operation.Priority,
@@ -151,7 +188,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 ContractImageLink = fund != null
                     ? new Uri($"https://{HostUrl.Host}/resources/{symbol}.png", UriKind.Absolute)
                     : new Uri(string.Format(ImageTemplate, coinloreId), UriKind.Absolute),
-                ContractMarketLink = fund == null || fund.Tradable
+                ContractMarketLink = !string.IsNullOrEmpty(coinloreId) && (fund == null || fund.Tradable)
                     ? new Uri(string.Format(MarketTemplate, coinloreId, currencyCode), UriKind.Absolute)
                     : null
             };
@@ -159,13 +196,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
         protected BusinessFundAsset MapFundAsset(FundSettings.FundAsset asset, decimal fundValue, CurrencyCode currencyCode)
         {
+            var total = CurrencyConverter.Convert(asset.Value, currencyCode);
             var sanitisedId = asset.Name.Replace(" ", "-").Replace(".", "-").ToLower().Trim();
             var coinloreId = GetAssetInfo(asset.Symbol)?.CoinLore ?? sanitisedId;
             var coinMarketCapId = GetAssetInfo(asset.Symbol)?.CoinMarketCap ?? sanitisedId;
 
             return new BusinessFundAsset()
             {
-                Coin = new BusinessCoin()
+                Holding = new BusinessHolding()
                 {
                     Name = asset.Name,
                     Symbol = asset.Symbol,
@@ -174,6 +212,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                         ? new EthereumAddress(asset.ContractAddress)
                         : default(EthereumAddress?),
                     Decimals = asset.Decimals,
+                    IsCoin = asset.IsCoin,
                     FixedValuePerCoin = asset.FixedValuePerCoin,
                     Link = asset.Link
                         ?? new Uri(string.Format(LinkTemplate, coinMarketCapId), UriKind.Absolute),
@@ -183,9 +222,27 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                         ? new Uri(string.Format(MarketTemplate, coinloreId, currencyCode), UriKind.Absolute)
                         : null
                 },
-                Value = CurrencyConverter.Convert(asset.Value, currencyCode),
-                Share = asset.Value / fundValue * 100
+                Total = total,
+                Share = total / fundValue * 100
             };
+        }
+
+        protected decimal? Aggregate<T>(IEnumerable<T> data, Func<T, decimal> selector, PriceMode mode)
+            where T : IDataAggregatable
+        {
+            var val = mode switch
+            {
+                PriceMode.Avg => data.Average(selector),
+                PriceMode.Open => data.OrderBy(x => x.Date).Select(selector).First(),
+                PriceMode.Close => data.OrderBy(x => x.Date).Select(selector).Last(),
+                PriceMode.High => data.Select(selector).Max(),
+                PriceMode.Low => data.Select(selector).Min(),
+                _ => throw new ArgumentException($"Arg not handled: {mode}", nameof(mode)),
+            };
+
+            return val != -1
+                ? val
+                : default(decimal?);
         }
     }
 }

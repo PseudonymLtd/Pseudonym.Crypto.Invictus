@@ -1,0 +1,86 @@
+﻿@inject IUserSettings UserSettings
+@inject IAppState AppState
+
+<div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        <div class="media" style="margin-top: auto; margin-bottom: auto; padding-bottom: 6px; position: relative;">
+            <img src="images/funds/@($"{Stake.Token.Symbol}.png")" class="mr-3" alt="@Stake.DisplayName">
+            <h1 class="display-4">@Stake.DisplayName</h1>
+            <div style="position: absolute; display: inline-block; right: 0; left: auto; top: 0; height: 20px;">
+                <a class="badge neutral" href="@Stake.Links.Pool" target="_blank" style="">Pool</a>
+                <a class="badge @Stake.Token.Symbol.ToString().ToLower()" href="@Stake.Links.Fact" target="_blank">Fact</a>
+            </div>
+        </div>
+        <p class="lead text-mob-md text-justify text-sm-left">@Stake.Description</p>
+        <div class="media text-center text-sm-left" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
+            <div class="container-fluid" style="max-width: none">
+                <div class="row justify-content-sm-between" style="justify-content: space-evenly;">
+                    <div class="col-xs-2 pr-sm-5 py-1">
+                        <small style="font-weight: bold; color: #cf2127;">Token</small>
+                        <div>
+                            <Token Symbol="@Stake.Token.Symbol.ToString()" ContractAddress="@Stake.Token.Address" />
+                        </div>
+                    </div>
+                    <div class="col-xs-2 px-2 pl-sm-0 pr-sm-5 py-1">
+                        <small style="font-weight: bold; color: #cf2127;">Circ. Supply</small>
+                        <div>
+                            <LargeNumber Value="Stake.CirculatingSupply" Decimals="2" />
+                        </div>
+                    </div>
+                    <div class="col-xs-2 px-2 pl-sm-0 pr-sm-5 py-1">
+                        <small style="font-weight: bold; color: #cf2127;">Market Value (@UserSettings.CurrencyCode.GetSymbol())</small>
+                        <div>
+                            <Money Value="@Stake.Market.Total" CurrencyCode="UserSettings.CurrencyCode" />
+                        </div>
+                    </div>
+                    <div class="col-xs-2 px-2 pl-sm-0 pr-sm-5 py-1">
+                        <small style="font-weight: bold; color: #cf2127;">Price (@UserSettings.CurrencyCode.GetSymbol())</small>
+                        <div>
+                            <Money Value="@Stake.Market.PricePerToken" CurrencyCode="UserSettings.CurrencyCode" />
+                        </div>
+                    </div>
+                    <div class="col-xs-2 px-2 pl-sm-0 pr-sm-5 py-1">
+                        <small style="font-weight: bold; color: #cf2127;">Volume (@UserSettings.CurrencyCode.GetSymbol())</small>
+                        <div>
+                            <Money Value="Stake.Market.Volume" CurrencyCode="UserSettings.CurrencyCode" />
+                        </div>
+                    </div>
+                    <div class="col-xs-2 pr-sm-5 py-1">
+                        <small style="font-weight: bold; color: #cf2127;">Total Power (@UserSettings.CurrencyCode.GetSymbol())</small>
+                        <div>
+                            <Money Value="Stake.Power.Power" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @if (ShowGraph)
+        {
+            <StakePowerChart Stake="Stake" />
+        }
+        @if (Clickable)
+        {
+            <a href="/stakes/@Stake.Token.Symbol"
+               class="btn btn-primary btn-lg @Stake.Token.Symbol.ToString().ToLower()"
+               role="button"
+               style="margin-left: auto; margin-right: 0; display: block; max-width: 150px;">Explore</a>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public ApiStake Stake { get; set; }
+
+    [Parameter]
+    public bool Clickable { get; set; }
+
+    [Parameter]
+    public bool ShowGraph { get; set; }
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+    }
+}
+

@@ -1,0 +1,23 @@
+﻿@inject IAppState AppState
+
+<TooltipItem
+    DisplayText="@Value.ToString("dd-MM-yyyy", DateTimeFormatInfo.InvariantInfo)"
+    CaptionText="@Value.ToString("F", DateTimeFormatInfo.InvariantInfo)"
+    FontSize="FontSize"
+    ToolTipFontSize="ToolTipFontSize" />
+
+@code {
+    [Parameter]
+    public DateTime Value { get; set; }
+
+    [Parameter]
+    public int? FontSize { get; set; }
+
+    [Parameter]
+    public int? ToolTipFontSize { get; set; }
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+    }
+}

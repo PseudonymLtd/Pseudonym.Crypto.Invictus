@@ -15,6 +15,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
     internal sealed class OperationRepository : BaseRepository<DataOperation>, IOperationRepository
     {
         private const string TableName = "Pseudonym-Crypto-Invictus-Operations";
+        private const string ContractInboundIndexName = "ContractInbound";
+        private const string ContractOutboundIndexName = "ContractOutbound";
         private const string InboundIndexName = "Inbound";
         private const string OutboundIndexName = "Outbound";
 
@@ -96,6 +98,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             }
         }
 
+        public IAsyncEnumerable<EthereumTransactionHash> ListInboundHashesAsync(EthereumAddress address, EthereumAddress contractAddress)
+        {
+            return ListAddressHashesAsync(address, contractAddress, ContractInboundIndexName, nameof(DataOperation.Recipient));
+        }
+
         public IAsyncEnumerable<EthereumTransactionHash> ListInboundHashesAsync(EthereumAddress address, string type)
         {
             return ListAddressHashesAsync(address, type, InboundIndexName, nameof(DataOperation.Recipient));
@@ -104,6 +111,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
         public IAsyncEnumerable<EthereumTransactionHash> ListOutboundHashesAsync(EthereumAddress address, string type)
         {
             return ListAddressHashesAsync(address, type, OutboundIndexName, nameof(DataOperation.Sender));
+        }
+
+        public IAsyncEnumerable<EthereumTransactionHash> ListOutboundHashesAsync(EthereumAddress address, EthereumAddress contractAddress)
+        {
+            return ListAddressHashesAsync(address, contractAddress, ContractOutboundIndexName, nameof(DataOperation.Sender));
         }
 
         protected sealed override DataOperation Map(Dictionary<string, AttributeValue> attributes)
@@ -158,8 +170,68 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                         },
                         ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
                         {
-                            [$":{attributeName}Val"] = new AttributeValue { S = address },
-                            [$":{nameof(DataOperation.Type)}Val"] = new AttributeValue { S = type }
+                            [$":{attributeName}Val"] = new AttributeValue(address),
+                            [$":{nameof(DataOperation.Type)}Val"] = new AttributeValue(type)
+                        },
+                        ExclusiveStartKey = lastEvaluatedKey.Any()
+                            ? lastEvaluatedKey
+                            : null
+                    },
+                    CancellationToken);
+
+                if (response.HttpStatusCode != HttpStatusCode.OK)
+                {
+                    throw new HttpRequestException($"Response code did not indicate success: {response.HttpStatusCode}");
+                }
+                else
+                {
+                    lastEvaluatedKey = response.LastEvaluatedKey;
+                }
+
+                foreach (var attributes in response.Items)
+                {
+                    if (attributes.ContainsKey(nameof(DataOperation.Hash)))
+                    {
+                        yield return new EthereumTransactionHash(attributes[nameof(DataOperation.Hash)].S);
+                    }
+                }
+
+                if (!lastEvaluatedKey.Any())
+                {
+                    break;
+                }
+            }
+        }
+
+        private async IAsyncEnumerable<EthereumTransactionHash> ListAddressHashesAsync(
+            EthereumAddress address,
+            EthereumAddress contractAddress,
+            string indexName,
+            string attributeName)
+        {
+            var lastEvaluatedKey = new Dictionary<string, AttributeValue>();
+
+            while (!CancellationToken.IsCancellationRequested)
+            {
+                var response = await DynamoDB.QueryAsync(
+                    new QueryRequest()
+                    {
+                        TableName = TableName,
+                        IndexName = indexName,
+                        Select = Select.ALL_PROJECTED_ATTRIBUTES,
+                        KeyConditionExpression = string.Format(
+                            "#{0} = :{0}Val AND #{1} = :{1}Val",
+                            attributeName,
+                            nameof(DataOperation.ContractAddress)),
+                        ExpressionAttributeNames = new Dictionary<string, string>()
+                        {
+                            [$"#{attributeName}"] = attributeName,
+                            [$"#{nameof(DataOperation.ContractAddress)}"] = nameof(DataOperation.ContractAddress)
+                        },
+                        ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
+                        {
+                            [$":{attributeName}Val"] = new AttributeValue(address),
+                            [$":{nameof(DataOperation.ContractAddress)}Val"] = new AttributeValue(contractAddress)
                         },
                         ExclusiveStartKey = lastEvaluatedKey.Any()
                             ? lastEvaluatedKey

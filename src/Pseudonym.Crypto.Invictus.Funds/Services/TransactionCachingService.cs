@@ -8,6 +8,7 @@ using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Bloxy;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Ethplorer;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
+using Pseudonym.Crypto.Invictus.Funds.Configuration.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Data.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 
@@ -31,11 +32,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             var transactionService = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
             var operationService = scope.ServiceProvider.GetRequiredService<IOperationRepository>();
 
-            foreach (var fund in AppSettings.Funds)
+            foreach (var fund in AppSettings.Funds.Cast<IFundSettings>())
             {
                 try
                 {
-                    var latestDate = await transactionService.GetLatestDateAsync(fund.Address)
+                    var latestDate = await transactionService.GetLatestDateAsync(fund.ContractAddress)
                         ?? InvictusStartDate;
 
                     await SyncTransactionsAsync(
@@ -43,11 +44,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                         bloxyClient,
                         transactionService,
                         operationService,
-                        fund.Address,
+                        fund.ContractAddress,
                         latestDate.AddDays(-7),
                         DateTime.UtcNow);
 
-                    var lowestDate = await transactionService.GetLowestDateAsync(fund.Address)
+                    var lowestDate = await transactionService.GetLowestDateAsync(fund.ContractAddress)
                         ?? DateTime.UtcNow;
 
                     await SyncTransactionsAsync(
@@ -55,7 +56,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                         bloxyClient,
                         transactionService,
                         operationService,
-                        fund.Address,
+                        fund.ContractAddress,
                         InvictusStartDate,
                         lowestDate.AddDays(1));
                 }

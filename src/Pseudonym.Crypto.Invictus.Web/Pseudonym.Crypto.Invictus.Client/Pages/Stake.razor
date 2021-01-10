@@ -1,0 +1,49 @@
+﻿@inherits BaseComponent
+@page "/stakes/{symbol}"
+@inject IUserSettings UserSettings
+@inject IApiClient Client
+@inject IAppState AppState
+
+@if (stake == null)
+{
+    <Loading />
+}
+else
+{
+    <StakeSummary Stake="stake" Clickable="false" ShowGraph="true" />
+    <StakeFundBreakdown Stake="stake" />
+}
+
+@code {
+
+    private ApiStake stake;
+
+    [Parameter]
+    public string Symbol { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.Assign(async () => await DrawAsync(false));
+
+        await DrawAsync(true);
+    }
+
+    private async Task DrawAsync(bool firstRender)
+    {
+        if (Enum.TryParse(Symbol, out Symbol symbol))
+        {
+            if (!firstRender)
+            {
+                stake = null;
+
+                StateHasChanged();
+            }
+
+            stake = await Client.GetStakeAsync(symbol);
+        }
+        else
+        {
+            throw new ArgumentException($"Could not pass parameter '{Symbol}'", nameof(Symbol));
+        }
+    }
+}

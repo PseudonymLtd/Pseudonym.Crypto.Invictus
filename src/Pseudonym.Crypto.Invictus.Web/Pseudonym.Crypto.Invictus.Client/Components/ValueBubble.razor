@@ -1,11 +1,19 @@
 ﻿@inject IAppState AppState
 @inject IUserSettings UserSettings
 
-<span class="badge @(Symbol.HasValue ? Symbol.Value.ToString().ToLower() : "neutral")" style="font-weight: bold; color: white;">
-    <span>@Type </span>
-    <LargeNumber Value="Math.Abs(displayValue)" Decimals="Decimals" ShowZeroValue="true" Suffix="@Suffix" />
-    <span class="oi @(displayValue < 0 ? "oi-arrow-circle-bottom" : "oi-arrow-circle-top")"></span>
-    <small>@UserSettings.DurationMode.GetDescription()</small>
+<span class="badge @(Symbol.HasValue ? Symbol.Value.ToString().ToLower() : "neutral")"
+      style="font-weight: bold; color: white; padding: 10px; font-size: 14px;">
+    <span style="padding-right: 4px;">@Type</span>
+    @if (ShowPricePerToken)
+    {
+        <Money Value="Pricing.PricePerToken" Decimals="Decimals" CurrencyCode="UserSettings.CurrencyCode" ShowZeroValue="true" />
+    }
+    else
+    {
+        <LargeNumber Value="Math.Abs(displayValue)" Decimals="Decimals" ShowZeroValue="true" Suffix="%" />
+        <span class="oi @(displayValue < 0 ? "oi-arrow-circle-bottom" : "oi-arrow-circle-top")"></span>
+        <small>@UserSettings.DurationMode.GetDescription()</small>
+    }
 </span>
 
 @code {
@@ -21,10 +29,10 @@
     public int Decimals { get; set; } = 2;
 
     [Parameter]
-    public string Suffix { get; set; }
+    public Symbol? Symbol { get; set; }
 
     [Parameter]
-    public Symbol? Symbol { get; set; }
+    public bool ShowPricePerToken { get; set; }
 
     protected override void OnInitialized()
     {

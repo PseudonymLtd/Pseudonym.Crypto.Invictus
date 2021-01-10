@@ -3,13 +3,6 @@ using Newtonsoft.Json;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Models
 {
-    public enum TransferAction
-    {
-        None = 0,
-        Inbound = 1,
-        Outbound = 2,
-    }
-
     public sealed class ApiOperation
     {
         [Required]
@@ -46,10 +39,6 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [EthereumAddress]
         [JsonProperty("address")]
         public string Address { get; set; }
-
-        [Required]
-        [JsonProperty("transfer_action")]
-        public TransferAction TransferAction { get; set; }
 
         [Required]
         [JsonProperty("contract")]

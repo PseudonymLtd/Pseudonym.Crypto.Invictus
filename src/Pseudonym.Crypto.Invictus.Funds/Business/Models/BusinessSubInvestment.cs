@@ -4,7 +4,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 {
     internal sealed class BusinessSubInvestment : ISubInvestment
     {
-        public ICoin Coin { get; set; }
+        public IHolding Holding { get; set; }
 
         public decimal Held { get; set; }
 

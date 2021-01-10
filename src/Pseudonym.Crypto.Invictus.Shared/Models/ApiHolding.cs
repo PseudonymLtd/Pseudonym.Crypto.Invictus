@@ -3,11 +3,15 @@ using Newtonsoft.Json;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Models
 {
-    public sealed class ApiCoin
+    public sealed class ApiHolding
     {
         [Required]
         [JsonProperty("name")]
         public string Name { get; set; }
+
+        [Required]
+        [JsonProperty("is_coin")]
+        public bool IsCoin { get; set; }
 
         [Required]
         [JsonProperty("symbol")]
@@ -27,6 +31,6 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
 
         [Required]
         [JsonProperty("links")]
-        public ApiCoinLinks Links { get; set; }
+        public ApiHoldingLinks Links { get; set; }
     }
 }

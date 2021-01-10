@@ -9,6 +9,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 
         public decimal Held { get; set; }
 
+        public bool Legacy { get; set; }
+
         public decimal Share => Held / Fund.CirculatingSupply * 100;
 
         public decimal RealValue => Fund.Nav.ValuePerToken * Held;
@@ -19,6 +21,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 
         public IReadOnlyList<ISubInvestment> SubInvestments { get; set; }
 
-        public IReadOnlyList<IStake> Stakes { get; set; }
+        public IReadOnlyList<IStakeEvent> Stakes { get; set; }
     }
 }

@@ -1,3 +1,4 @@
+@inherits BaseComponent
 @page "/"
 @inject IUserSettings UserSettings
 @inject IApiClient Client
@@ -7,7 +8,7 @@
     <h1 class="display-1">Funds</h1>
     <p class="lead">
         Below shows the summary of funds provided by <a href="https://invictuscapital.com/" target="_blank">Invictus Capital</a>.
-        There are currently @(funds?.Count ?? 0) available funds.
+        There is currently @(funds?.Count ?? 0) available @((funds?.Count ?? 0) == 1 ? "fund" : "funds").
     </p>
 </div>
 

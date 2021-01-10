@@ -1,8 +1,9 @@
 ﻿using System;
+using Pseudonym.Crypto.Invictus.Funds.Data.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Data.Models
 {
-    public sealed class DataFundPerformance
+    public sealed class DataFundPerformance : IDataAggregatable
     {
         public string Address { get; set; }
 

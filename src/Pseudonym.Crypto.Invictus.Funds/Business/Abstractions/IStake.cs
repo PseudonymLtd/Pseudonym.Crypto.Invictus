@@ -1,22 +1,36 @@
 ﻿using System;
+using System.Collections.Generic;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 {
     public interface IStake
     {
-        EthereumAddress ContractAddress { get; }
+        string Name { get; }
 
-        EthereumTransactionHash Hash { get; }
+        string DisplayName { get; }
 
-        DateTime StakedAt { get; }
+        string Description { get; }
 
-        TimeSpan Duration { get; }
+        Uri InvictusUri { get; }
 
-        DateTime ExpiresAt { get; }
+        Uri FactSheetUri { get; }
 
-        decimal PricePerToken { get; }
+        Uri PoolUri { get; }
 
-        decimal Quantity { get; }
+        IToken Token { get; }
+
+        decimal CirculatingSupply { get; }
+
+        IMarket Market { get; }
+
+        EthereumAddress StakingAddress { get; }
+
+        IReadOnlyList<ITimeMultiplier> TimeMultipliers { get; }
+
+        IReadOnlyDictionary<Symbol, decimal> FundMultipliers { get; }
+
+        IStakingPower Power { get; }
     }
 }

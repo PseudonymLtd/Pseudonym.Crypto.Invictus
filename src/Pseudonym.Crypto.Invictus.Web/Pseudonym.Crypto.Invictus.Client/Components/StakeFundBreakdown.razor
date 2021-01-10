@@ -1,0 +1,56 @@
+﻿@inject IAppState AppState
+@inject IUserSettings UserSettings
+
+<div class="jumbotron jumbotron-fluid">
+    <div class="container" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
+        <div class="container-fluid" style="max-width: none">
+            <div class="row">
+                <div class="col py-1">
+                    <h1 class="display-4">Power Breakdown</h1>
+                    <p class="lead">
+                        Below shows the funds that contribute to the staking power.
+                    </p>
+                    <div class="container-fluid" style="max-width: none">
+                        <div class="row">
+                            <div class="col py-1" style="font-weight: bold;">
+                                Fund
+                            </div>
+                            <div class="col py-1" style="font-weight: bold;">
+                                Power
+                            </div>
+                        </div>
+                    </div>
+                    @foreach (var stakingPowerFund in Stake.Power.Breakdown
+                       .OrderByDescending(x => x.Power))
+                    {
+                        <StakeFundBanner StakeFund="stakingPowerFund" />
+                    }
+                    <div class="container-fluid" style="max-width: none">
+                        <div class="row">
+                            <div class="col py-1">
+                            </div>
+                            <div class="col py-1 text-mob-sm" style="font-weight: bold;">
+                                <Money Value="Stake.Power.Power" Decimals="2" CurrencyCode="UserSettings.CurrencyCode" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col py-1">
+                    <StakePowerDistributionChart IsHollow="true" StakingPowerFunds="Stake.Power.Breakdown" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public ApiStake Stake { get; set; }
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+    }
+}
+

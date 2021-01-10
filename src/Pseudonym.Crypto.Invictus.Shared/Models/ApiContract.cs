@@ -32,6 +32,6 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
 
         [Required]
         [JsonProperty("links")]
-        public ApiCoinLinks Links { get; set; }
+        public ApiHoldingLinks Links { get; set; }
     }
 }

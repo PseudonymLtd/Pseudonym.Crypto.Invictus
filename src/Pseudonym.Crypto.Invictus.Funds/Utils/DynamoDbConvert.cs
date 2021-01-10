@@ -112,10 +112,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Utils
 
             if (type == typeof(string))
             {
-                return new AttributeValue(
-                    collection
-                        .Cast<string>()
-                        .ToList());
+                var stringList = collection
+                    .Cast<string>()
+                    .ToList();
+
+                return stringList.Any()
+                    ? new AttributeValue(stringList)
+                    : new AttributeValue()
+                    {
+                        NULL = true
+                    };
             }
             else if (type == typeof(byte))
             {
@@ -143,10 +149,15 @@ namespace Pseudonym.Crypto.Invictus.Funds.Utils
                     numberList.Add(child.ToString());
                 }
 
-                return new AttributeValue()
-                {
-                    NS = numberList
-                };
+                return numberList.Any()
+                    ? new AttributeValue()
+                    {
+                        NS = numberList
+                    }
+                    : new AttributeValue()
+                    {
+                        NULL = true
+                    };
             }
             else
             {
@@ -157,11 +168,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Utils
                     list.Add(SerializeItem(type, child));
                 }
 
-                return new AttributeValue()
-                {
-                    IsLSet = true,
-                    L = list
-                };
+                return list.Any()
+                    ? new AttributeValue()
+                    {
+                        IsLSet = true,
+                        L = list
+                    }
+                    : new AttributeValue()
+                    {
+                        NULL = true
+                    };
             }
         }
 

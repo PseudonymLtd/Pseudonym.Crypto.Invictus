@@ -1,0 +1,126 @@
+﻿@inherits BaseComponent
+@inject IUserSettings UserSettings
+@inject IApiClient Client
+@inject IAppState AppState
+
+<div class="jumbotron jumbotron-fluid">
+    <div class="container" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
+        <div class="container-fluid" style="max-width: none">
+            <div class="row">
+                <div class="col-xs-1 py-1">
+                    <h1 class="display-4">@Fund.Token.Symbol Buy &amp; Burn Events</h1>
+                    <p class="lead">
+                        There has currently been @transactions.Count Buy &amp; Burn event(s).
+                    </p>
+                    @if (transactions.Any())
+                    {
+                        <div class="container-fluid" style="max-width: none">
+                            <div class="row">
+                                <div class="col-3 py-1" style="font-weight: bold;">
+                                    Date
+                                </div>
+                                <div class="col-4 py-1" style="font-weight: bold;">
+                                    Value (@UserSettings.CurrencyCode.GetSymbol())
+                                </div>
+                                <div class="col-3 py-1" style="font-weight: bold;">
+                                    Quantity
+                                </div>
+                            </div>
+                            @foreach (var trade in Trades)
+                            {
+                                <div class="row">
+                                    <div class="col-3 py-1">
+                                        <Date Value="trade.Date" />
+                                    </div>
+                                    <div class="col-4 py-1">
+                                        <Money Value="trade.NetCurrentPrice" Decimals="2" ShowZeroValue="true" CurrencyCode="UserSettings.CurrencyCode" />
+                                        <ProfitTag Value="trade.BurnGain" Decimals="2" />
+                                    </div>
+                                    <div class="col-3 py-1">
+                                        <LargeNumber Value="trade.Quantity" Decimals="2" ShowZeroValue="true" />
+                                    </div>
+                                </div>
+                            }
+                            <div class="row">
+                                <div class="col-3 py-1" style="font-weight: bold;">
+                                </div>
+                                <div class="col-4 py-1" style="font-weight: bold;">
+                                    Total
+                                </div>
+                                <div class="col-3 py-1" style="font-weight: bold;">
+                                    <LargeNumber Value="Trades.Sum(x => x.Quantity)" Decimals="2" ShowZeroValue="true" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="col-xs-1 py-1">
+                    @if (!transactions.Any())
+                    {
+                        <Loading />
+                    }
+                    else
+                    {
+                        <div>
+                            @foreach (var transaction in transactions.OrderByDescending(x => x.ConfirmedAt))
+                            {
+                                <Anchor Id="@transaction.Hash" />
+                                <TransactionSummary Fund="Fund" Transaction="transaction" CollapseId="@($"Id-{transaction.Hash}")" />
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private readonly List<BusinessTransaction> transactions;
+
+    public FundBuyAndBurns()
+    {
+        transactions = new List<BusinessTransaction>();
+    }
+
+    [Parameter]
+    public ApiFund Fund { get; set; }
+
+    protected IReadOnlyList<ITrade> Trades => transactions
+        .OrderBy(x => x.ConfirmedAt)
+        .Select(x => x.GetTrade(Fund, UserSettings))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.Assign(async () => await DrawAsync(false));
+
+        await DrawAsync(true);
+    }
+
+    private async Task DrawAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            transactions.Clear();
+
+            StateHasChanged();
+        }
+
+        await foreach (var transaction in Client.ListFundBurnsAsync(Fund.Token.Symbol))
+        {
+            transactions.Add(Map(
+                UserSettings,
+                Fund,
+                transaction,
+                new ApiPerformance()
+                {
+                    NetAssetValuePerToken = Fund.Nav.ValuePerToken,
+                    MarketValuePerToken = Fund.Market.PricePerToken
+                }));
+        }
+
+        StateHasChanged();
+    }
+}

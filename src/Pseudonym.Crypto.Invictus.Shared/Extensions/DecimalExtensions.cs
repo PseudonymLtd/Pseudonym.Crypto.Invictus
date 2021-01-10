@@ -6,10 +6,11 @@ namespace System
     {
         public static string ToCommaFormat(this decimal m)
         {
+            var negative = m < 0;
             var nonDecimalAmount = (long)m;
             var decimalAmount = m - nonDecimalAmount;
 
-            var moneyString = nonDecimalAmount.ToString();
+            var moneyString = nonDecimalAmount.ToString().Replace("-", string.Empty);
 
             for (var i = moneyString.Length - 3; i > 0; i = i - 3)
             {
@@ -21,7 +22,9 @@ namespace System
                 moneyString = $"{moneyString}.{decimalAmount.ToString().Replace("0.", string.Empty).Replace("-", string.Empty)}";
             }
 
-            return moneyString;
+            return negative
+                ? $"-{moneyString}"
+                : moneyString;
         }
 
         public static string ToCommaFormat(this decimal m, int decimals)

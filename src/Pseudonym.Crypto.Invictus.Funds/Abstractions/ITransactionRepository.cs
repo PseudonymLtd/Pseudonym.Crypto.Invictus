@@ -6,7 +6,7 @@ using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
 {
-    public interface ITransactionRepository
+    public interface ITransactionRepository : IRepository<DataTransaction>
     {
         Task<DataTransaction> GetTransactionAsync(EthereumAddress contractAddress, EthereumTransactionHash hash);
 
@@ -17,11 +17,19 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
             DateTime from,
             DateTime to);
 
-        IAsyncEnumerable<DataTransaction> ListInboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address, EthereumAddress? filterAddress = null);
+        IAsyncEnumerable<DataTransaction> ListInboundTransactionsAsync(
+            EthereumAddress contractAddress,
+            EthereumAddress address,
+            EthereumAddress? filterAddress = null,
+            DateTime? from = null,
+            DateTime? to = null);
 
-        IAsyncEnumerable<DataTransaction> ListOutboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address, EthereumAddress? filterAddress = null);
-
-        Task UploadItemsAsync(params DataTransaction[] transaction);
+        IAsyncEnumerable<DataTransaction> ListOutboundTransactionsAsync(
+            EthereumAddress contractAddress,
+            EthereumAddress address,
+            EthereumAddress? filterAddress = null,
+            DateTime? from = null,
+            DateTime? to = null);
 
         Task<long> GetLatestBlockNumberAsync(EthereumAddress address);
 

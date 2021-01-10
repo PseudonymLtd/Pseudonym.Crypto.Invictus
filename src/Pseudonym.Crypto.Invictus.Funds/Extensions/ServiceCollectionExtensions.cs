@@ -76,6 +76,14 @@ namespace Microsoft.Extensions.DependencyInjection
             return container;
         }
 
+        public static IServiceCollection AddTheGraphClient(this IServiceCollection container)
+        {
+            container.AddScoped<IGraphClient, TheGraphClient>()
+                .AddHttpClient(nameof(TheGraphClient), (sp, client) => ConfigureHttpClient(sp, client, d => d.TheGraph));
+
+            return container;
+        }
+
         private static Dependency<TSettings> ConfigureHttpClient<TSettings>(
             IServiceProvider serviceProvider, HttpClient client, Func<Dependencies, Dependency<TSettings>> selector)
             where TSettings : DependencySettings, new()

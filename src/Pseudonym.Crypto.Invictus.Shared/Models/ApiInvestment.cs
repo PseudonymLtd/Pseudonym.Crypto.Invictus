@@ -15,6 +15,10 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         public decimal Held { get; set; }
 
         [Required]
+        [JsonProperty("legacy")]
+        public bool Legacy { get; set; }
+
+        [Required]
         [JsonProperty("asset_value")]
         public decimal RealValue { get; set; }
 
@@ -30,6 +34,6 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         public IReadOnlyList<ApiSubInvestment> SubInvestments { get; set; } = new List<ApiSubInvestment>();
 
         [JsonProperty("stakes")]
-        public IReadOnlyList<ApiStake> Stakes { get; set; } = new List<ApiStake>();
+        public IReadOnlyList<ApiStakeEvent> Stakes { get; set; } = new List<ApiStakeEvent>();
     }
 }

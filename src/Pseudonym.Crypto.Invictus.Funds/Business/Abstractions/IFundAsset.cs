@@ -2,9 +2,13 @@
 {
     public interface IFundAsset
     {
-        ICoin Coin { get; }
+        IHolding Holding { get; }
 
-        decimal Value { get; }
+        decimal Quantity { get; }
+
+        decimal PricePerToken { get; }
+
+        decimal Total { get; }
 
         decimal Share { get; }
     }

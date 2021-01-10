@@ -1,4 +1,5 @@
-﻿@page "/investments/{symbol}"
+﻿@inherits BaseComponent
+@page "/investments/{symbol}"
 @inject IJSRuntime JSRuntime
 @inject IUserSettings UserSettings
 @inject IApiClient Client
@@ -16,6 +17,10 @@ else if (investment == null)
 else
 {
     <InvestmentSummary Investment="investment" Transactions="transactions" ShowGraph="true" Clickable="false" ClickCallback="TransactionOnClickAsync" @ref="investmentSummary" />
+    foreach (var stake in stakes)
+    {
+        <StakeEventFundBreakdown Fund="investment.Fund" Stake="stake.Key" Events="stake.Value" />
+    }
     <FundBreakdown Fund="investment.Fund" />
     if (investment.SubInvestments.Any())
     {
@@ -62,6 +67,7 @@ else
 
 @code {
 
+    private readonly Dictionary<ApiStake, List<ApiStakeEvent>> stakes;
     private readonly List<BusinessTransaction> transactions;
 
     private ApiInvestment investment;
@@ -69,6 +75,7 @@ else
 
     public Investment()
     {
+        stakes = new Dictionary<ApiStake, List<ApiStakeEvent>>();
         transactions = new List<BusinessTransaction>();
     }
 
@@ -96,6 +103,7 @@ else
             if (!firstRender)
             {
                 investment = null;
+                stakes.Clear();
                 transactions.Clear();
 
                 StateHasChanged();
@@ -108,9 +116,23 @@ else
 
                 StateHasChanged();
 
+                await foreach (var stake in Client.ListStakesAsync())
+                {
+                    stakes.Add(stake, new List<ApiStakeEvent>());
+
+                    await foreach (var stakeEvent in Client.ListStakeEventsAsync(stake.Token.Symbol, symbol))
+                    {
+                        stakes[stake].Add(stakeEvent);
+                    }
+
+                    StateHasChanged();
+                }
+
                 await foreach (var transaction in Client.ListInvestmentTransactionsAsync(symbol))
                 {
                     transactions.Add(Map(
+                        UserSettings,
+                        investment.Fund,
                         transaction,
                         transaction.ConfirmedAt.Date == now
                         ? new ApiPerformance()
@@ -168,64 +190,5 @@ else
         {
             throw new ArgumentException($"Could not pass parameter '{Symbol}'", nameof(Symbol));
         }
-    }
-
-    private BusinessTransaction Map(ApiTransactionSet transaction, ApiPerformance performance)
-    {
-        return new BusinessTransaction()
-        {
-            Hash = transaction.Hash,
-            ContractAddress = investment.Fund.Token.Address,
-            BlockNumber = transaction.BlockNumber,
-            Confirmations = transaction.Confirmations,
-            ConfirmedAt = transaction.ConfirmedAt,
-            Success = transaction.Success,
-            TransferAction = transaction.TransferAction,
-            Eth = transaction.Eth,
-            Gas = transaction.Gas,
-            GasLimit = transaction.GasLimit,
-            GasUsed = transaction.GasUsed,
-            Sender = transaction.Sender,
-            Recipient = transaction.Recipient,
-            Price = performance != null
-                ? new BusinessPrice()
-                {
-                    MarketValuePerToken = performance.MarketValuePerToken,
-                    NetAssetValuePerToken = performance.NetAssetValuePerToken
-                }
-                : null,
-            Operations = transaction.Operations
-                .Select(operation => new BusinessOperation()
-                {
-                    IsEth = operation.IsEth,
-                    Sender = operation.Sender,
-                    Address = operation.Address,
-                    PricePerToken =
-                        performance != null &&
-                        operation.PricePerToken == default &&
-                        operation.Contract.Symbol.Equals(investment.Fund.Token.Symbol.ToString(), StringComparison.OrdinalIgnoreCase)
-                            ? performance.MarketValuePerToken ?? performance.NetAssetValuePerToken
-                            : operation.PricePerToken,
-                    Priority = operation.Priority,
-                    Quantity = operation.Quantity,
-                    Type = operation.Type,
-                    Value = operation.Value,
-                    Recipient = operation.Recipient,
-                    TransferAction = operation.TransferAction,
-                    Contract = new BusinessContract()
-                    {
-                        Symbol = operation.Contract.Symbol,
-                        Address = operation.Contract.Address,
-                        Decimals = operation.Contract.Decimals,
-                        Holders = operation.Contract.Holders,
-                        Issuances = operation.Contract.Issuances,
-                        Name = operation.Contract.Name,
-                        Link = operation.Contract.Links.Link,
-                        ImageLink = operation.Contract.Links.ImageLink,
-                        MarketLink = operation.Contract.Links.MarketLink
-                    }
-                })
-                .ToList()
-        };
     }
 }

@@ -13,5 +13,6 @@
         public const string CurrencyCode = "X-Currency-Code";
         public const string Address = "X-Eth-Address";
         public const string Contract = "X-Eth-Contract";
+        public const string StakeContract = "X-Eth-Stake-Contract";
     }
 }

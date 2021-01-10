@@ -154,7 +154,7 @@
     public IReadOnlyList<BusinessTransaction> Transactions { get; set; } = new List<BusinessTransaction>();
 
     [Parameter]
-    public IReadOnlyList<ApiStake> Stakes { get; set; } = new List<ApiStake>();
+    public IReadOnlyList<ApiStakeEvent> Stakes { get; set; } = new List<ApiStakeEvent>();
 
     [Parameter]
     public EventCallback<BusinessTransaction> ClickCallback { get; set; }
@@ -187,12 +187,12 @@
         .SkipWhile(t => t.ConfirmedAt < StartDate)
         .TakeWhile(t => t.ConfirmedAt <= EndDate);
 
-    protected IEnumerable<ApiStake> GetDrawableStakes(ApiFund fund) => Stakes
-        .Where(x =>
-            x.ContractAddress.Equals(fund.Token.Address, StringComparison.OrdinalIgnoreCase))
-        .OrderBy(t => t.StakedAt)
-        .SkipWhile(t => t.StakedAt < StartDate)
-        .TakeWhile(t => t.StakedAt <= EndDate);
+    protected IEnumerable<ApiStakeEvent> GetDrawableStakes(ApiFund fund) => Stakes
+        .Where(s =>
+            s.ContractAddress.Equals(fund.Token.Address, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(s => s.ConfirmedAt)
+        .SkipWhile(s => s.ConfirmedAt < StartDate)
+        .TakeWhile(s => s.ConfirmedAt <= EndDate);
 
     protected override async Task OnInitializedAsync()
     {
@@ -215,24 +215,27 @@
             PointHitRadius = 8
         }));
 
-        datasets.AddRange(Stakes.Select(s => new LineDataset<TimeTuple<decimal>>()
-        {
-            Id = $"{StakePrefix}{s.ContractAddress}",
-            Fill = false,
-            BorderWidth = 2,
-            PointRadius = 4,
-            PointHoverRadius = 6,
-            PointBorderWidth = 1,
-            PointHoverBorderWidth = 1,
-            SteppedLine = SteppedLine.False,
-            BorderDash = new int[] { 3, 1 },
-            BorderDashOffset = 1,
-            LineTension = 0,
-            Label = $"Staked ({UserSettings.Funds.First(kvp => kvp.Value.ContractAddress == s.ContractAddress).Key})",
-            BackgroundColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Symbol.ICAP)),
-            BorderColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Symbol.ICAP)),
-            PointHitRadius = 8
-        }));
+        datasets.AddRange(Stakes
+            .Select(x => x.ContractAddress)
+            .Distinct()
+            .Select(addr => new LineDataset<TimeTuple<decimal>>()
+            {
+                Id = $"{StakePrefix}{addr}",
+                Fill = false,
+                BorderWidth = 2,
+                PointRadius = 4,
+                PointHoverRadius = 6,
+                PointBorderWidth = 1,
+                PointHoverBorderWidth = 1,
+                SteppedLine = SteppedLine.False,
+                BorderDash = new int[] { 3, 1 },
+                BorderDashOffset = 1,
+                LineTension = 0,
+                Label = $"Staked ({UserSettings.Funds.First(kvp => kvp.Value.ContractAddress.Equals(addr, StringComparison.OrdinalIgnoreCase)).Key})",
+                BackgroundColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Symbol.ICAP)),
+                BorderColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Symbol.ICAP)),
+                PointHitRadius = 8
+            }));
 
         foreach (var dataset in datasets)
         {
@@ -274,22 +277,22 @@
             if (dataset.Id.StartsWith(StakePrefix))
             {
                 var total = Stakes
-                    .Where(x =>
-                        x.ContractAddress.Equals(fund.Token.Address, StringComparison.OrdinalIgnoreCase))
-                    .OrderBy(t => t.StakedAt)
-                    .TakeWhile(t => t.StakedAt < StartDate)
-                    .Sum(t => t.Quantity);
+                    .Where(s =>
+                        s.ContractAddress.Equals(fund.Token.Address, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(s => s.ConfirmedAt)
+                    .TakeWhile(s => s.ConfirmedAt < StartDate)
+                    .Sum(s => s.Change);
 
                 foreach (var stake in GetDrawableStakes(fund))
                 {
                     if (total == default)
                     {
-                        dataset.Add(new TimeTuple<decimal>(new Moment(stake.StakedAt), total));
+                        dataset.Add(new TimeTuple<decimal>(new Moment(stake.ConfirmedAt), total));
                     }
 
-                    total += stake.Quantity;
+                    total += stake.Change;
 
-                    dataset.Add(new TimeTuple<decimal>(new Moment(stake.StakedAt), total));
+                    dataset.Add(new TimeTuple<decimal>(new Moment(stake.ConfirmedAt), total));
                 }
 
                 dataset.Add(new TimeTuple<decimal>(new Moment(EndDate.Value.UtcDateTime), total));

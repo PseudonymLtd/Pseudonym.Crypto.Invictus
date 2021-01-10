@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus
 {
-    public sealed class InvictusFund
+    public sealed class InvictusFund : IInvictusFund
     {
         [JsonProperty("name")]
         public string Name { get; set; }
@@ -20,7 +22,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus
         [JsonProperty("nav_per_token")]
         public string NetAssetValuePerToken { get; set; }
 
-        [JsonProperty("assets")]
-        public IReadOnlyList<InvictusAsset> Assets { get; set; } = new List<InvictusAsset>();
+        [JsonIgnore]
+        public IReadOnlyList<InvictusAsset> Assets => new List<InvictusAsset>();
+
+        [JsonIgnore]
+        Symbol IInvictusFund.Symbol => Enum.Parse<Symbol>(Symbol);
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 using Pseudonym.Crypto.Invictus.Shared.Models;
 using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
@@ -11,6 +12,8 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
 {
     public sealed class BusinessTransaction
     {
+        private const string ZeroAddress = "0x0000000000000000000000000000000000000000";
+
         [Required]
         public string Hash { get; set; }
 
@@ -48,13 +51,18 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
         public decimal GasUsed { get; set; }
 
         [Required]
-        public TransferAction TransferAction { get; set; }
-
-        [Required]
         public IReadOnlyList<BusinessOperation> Operations { get; set; }
 
         [Required]
         public BusinessPrice Price { get; set; }
+
+        [Required]
+        public TransferAction TransferAction => Operations.LastOrDefault(
+            x =>
+                x.Contract.Address.Equals(ContractAddress, StringComparison.OrdinalIgnoreCase) &&
+                x.TransferAction != TransferAction.None)
+            ?.TransferAction
+            ?? TransferAction.None;
 
         public ITrade GetTrade(ApiFund fund, IUserSettings settings)
         {
@@ -69,19 +77,26 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
             {
                 return new BusinessTrade()
                 {
+                    Date = ConfirmedAt,
                     IsTradeable = fund.Market.IsTradeable,
                     IsInbound = IsInbound(),
-                    Quantity = GetTransferQuantity(TransferAction),
+                    Quantity = GetTransferQuantity(TransferAction, settings),
                     NetCurrentPricePerToken = fund.Nav.ValuePerToken,
                     NetSnapshotPricePerToken = Price.NetAssetValuePerToken,
                     MarketCurrentPricePerToken = fund.Market.IsTradeable
                         ? fund.Market.PricePerToken
                         : default(decimal?),
                     MarketSnapshotPricePerToken = fund.Market.IsTradeable
-                        ? GetTransferPricePerToken(TransferAction)
+                        ? GetTransferPricePerToken(TransferAction, settings)
                         : default(decimal?),
-                    IsStake = Recipient.Equals(settings.StakingAddress, StringComparison.OrdinalIgnoreCase),
-                    IsOwned = settings.SecondaryWalletAddresses.Contains(Recipient) || settings.SecondaryWalletAddresses.Contains(Sender)
+                    IsStakeLockup = Recipient.Equals(settings.StakingAddress, StringComparison.OrdinalIgnoreCase),
+                    IsStakeRelease = Operations.Any(x =>
+                        x.Type == OperationTypes.Transfer &&
+                        x.Sender.Equals(settings.StakingAddress, StringComparison.OrdinalIgnoreCase)),
+                    IsOwned = settings.SecondaryWalletAddresses.Contains(Recipient) || settings.SecondaryWalletAddresses.Contains(Sender),
+                    IsBurn = Operations.Any(x =>
+                        x.Contract.Address.Equals(ContractAddress, StringComparison.OrdinalIgnoreCase) &&
+                        x.Recipient.Equals(ZeroAddress, StringComparison.OrdinalIgnoreCase))
                 };
             }
             else
@@ -104,6 +119,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
 
                 return new BusinessSwap()
                 {
+                    Date = ConfirmedAt,
                     InboundSymbol = IsOutboundEtherSwap()
                         ? "ETH"
                         : inboundSwap.Contract.Symbol,
@@ -123,8 +139,10 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                     MarketSnapshotPricePerToken = fund.Market.IsTradeable
                         ? fundOp.PricePerToken
                         : default(decimal?),
-                    IsStake = false,
-                    IsOwned = false
+                    IsStakeLockup = false,
+                    IsStakeRelease = false,
+                    IsOwned = false,
+                    IsBurn = false
                 };
             }
             else
@@ -135,7 +153,9 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
 
         public bool IsInbound()
         {
-            var lastOperation = Operations.LastOrDefault();
+            var lastOperation = Operations
+                .Where(x => x.Type == OperationTypes.Transfer)
+                .LastOrDefault();
 
             return lastOperation != null &&
                 lastOperation.TransferAction == TransferAction.Inbound &&
@@ -152,7 +172,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
         public bool IsTokenSwap() => IsOutboundTokenSwap() || IsInboundTokenSwap();
 
         public bool IsInboundTokenSwap() =>
-            TransferAction == TransferAction.Outbound &&
+            TransferAction == TransferAction.Inbound &&
             Operations.Any(o =>
                 o.TransferAction == TransferAction.Outbound &&
                 o.Contract.Address != ContractAddress) &&
@@ -172,7 +192,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
         public bool IsEtherSwap() => IsOutboundEtherSwap() || IsInboundEtherSwap();
 
         public bool IsInboundEtherSwap() =>
-            TransferAction == TransferAction.Outbound &&
+            TransferAction == TransferAction.Inbound &&
             Eth > 0 &&
             Operations.Any(o =>
                 o.TransferAction == TransferAction.Inbound &&
@@ -187,56 +207,66 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                 o.TransferAction == TransferAction.None &&
                 o.Contract.Symbol == "WETH");
 
-        public decimal GetTransferPricePerToken(TransferAction action)
+        public decimal GetTransferPricePerToken(TransferAction action, IUserSettings userSettings)
         {
             var transfers = Operations
                 .Where(o =>
                     o.TransferAction == action &&
                     o.Contract.Address == ContractAddress);
 
+            var pricePerToken = default(decimal?);
+
             switch (action)
             {
                 case TransferAction.Inbound:
-                    return transfers.LastOrDefault()?.PricePerToken ?? 0;
+                    pricePerToken = transfers
+                        .LastOrDefault(x => x.Recipient.Equals(userSettings.WalletAddress, StringComparison.OrdinalIgnoreCase))
+                        ?.PricePerToken;
+                    break;
                 case TransferAction.Outbound:
-                    return transfers.FirstOrDefault()?.PricePerToken ?? 0;
-                default:
-                    if (Operations.Count == 1 &&
-                        Operations.Single().TransferAction != TransferAction.None)
-                    {
-                        return Operations.Single().PricePerToken;
-                    }
-                    else
-                    {
-                        return 0;
-                    }
+                    pricePerToken = transfers
+                        .FirstOrDefault(x => x.Sender.Equals(userSettings.WalletAddress, StringComparison.OrdinalIgnoreCase))
+                        ?.PricePerToken;
+                    break;
             }
+
+            if (!pricePerToken.HasValue)
+            {
+                pricePerToken = transfers.LastOrDefault()?.PricePerToken ?? decimal.Zero;
+            }
+
+            return pricePerToken ?? decimal.Zero;
         }
 
-        public decimal GetTransferQuantity(TransferAction action)
+        public decimal GetTransferQuantity(TransferAction action, IUserSettings userSettings)
         {
             var transfers = Operations
                 .Where(o =>
                     o.TransferAction == action &&
                     o.Contract.Address == ContractAddress);
 
+            var pricePerToken = default(decimal?);
+
             switch (action)
             {
                 case TransferAction.Inbound:
-                    return transfers.LastOrDefault()?.Quantity ?? 0;
+                    pricePerToken = transfers
+                        .Where(x => x.Recipient.Equals(userSettings.WalletAddress, StringComparison.OrdinalIgnoreCase))
+                        .Sum(x => x.Quantity);
+                    break;
                 case TransferAction.Outbound:
-                    return transfers.FirstOrDefault()?.Quantity ?? 0;
-                default:
-                    if (Operations.Count == 1 &&
-                        Operations.Single().TransferAction != TransferAction.None)
-                    {
-                        return Operations.Single().Quantity;
-                    }
-                    else
-                    {
-                        return 0;
-                    }
+                    pricePerToken = transfers
+                        .Where(x => x.Sender.Equals(userSettings.WalletAddress, StringComparison.OrdinalIgnoreCase))
+                        .Sum(x => x.Quantity);
+                    break;
             }
+
+            if (!pricePerToken.HasValue)
+            {
+                pricePerToken = transfers.Sum(x => x.Quantity);
+            }
+
+            return pricePerToken ?? decimal.Zero;
         }
 
         public BusinessOperation GetSwap(TransferAction action)

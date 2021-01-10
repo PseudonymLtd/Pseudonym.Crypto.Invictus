@@ -63,10 +63,10 @@ else
             }
             else
             {
-                var asset = Fund.Assets.SingleOrDefault(a => a.Coin.Name.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
+                var asset = Fund.Assets.SingleOrDefault(a => a.Holding.Name.Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
                 if (asset != null)
                 {
-                    Runtime.InvokeAsync<object>("open", asset.Coin.Links.Link.OriginalString, "_blank")
+                    Runtime.InvokeAsync<object>("open", asset.Holding.Links.Link.OriginalString, "_blank")
                         .GetAwaiter()
                         .GetResult();
                 }
@@ -134,10 +134,10 @@ else
 
         foreach (var asset in Fund.Assets)
         {
-            dataSet.Data.Add((double)Math.Round(asset.Value, 2));
+            dataSet.Data.Add((double)Math.Round(asset.Total, 2));
 
-            var symbol = Enum.IsDefined(typeof(Symbol), asset.Coin.Symbol)
-                ? Enum.Parse<Symbol>(asset.Coin.Symbol)
+            var symbol = Enum.IsDefined(typeof(Symbol), asset.Holding.Symbol)
+                ? Enum.Parse<Symbol>(asset.Holding.Symbol)
                 : default(Symbol?);
 
             if (symbol.HasValue && UserSettings.Funds.ContainsKey(symbol.Value))
@@ -148,11 +148,11 @@ else
             }
             else
             {
-                colours.Add(string.IsNullOrEmpty(asset.Coin.HexColour)
+                colours.Add(string.IsNullOrEmpty(asset.Holding.HexColour)
                     ? InvictusColours.RandomColor()
-                    : ColorTranslator.FromHtml(asset.Coin.HexColour));
+                    : ColorTranslator.FromHtml(asset.Holding.HexColour));
 
-                config.Data.Labels.Add(asset.Coin.Name);
+                config.Data.Labels.Add(asset.Holding.Name);
             }
         }
 

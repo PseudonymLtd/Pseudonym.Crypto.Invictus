@@ -76,6 +76,7 @@
                     {
                         new LinearCartesianAxis()
                         {
+                            ID = "Price",
                             Ticks = new LinearCartesianTicks()
                             {
                                 BeginAtZero = true,
@@ -193,7 +194,10 @@
     {
         AppState.Assign(async () => await DrawAsync(false));
 
-        navDataset.Label = $"Nav ({UserSettings.CurrencyCode.GetSymbol()})";
+        var priceAxis = config.Options.Scales.yAxes.OfType<LinearCartesianAxis>().Single(x => x.ID == "Price");
+        priceAxis.ScaleLabel.LabelString = $"Price {UserSettings.CurrencyCode.GetSymbol()}";
+
+        navDataset.Label = "Nav";
         navDataset.BackgroundColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Fund.Token.Symbol));
         navDataset.BorderColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Fund.Token.Symbol));
 
@@ -201,7 +205,7 @@
 
         if (Fund.Market.IsTradeable)
         {
-            marketDataset.Label = $"Price ({UserSettings.CurrencyCode.GetSymbol()})";
+            marketDataset.Label = "Market";
 
             config.Data.Datasets.Add(marketDataset);
         }

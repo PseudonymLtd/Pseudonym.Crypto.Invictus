@@ -52,9 +52,5 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [Required]
         [JsonProperty("gas_used")]
         public decimal GasUsed { get; set; }
-
-        [Required]
-        [JsonProperty("transfer_action")]
-        public TransferAction TransferAction { get; set; }
     }
 }

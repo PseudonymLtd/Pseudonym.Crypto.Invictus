@@ -4,41 +4,41 @@
 <Header Fund="Investment.Fund" Link="Link" ShowGraph="ShowGraph">
     <Content>
         <div class="container-fluid" style="max-width: none">
-            <div class="row">
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+            <div class="row justify-content-sm-between" style="justify-content: space-evenly;">
+                <div class="col-xs-2 pr-sm-5 py-1">
                     <small style="font-weight: bold; color: #cf2127;">Token</small>
                     <div>
                         <Token Symbol="@Investment.Fund.Token.Symbol.ToString()" ContractAddress="@Investment.Fund.Token.Address" />
                     </div>
                 </div>
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                <div class="col-xs-2 px-2 pl-sm-0 pr-sm-5 py-1">
                     <small style="font-weight: bold; color: #cf2127;">Held</small>
                     <div>
-                        <LargeNumber Value="Investment.Held" Decimals="2" />
+                        <LargeNumber Value="Investment.Held" ShowZeroValue="true" Decimals="2" />
                     </div>
                 </div>
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                <div class="col-xs-2 px-2 pl-sm-0 pr-sm-5 py-1">
                     <small style="font-weight: bold; color: #cf2127;">Net Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                     <div>
-                        <Money Value="Investment.RealValue" CurrencyCode="UserSettings.CurrencyCode" />
+                        <Money Value="Investment.RealValue" ShowZeroValue="true" CurrencyCode="UserSettings.CurrencyCode" />
                         @if (NetProfit.HasValue)
                         {
                             <ProfitTag Value="NetProfit.Value" Decimals="2" />
                         }
                     </div>
                 </div>
-                <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                <div class="col-xs-2 @(Investment.Fund.Market.IsTradeable ? "px-2 pl-sm-0" : string.Empty) pr-sm-5 py-1">
                     <small style="font-weight: bold; color: #cf2127;">Share</small>
                     <div>
-                        <LargeNumber Value="Investment.Share" Decimals="2" Suffix="%" />
+                        <LargeNumber Value="Investment.Share" ShowZeroValue="true" Decimals="2" Suffix="%" />
                     </div>
                 </div>
                 @if (Investment.Fund.Market.IsTradeable)
                 {
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <div class="col-xs-2 @(Investment.SubInvestments.Any() ? "px-2 pl-sm-0" : string.Empty) pr-sm-5 py-1">
                         <small style="font-weight: bold; color: #cf2127;">Market Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                         <div>
-                            <Money Value="Investment.MarketValue ?? 0" CurrencyCode="UserSettings.CurrencyCode" />
+                            <Money Value="Investment.MarketValue ?? 0" ShowZeroValue="true" CurrencyCode="UserSettings.CurrencyCode" />
                             @if (MarketProfit.HasValue)
                             {
                                 <ProfitTag Value="MarketProfit.Value" Decimals="2" />
@@ -48,10 +48,10 @@
                 }
                 @if (Investment.SubInvestments.Any())
                 {
-                    <div class="col-xs-auto col-sm-auto col-md-auto col-lg-auto col-xl-auto" style="min-width: 200px; padding-bottom: 15px;">
+                    <div class="col-xs-2 pr-sm-5 py-1">
                         <small style="font-weight: bold; color: #cf2127;">Additional Value (@UserSettings.CurrencyCode.GetSymbol())</small>
                         <div>
-                            <Money Value="Investment.SubInvestments.Sum(si => si.MarketValue)" CurrencyCode="UserSettings.CurrencyCode" />
+                            <Money Value="Investment.SubInvestments.Sum(si => si.MarketValue)" ShowZeroValue="true" CurrencyCode="UserSettings.CurrencyCode" />
                             <Help Title="Additional Value" Content="Additional Value is the combined total of any assets this fund holds that you also hold as an individual investment external to the fund." />
                         </div>
                     </div>

@@ -11,7 +11,7 @@
                 case CurrencyCode.AED:
                     return "د.إ";
                 case CurrencyCode.ARS:
-                    return "?";
+                    return "$";
                 case CurrencyCode.AUD:
                     return "$";
                 case CurrencyCode.BGN:

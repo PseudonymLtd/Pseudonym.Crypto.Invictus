@@ -13,23 +13,20 @@ using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Clients
 {
-    internal sealed class InvictusClient : IInvictusClient
+    internal sealed class InvictusClient : BaseHttpClient, IInvictusClient
     {
         private readonly AppSettings appSettings;
-        private readonly IScopedCancellationToken scopedCancellationToken;
-        private readonly IHttpClientFactory httpClientFactory;
 
         public InvictusClient(
             IOptions<AppSettings> appSettings,
             IScopedCancellationToken scopedCancellationToken,
             IHttpClientFactory httpClientFactory)
+            : base(scopedCancellationToken, httpClientFactory)
         {
             this.appSettings = appSettings.Value;
-            this.scopedCancellationToken = scopedCancellationToken;
-            this.httpClientFactory = httpClientFactory;
         }
 
-        public async IAsyncEnumerable<InvictusFund> ListFundsAsync()
+        public async IAsyncEnumerable<IInvictusFund> ListFundsAsync()
         {
             var response = await GetAsync<ListFundsResponse>("/v2/funds");
 
@@ -46,58 +43,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             {
                 var response = await GetAsync<ListPerformanceResponse>(
                     $"/v2/funds/{fundInfo.FundName}/history?start={from.ToISO8601String()}&end={to.AddDays(1).ToISO8601String()}");
-
-                if (response.Performance.Any())
-                {
-                    var start = response.Performance.Min(x => x.Date.Date);
-                    var end = response.Performance.Max(x => x.Date.Date);
-
-                    while (start < end)
-                    {
-                        if (!response.Performance.Any(x => x.Date.Date == start))
-                        {
-                            var previousDate = response.Performance
-                                .Where(x => x.Date.Date < start)
-                                .OrderByDescending(x => x.Date)
-                                .FirstOrDefault();
-
-                            var nextDate = response.Performance
-                                .Where(x => x.Date.Date > start)
-                                .OrderBy(x => x.Date)
-                                .FirstOrDefault();
-
-                            if (previousDate != null && nextDate == null)
-                            {
-                                response.Performance.Add(new InvictusPerformance()
-                                {
-                                    Date = new DateTimeOffset(start.AddHours(12), TimeSpan.Zero),
-                                    NetValue = previousDate.NetValue,
-                                    NetAssetValuePerToken = previousDate.NetAssetValuePerToken
-                                });
-                            }
-                            else if (previousDate == null && nextDate != null)
-                            {
-                                response.Performance.Add(new InvictusPerformance()
-                                {
-                                    Date = new DateTimeOffset(start.AddHours(12), TimeSpan.Zero),
-                                    NetValue = nextDate.NetValue,
-                                    NetAssetValuePerToken = nextDate.NetAssetValuePerToken
-                                });
-                            }
-                            else
-                            {
-                                response.Performance.Add(new InvictusPerformance()
-                                {
-                                    Date = new DateTimeOffset(start.AddHours(12), TimeSpan.Zero),
-                                    NetValue = ((nextDate.NetValue.FromPythonString() + previousDate.NetValue.FromPythonString()) / 2).ToString(),
-                                    NetAssetValuePerToken = ((nextDate.NetAssetValuePerToken.FromPythonString() + previousDate.NetAssetValuePerToken.FromPythonString()) / 2).ToString()
-                                });
-                            }
-                        }
-
-                        start = start.AddDays(1);
-                    }
-                }
 
                 foreach (var perfSet in response.Performance
                     .Where(x => x.Date >= from && x.Date <= to)
@@ -118,39 +63,28 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             }
         }
 
-        public async Task<InvictusFund> GetFundAsync(Symbol symbol)
+        public async Task<IInvictusFund> GetFundAsync(Symbol symbol)
         {
             var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
             if (fundInfo != null)
             {
-                var fund = await GetAsync<InvictusFund>($"/v2/funds/{fundInfo.FundName}/nav");
+                var date = DateTime.UtcNow;
 
-                return Format(fund);
+                var fund = await GetAsync<GetFundResponse>(
+                    $"/v2/funds/{fundInfo.FundName}/assets-history?start={date.AddHours(-1).ToISO8601String()}&end={date.AddHours(1).ToISO8601String()}&points=1&summary=false");
+
+                var data = fund.Data.Last();
+
+                data.Symbol = symbol;
+                data.Name = symbol == Symbol.C10
+                    ? $"{fundInfo.FundName} Hedged"
+                    : fundInfo.FundName;
+
+                return data;
             }
             else
             {
                 throw new PermanentException($"Could not find invictus fund with symbol `{symbol}`");
-            }
-        }
-
-        private async Task<TResponse> GetAsync<TResponse>(string url)
-            where TResponse : class, new()
-        {
-            try
-            {
-                using var client = httpClientFactory.CreateClient(nameof(InvictusClient));
-
-                var response = await client.GetAsync(new Uri(url, UriKind.Relative), scopedCancellationToken.Token);
-
-                response.EnsureSuccessStatusCode();
-
-                var json = await response.Content.ReadAsStringAsync();
-
-                return json.Deserialize<TResponse>();
-            }
-            catch (HttpRequestException e)
-            {
-                throw new TransientException($"{GetType().Name} Error calling GET {url}", e);
             }
         }
 

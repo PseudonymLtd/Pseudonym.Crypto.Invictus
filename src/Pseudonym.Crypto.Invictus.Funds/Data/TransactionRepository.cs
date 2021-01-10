@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -148,14 +149,24 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             return GetDateAsync(address, false);
         }
 
-        public IAsyncEnumerable<DataTransaction> ListInboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address, EthereumAddress? filterAddress = null)
+        public IAsyncEnumerable<DataTransaction> ListInboundTransactionsAsync(
+            EthereumAddress contractAddress,
+            EthereumAddress address,
+            EthereumAddress? filterAddress = null,
+            DateTime? from = null,
+            DateTime? to = null)
         {
-            return ListAddressTransactionsAsync(contractAddress, address, false, filterAddress);
+            return ListAddressTransactionsAsync(contractAddress, address, false, filterAddress, from, to);
         }
 
-        public IAsyncEnumerable<DataTransaction> ListOutboundTransactionsAsync(EthereumAddress contractAddress, EthereumAddress address, EthereumAddress? filterAddress = null)
+        public IAsyncEnumerable<DataTransaction> ListOutboundTransactionsAsync(
+            EthereumAddress contractAddress,
+            EthereumAddress address,
+            EthereumAddress? filterAddress = null,
+            DateTime? from = null,
+            DateTime? to = null)
         {
-            return ListAddressTransactionsAsync(contractAddress, address, true, filterAddress);
+            return ListAddressTransactionsAsync(contractAddress, address, true, filterAddress, from, to);
         }
 
         protected sealed override DataTransaction Map(Dictionary<string, AttributeValue> attributes)
@@ -169,7 +180,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                 Sender = attributes[nameof(DataTransaction.Sender)].S,
                 Recipient = attributes[nameof(DataTransaction.Recipient)].S,
                 Input = attributes[nameof(DataTransaction.Input)].S,
-                ConfirmedAt = DateTime.Parse(attributes[nameof(DataTransaction.ConfirmedAt)].S),
+                ConfirmedAt = DateTimeOffset.Parse(attributes[nameof(DataTransaction.ConfirmedAt)].S, styles: DateTimeStyles.AssumeUniversal).UtcDateTime,
                 Confirmations = long.Parse(attributes[nameof(DataTransaction.Confirmations)].N),
                 Eth = decimal.Parse(attributes[nameof(DataTransaction.Eth)].N),
                 GasLimit = long.Parse(attributes[nameof(DataTransaction.GasLimit)].N),
@@ -181,7 +192,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             EthereumAddress contractAddress,
             EthereumAddress address,
             bool outbound,
-            EthereumAddress? filterAddress = null)
+            EthereumAddress? filterAddress = null,
+            DateTime? from = null,
+            DateTime? to = null)
         {
             var lastEvaluatedKey = new Dictionary<string, AttributeValue>();
             var attributeName = outbound
@@ -214,6 +227,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                         [$":{attributeName}Val"] = new AttributeValue(address),
                         [$":{nameof(DataTransaction.Address)}Val"] = new AttributeValue(contractAddress)
                     },
+                    Limit = PageSize,
                     ExclusiveStartKey = lastEvaluatedKey.Any()
                         ? lastEvaluatedKey
                         : null
@@ -234,7 +248,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                         !filterAddress.HasValue ||
                         filterAddress.Value.Address.Equals(x[filterAttributeName].S, StringComparison.OrdinalIgnoreCase)))
                 {
-                    yield return Map(attributes);
+                    var transaction = Map(attributes);
+
+                    if (!from.HasValue ||
+                        !to.HasValue ||
+                        (from.HasValue && to.HasValue &&
+                         from <= transaction.ConfirmedAt &&
+                         to >= transaction.ConfirmedAt))
+                    {
+                        yield return transaction;
+                    }
                 }
 
                 if (!lastEvaluatedKey.Any())

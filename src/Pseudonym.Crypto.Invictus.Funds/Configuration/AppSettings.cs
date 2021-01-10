@@ -9,7 +9,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 
         public string ServiceName { get; set; }
 
-        public bool CachingEnabled { get; set; }
+        public bool CacheTransactions { get; set; }
+
+        public bool CacheStakePower { get; set; }
+
+        public bool CacheFundPerformance { get; set; }
 
         public string Version { get; set; }
 
@@ -25,8 +29,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 
         public string StakingAddress { get; set; }
 
+        public List<StakeSettings> Stakes { get; set; } = new List<StakeSettings>();
+
         public List<FundSettings> Funds { get; set; } = new List<FundSettings>();
 
         public List<AssetSettings> Assets { get; set; } = new List<AssetSettings>();
+
+        public List<HoldingSettings> Holdings { get; set; } = new List<HoldingSettings>();
     }
 }

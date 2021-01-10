@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Models
 {
-    public sealed class ApiCoinLinks : ApiCollection<Uri>
+    public sealed class ApiHoldingLinks : ApiCollection<Uri>
     {
         [JsonIgnore]
         public Uri Link => this[nameof(Link)];

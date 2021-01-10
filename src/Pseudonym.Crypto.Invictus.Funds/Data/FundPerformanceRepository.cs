@@ -62,7 +62,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
                     new QueryRequest()
                     {
                         TableName = TableName,
-                        ScanIndexForward = true,
+                        ScanIndexForward = false,
                         Select = Select.ALL_ATTRIBUTES,
                         KeyConditionExpression = string.Format(
                             "#{0} = :{0}Val AND #{1} >= :{2}Val",
@@ -149,7 +149,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Data
             return new DataFundPerformance()
             {
                 Address = attributes[nameof(DataFundPerformance.Address)].S,
-                Date = DateTime.Parse(attributes[nameof(DataFundPerformance.Date)].S),
+                Date = DateTimeOffset.Parse(attributes[nameof(DataFundPerformance.Date)].S, styles: DateTimeStyles.AssumeUniversal).UtcDateTime,
                 Nav = decimal.Parse(attributes[nameof(DataFundPerformance.Nav)].N),
                 Price = decimal.Parse(attributes[nameof(DataFundPerformance.Price)].N),
                 MarketCap = decimal.Parse(attributes[nameof(DataFundPerformance.MarketCap)].N),

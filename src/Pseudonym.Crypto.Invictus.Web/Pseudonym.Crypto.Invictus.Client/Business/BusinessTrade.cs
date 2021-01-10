@@ -1,9 +1,12 @@
-﻿using Pseudonym.Crypto.Invictus.Web.Client.Business.Abstractions;
+﻿using System;
+using Pseudonym.Crypto.Invictus.Web.Client.Business.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Web.Client.Business
 {
     public class BusinessTrade : ITrade
     {
+        public DateTime Date { get; set; }
+
         public decimal Quantity { get; set; }
 
         public decimal SignedQuantity => IsInbound
@@ -17,6 +20,8 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
         public decimal NetCurrentPrice => NetCurrentPricePerToken * Quantity;
 
         public decimal NetCurrentPricePerToken { get; set; }
+
+        public decimal BurnGain => NetCurrentPrice - MarketSnapshotPrice ?? decimal.Zero;
 
         public decimal NetDiff => IsInbound
             ? NetCurrentPrice - NetSnapshotPrice
@@ -46,8 +51,31 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
 
         public bool IsTradeable { get; set; }
 
-        public bool IsStake { get; set; }
+        public bool IsStake => IsStakeLockup || IsStakeRelease;
+
+        public bool IsStakeLockup { get; set; }
+
+        public bool IsStakeRelease { get; set; }
 
         public bool IsOwned { get; set; }
+
+        public bool IsBurn { get; set; }
+
+        public string GetTradeName()
+        {
+            return IsInbound
+                ? IsOwned
+                    ? "Transfer In"
+                    : IsStakeRelease
+                        ? "Stake Withdrawal"
+                        : "Buy"
+                : IsOwned
+                    ? "Transfer Out"
+                    : IsStakeLockup
+                        ? "Stake Lockup"
+                        : IsBurn
+                            ? "Burn"
+                            : "Sell";
+        }
     }
 }

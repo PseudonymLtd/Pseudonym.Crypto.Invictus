@@ -10,7 +10,6 @@ using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Controllers.Filters;
-using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Models;
@@ -51,27 +50,28 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         [HttpGet]
         [Route("{symbol}")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(ApiFund), StatusCodes.Status200OK)]
-        public async IAsyncEnumerable<ApiStake> GetStakesByFund([Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        [ProducesResponseType(typeof(ApiStake), StatusCodes.Status200OK)]
+        public async Task<ApiStake> GetStakes(
+            [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
-            await foreach (var stake in stakeService
-                .ListStakesAsync(symbol, queryFilter.CurrencyCode)
-                .WithCancellation(scopedCancellationToken.Token))
-            {
-                yield return MapStake(stake);
-            }
+            var stake = await stakeService.GetStakeAsync(symbol, queryFilter.CurrencyCode);
+
+            return MapStake(stake);
         }
 
         [HttpGet]
-        [Route("{symbol}/{hash}")]
+        [Route("{symbol}/performance")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(ApiTransactionSet), StatusCodes.Status200OK)]
-        public async Task<ApiStake> GetTransaction(
-            [Required, FromRoute] Symbol symbol, [Required, FromRoute, TransactionHash] string hash, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        [ProducesResponseType(typeof(List<ApiStakingPower>), StatusCodes.Status200OK)]
+        public async IAsyncEnumerable<ApiStakingPower> ListPerformance(
+            [Required, FromRoute] Symbol symbol, [FromQuery] ApiPerformanceQueryFilter queryFilter)
         {
-            var stake = await stakeService.GetStakeAsync(symbol, new EthereumTransactionHash(hash), queryFilter.CurrencyCode);
-
-            return MapStake(stake);
+            await foreach (var stakingPower in stakeService
+                .ListStakePowersAsync(symbol, queryFilter.Mode, queryFilter.FromDate, queryFilter.ToDate, queryFilter.CurrencyCode)
+                .WithCancellation(scopedCancellationToken.Token))
+            {
+                yield return MapStakingPower(stakingPower);
+            }
         }
     }
 }

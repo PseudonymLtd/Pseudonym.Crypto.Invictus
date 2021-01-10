@@ -1,0 +1,59 @@
+﻿@inject IAppState AppState
+@inject IUserSettings UserSettings
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-3 py-1 text-mob-sm">
+            <Date Value="Event.ConfirmedAt" />
+        </div>
+        <div class="col-3 py-1">
+            <img src="images/funds/@(Fund.Token.Symbol).png" width="32" height="32">
+            <span>@Fund.Token.Symbol</span>
+            <ProfitTag Value="Event.Change" Decimals="2" />
+        </div>
+        <div class="col-3 py-1 text-mob-sm">
+            @if (Event.Type == StakeEventType.Lockup)
+            {
+                <Money Value="Event.Lock.Quantity * Fund.Nav.ValuePerToken" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
+            }
+            else
+            {
+                <Money Value="Event.Release.Quantity * Fund.Nav.ValuePerToken" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
+                @if (Event.Release.FeeQuantity.HasValue)
+                {
+                    <ProfitTag Value="-(Event.Release.FeeQuantity.Value * Fund.Nav.ValuePerToken)" Suffix=" (Fees)" Decimals="2" />
+                }
+            }
+        </div>
+        <div class="col-3 py-1 text-mob-sm">
+            @switch (Event.Type)
+            {
+                case StakeEventType.Lockup:
+                    <TooltipItem DisplayText="@($"Lock {Event.Lock.Duration.Days} Days")" CaptionText="@($"Expires {Event.Lock.ExpiresAt.ToString("F", DateTimeFormatInfo.InvariantInfo)}")" />
+                    break;
+                case StakeEventType.EarlyWithdrawal:
+                    <span>Early Withdrawal</span>
+                    break;
+                default:
+                    <span>@Event.Type</span>
+                    break;
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public ApiFund Fund { get; set; }
+
+    [Parameter]
+    public ApiStakeEvent Event { get; set; }
+
+    public string FundImageName => $"{Fund.Token.Symbol}.png";
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(StateHasChanged);
+    }
+}

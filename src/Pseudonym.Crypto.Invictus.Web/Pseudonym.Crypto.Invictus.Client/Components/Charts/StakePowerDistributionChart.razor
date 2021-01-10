@@ -1,0 +1,145 @@
+﻿@using ChartJs.Blazor.Charts
+@using ChartJs.Blazor.ChartJS.PieChart
+@inject IAppState AppState
+@inject NavigationManager NavigationManager
+
+@if (!config.Data.Datasets.Any())
+{
+    <Loading />
+}
+else
+{
+    <div style="
+        max-width: @($"{Width}px");
+        max-height: @($"{Height}px");
+        margin-bottom: 40px;
+        margin-left: auto;
+        margin-right: auto;">
+        <ChartJsPieChart Config="config" Width="Width" Height="Height" @ref="chart" />
+    </div>
+}
+
+@code {
+
+    private readonly PieConfig config;
+    private ChartJsPieChart chart;
+
+    public StakePowerDistributionChart()
+    {
+        config = new PieConfig();
+    }
+
+    [Parameter]
+    public int Height { get; set; } = 600;
+
+    [Parameter]
+    public int Width { get; set; } = 600;
+
+    [Parameter]
+    public string SubTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool IsHollow { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<ApiStakingPowerFund> StakingPowerFunds { get; set; }
+
+    [JSInvokable]
+    public void InstanceClickHandler(object sender, object args)
+    {
+        var clickData = JsonConvert.DeserializeObject<List<JPieClickData>>(args.ToString())
+            .FirstOrDefault();
+
+        if (clickData != null)
+        {
+            var stakingPowerFund = StakingPowerFunds.SingleOrDefault(i =>
+                i.Symbol.ToString().Equals(clickData.Model.Label, StringComparison.OrdinalIgnoreCase));
+
+            if (stakingPowerFund != null)
+            {
+                NavigationManager.NavigateTo($"/funds/{stakingPowerFund.Symbol}");
+            }
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(() => Draw(false));
+
+        config.Options = new PieOptions(IsHollow)
+        {
+            Responsive = true,
+            Tooltips = new Tooltips()
+            {
+                DisplayColors = true,
+            },
+            MaintainAspectRatio = true,
+            Title = new OptionsTitle()
+            {
+                Display = !string.IsNullOrEmpty(SubTitle),
+                Text = new IndexableOption<string>(SubTitle),
+                FontColor = ColorUtil.FromDrawingColor(Color.White)
+            },
+            Legend = new Legend()
+            {
+                Labels = new LegendLabelConfiguration()
+                {
+                    FontColor = ColorUtil.FromDrawingColor(Color.White)
+                }
+            },
+            Animation = new ArcAnimation()
+            {
+                AnimateRotate = true,
+                AnimateScale = true,
+                Duration = 1000,
+                Easing = Easing.EaseInOutCirc
+            },
+            ResponsiveAnimationDuration = 1000,
+            OnClick = new DotNetInstanceClickHandler(InstanceClickHandler)
+        };
+
+        Draw(true);
+    }
+
+    private void Draw(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            config.Data.Datasets.Clear();
+            config.Data.Labels.Clear();
+
+            StateHasChanged();
+        }
+
+        var colours = StakingPowerFunds
+            .Select(i => InvictusColours.GetByFund(i.Symbol))
+            .ToList();
+
+        var compiledColours = colours
+            .Select(c => ColorUtil.FromDrawingColor(c))
+            .ToArray();
+
+        var compiledHoverColours = colours
+            .Select(c => ColorUtil.ColorString(c.R, c.G, c.B, 0.5))
+            .ToArray();
+
+        var dataSet = new PieDataset()
+        {
+            BorderWidth = 2,
+            BackgroundColor = compiledColours,
+            BorderColor = compiledColours,
+            HoverBorderWidth = 2,
+            HoverBackgroundColor = compiledHoverColours,
+            HoverBorderColor = compiledColours,
+            BorderAlign = BorderAlign.Inner,
+            Weight = 1
+        };
+
+        dataSet.Data.AddRange(StakingPowerFunds.Select(i => (double)Math.Round(i.Power, 2)));
+
+        config.Data.Datasets.Add(dataSet);
+        config.Data.Labels.AddRange(StakingPowerFunds.Select(i => i.Symbol.ToString()));
+
+        StateHasChanged();
+    }
+}

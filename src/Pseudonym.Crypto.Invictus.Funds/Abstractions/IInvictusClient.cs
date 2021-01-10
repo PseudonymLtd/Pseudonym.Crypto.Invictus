@@ -8,10 +8,10 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
 {
     public interface IInvictusClient
     {
-        IAsyncEnumerable<InvictusFund> ListFundsAsync();
+        IAsyncEnumerable<IInvictusFund> ListFundsAsync();
 
         IAsyncEnumerable<InvictusPerformance> ListPerformanceAsync(Symbol symbol, DateTimeOffset from, DateTimeOffset to);
 
-        Task<InvictusFund> GetFundAsync(Symbol symbol);
+        Task<IInvictusFund> GetFundAsync(Symbol symbol);
     }
 }

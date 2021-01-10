@@ -6,12 +6,20 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
     public sealed class ApiAsset
     {
         [Required]
-        [JsonProperty("coin")]
-        public ApiCoin Coin { get; set; }
+        [JsonProperty("holding")]
+        public ApiHolding Holding { get; set; }
 
         [Required]
-        [JsonProperty("value")]
-        public decimal Value { get; set; }
+        [JsonProperty("quantity")]
+        public decimal Quantity { get; set; }
+
+        [Required]
+        [JsonProperty("price_per_token")]
+        public decimal PricePerToken { get; set; }
+
+        [Required]
+        [JsonProperty("total")]
+        public decimal Total { get; set; }
 
         [Required]
         [JsonProperty("share")]

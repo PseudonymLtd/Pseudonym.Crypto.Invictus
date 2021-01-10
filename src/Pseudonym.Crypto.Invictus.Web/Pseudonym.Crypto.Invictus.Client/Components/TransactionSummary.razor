@@ -26,20 +26,9 @@
                             {
                                 var trade = Transaction.GetTradeData(Fund, UserSettings);
 
-                                <span>
-                                    @(trade.IsInbound
-                                        ? trade.IsOwned
-                                            ? "Transfer In"
-                                            : "Buy"
-                                        : trade.IsOwned
-                                            ? "Transfer Out"
-                                            : trade.IsStake
-                                                ? "Stake"
-                                                : "Sell")
-                                </span>
+                                <span>@trade.GetTradeName()</span>
                                 <LargeNumber Value="trade.Quantity" Decimals="2" ShowZeroValue="true" />
                                 <small>@Fund.Token.Symbol</small>
-
                             }
                         }
                         else
@@ -81,11 +70,11 @@
                                 <Money Value="trade.NetSnapshotPrice" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
                                 @if (!trade.IsStake)
                                 {
-                                    <ProfitTag Value="trade.NetDiff" Decimals="2" />
+                                    <ProfitTag Value="@(trade.IsBurn ? trade.BurnGain : trade.NetDiff)" Decimals="2" />
                                 }
                             </span>
 
-                            if (trade.IsTradeable)
+                            if (trade.IsTradeable && !trade.IsBurn)
                             {
                                 <span>
                                     MKT

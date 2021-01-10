@@ -6,11 +6,9 @@ using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
 {
-    public interface IFundPerformanceRepository
+    public interface IFundPerformanceRepository : IRepository<DataFundPerformance>
     {
         Task<DataFundPerformance> GetPerformanceAsync(EthereumAddress contractAddress, DateTime timeStamp);
-
-        Task UploadItemsAsync(params DataFundPerformance[] perfs);
 
         IAsyncEnumerable<DataFundPerformance> ListPerformancesAsync(
             EthereumAddress contractAddress,

@@ -5,12 +5,12 @@
         <div class="media" style="margin-top: auto; margin-bottom: auto; padding-bottom: 6px; position: relative;">
             <img src="images/funds/@($"{Fund.Token.Symbol}.png")" class="mr-3" alt="@Fund.DisplayName">
             <h1 class="display-4">@Fund.DisplayName</h1>
-            <div class="text-align-mob-center">
-                <ValueBubble Type="Nav" Pricing="Fund.Nav" Decimals="2" Symbol="Fund.Token.Symbol" Suffix="%" />
+            <div class="text-align-mob-center" style="margin-left: 5px;">
+                <ValueBubble Type="Nav" Pricing="Fund.Nav" Decimals="2" Symbol="Fund.Token.Symbol" />
                 @if (Fund.Market.IsTradeable)
                 {
                     <span style="padding-left: 5px;">
-                        <ValueBubble Type="Mkt" Pricing="Fund.Market" Decimals="2" Suffix="%" />
+                        <ValueBubble Type="Mkt" Pricing="Fund.Market" Decimals="2" />
                     </span>
                 }
             </div>
@@ -19,8 +19,8 @@
                 <a class="badge @Fund.Token.Symbol.ToString().ToLower()" href="@Fund.Links.Fact" target="_blank">Fact</a>
             </div>
         </div>
-        <p class="lead text-mob-md">@Fund.Description</p>
-        <div class="media" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
+        <p class="lead text-mob-md text-justify text-sm-left">@Fund.Description</p>
+        <div class="media text-center text-sm-left" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
             @Content
         </div>
         @if (ShowGraph)

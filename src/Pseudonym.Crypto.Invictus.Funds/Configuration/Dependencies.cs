@@ -6,6 +6,8 @@
 
         public Dependency<DependencySettings> CoinGecko { get; set; }
 
+        public Dependency<DependencySettings> TheGraph { get; set; }
+
         public Dependency<ApiKeyDependencySettings> Ethplorer { get; set; }
 
         public Dependency<DependencySettings> Invictus { get; set; }

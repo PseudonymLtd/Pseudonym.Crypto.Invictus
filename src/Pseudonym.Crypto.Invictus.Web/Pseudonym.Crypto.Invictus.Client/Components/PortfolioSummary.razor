@@ -6,6 +6,9 @@
         <div class="container-fluid" style="max-width: none">
             <div class="row">
                 <div class="col py-1">
+                    <PortfolioDistributionChart Investments="Investments" IsHollow="true" />
+                </div>
+                <div class="col py-1">
                     <h1 class="display-4">Portfolio Breakdown</h1>
                     <p class="lead">
                         <EthAddress Address="@UserSettings.WalletAddress" HighlightOwnership="false" FontSize="24" />
@@ -20,7 +23,9 @@
                             </div>
                         </div>
                     </div>
-                    @foreach (var investment in Investments.OrderByDescending(x => x.RealValue))
+                    @foreach (var investment in Investments
+                       .Where(x => !x.Legacy)
+                       .OrderByDescending(x => x.RealValue))
                     {
                         <InvestmentBanner Investment="investment" />
                     }
@@ -36,9 +41,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="col py-1">
-                    <PortfolioDistributionChart Investments="Investments" IsHollow="true" />
-                </div>
             </div>
         </div>
     </div>
@@ -49,9 +51,9 @@
     [Parameter]
     public List<ApiInvestment> Investments { get; set; }
 
-    protected decimal TotalAssetValue => Investments.Sum(x => x.RealValue);
+    protected decimal TotalAssetValue => Investments.Where(x => !x.Legacy).Sum(x => x.RealValue);
 
-    protected decimal TotalMarketValue => Investments.Sum(x => x.MarketValue ?? 0);
+    protected decimal TotalMarketValue => Investments.Where(x => !x.Legacy).Sum(x => x.MarketValue ?? 0);
 
     protected override void OnInitialized()
     {

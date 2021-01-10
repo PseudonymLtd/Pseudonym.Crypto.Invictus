@@ -4,7 +4,7 @@
 <div class="container-fluid" style="max-width: none">
     <div class="row">
         <div class="col py-1">
-            <img src="images/funds/@FundImageName" class="mr-3" width="32" height="32">
+            <img src="images/funds/@(Investment.Fund.Token.Symbol).png" class="mr-3" width="32" height="32">
             <span>@Investment.Fund.Token.Symbol</span>
             @if (Investment.Held != default)
             {
@@ -14,10 +14,10 @@
             }
         </div>
         <div class="col py-1">
-            <Money Value="Investment.RealValue" CurrencyCode="UserSettings.CurrencyCode" />
+            <Money Value="Investment.RealValue" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" />
             @if (Investment.Fund.Market.IsTradeable)
             {
-                <span> / </span><Money Value="Investment.MarketValue ?? 0" CurrencyCode="UserSettings.CurrencyCode" />
+                <span> / </span><Money Value="Investment.MarketValue ?? 0" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" />
             }
         </div>
     </div>
@@ -26,8 +26,6 @@
 @code {
     [Parameter]
     public ApiInvestment Investment { get; set; }
-
-    protected string FundImageName => $"{Investment.Fund.Token.Symbol}.png";
 
     protected override void OnInitialized()
     {

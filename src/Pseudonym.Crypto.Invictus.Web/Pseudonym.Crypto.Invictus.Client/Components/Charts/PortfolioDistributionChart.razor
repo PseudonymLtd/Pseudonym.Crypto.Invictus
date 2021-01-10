@@ -42,7 +42,7 @@ else
     public bool IsHollow { get; set; }
 
     [Parameter]
-    public List<ApiInvestment> Investments { get; set; }
+    public IReadOnlyList<ApiInvestment> Investments { get; set; }
 
     [JSInvokable]
     public void InstanceClickHandler(object sender, object args)
@@ -111,7 +111,11 @@ else
             StateHasChanged();
         }
 
-        var colours = Investments
+        var investments = Investments
+            .Where(x => !x.Legacy)
+            .ToList();
+
+        var colours = investments
             .Select(i => InvictusColours.GetByFund(i.Fund.Token.Symbol))
             .ToList();
 
@@ -135,10 +139,10 @@ else
             Weight = 1
         };
 
-        dataSet.Data.AddRange(Investments.Select(i => (double)Math.Round(i.RealValue, 2)));
+        dataSet.Data.AddRange(investments.Select(i => (double)Math.Round(i.RealValue, 2)));
 
         config.Data.Datasets.Add(dataSet);
-        config.Data.Labels.AddRange(Investments.Select(i => i.Fund.DisplayName));
+        config.Data.Labels.AddRange(investments.Select(i => i.Fund.DisplayName));
 
         StateHasChanged();
     }

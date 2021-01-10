@@ -59,39 +59,29 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                     DiffWeekly = fund.Nav.DiffWeekly,
                     DiffMonthly = fund.Nav.DiffMonthly
                 },
-                Market = new ApiMarket()
-                {
-                    IsTradeable = fund.Market.IsTradable,
-                    Cap = fund.Market.Cap,
-                    Total = fund.Market.Total,
-                    PricePerToken = fund.Market.PricePerToken,
-                    DiffDaily = fund.Market.DiffDaily,
-                    DiffWeekly = fund.Market.DiffWeekly,
-                    DiffMonthly = fund.Market.DiffMonthly,
-                    Volume = fund.Market.Volume,
-                    VolumeDiffDaily = fund.Market.VolumeDiffDaily,
-                    VolumeDiffWeekly = fund.Market.VolumeDiffWeekly,
-                    VolumeDiffMonthly = fund.Market.VolumeDiffMonthly
-                },
+                Market = MapMarket(fund.Market),
                 Assets = fund.Assets
                     .Select(a => new ApiAsset()
                     {
-                        Coin = new ApiCoin()
+                        Holding = new ApiHolding()
                         {
-                            Name = a.Coin.Name,
-                            Symbol = a.Coin.Symbol ?? "-",
-                            ContractAddress = a.Coin.ContractAddress?.Address,
-                            HexColour = a.Coin.HexColour,
-                            FixedValuePerCoin = a.Coin.FixedValuePerCoin,
-                            Decimals = a.Coin.Decimals,
-                            Links = new ApiCoinLinks()
+                            Name = a.Holding.Name,
+                            IsCoin = a.Holding.IsCoin,
+                            Symbol = a.Holding.Symbol ?? "-",
+                            ContractAddress = a.Holding.ContractAddress?.Address,
+                            HexColour = a.Holding.HexColour,
+                            FixedValuePerCoin = a.Holding.FixedValuePerCoin,
+                            Decimals = a.Holding.Decimals,
+                            Links = new ApiHoldingLinks()
                             {
-                                [nameof(ApiCoinLinks.Link)] = a.Coin.Link,
-                                [nameof(ApiCoinLinks.ImageLink)] = a.Coin.ImageLink,
-                                [nameof(ApiCoinLinks.MarketLink)] = a.Coin.MarketLink,
+                                [nameof(ApiHoldingLinks.Link)] = a.Holding.Link,
+                                [nameof(ApiHoldingLinks.ImageLink)] = a.Holding.ImageLink,
+                                [nameof(ApiHoldingLinks.MarketLink)] = a.Holding.MarketLink,
                             }
                         },
-                        Value = a.Value,
+                        PricePerToken = a.PricePerToken,
+                        Quantity = a.Quantity,
+                        Total = a.Total,
                         Share = a.Share
                     })
                     .ToList(),
@@ -138,7 +128,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 Gas = transactionSet.Gas,
                 GasUsed = transactionSet.GasUsed,
                 GasLimit = transactionSet.GasLimit,
-                TransferAction = GetTransferAction(transactionSet.Sender, transactionSet.Recipient),
                 Operations = transactionSet.Operations
                     .Select(o => new ApiOperation()
                     {
@@ -148,7 +137,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                         IsEth = o.IsEth,
                         PricePerToken = o.PricePerToken,
                         Type = o.Type,
-                        TransferAction = GetOperationTransferAction(o),
                         Priority = o.Priority,
                         Value = o.Value,
                         Quantity = o.Quantity,
@@ -160,60 +148,122 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                             Holders = o.ContractHolders,
                             Issuances = o.ContractIssuances,
                             Name = o.ContractName,
-                            Links = new ApiCoinLinks()
+                            Links = new ApiHoldingLinks()
                             {
-                                [nameof(ApiCoinLinks.Link)] = o.ContractLink,
-                                [nameof(ApiCoinLinks.ImageLink)] = o.ContractImageLink,
-                                [nameof(ApiCoinLinks.MarketLink)] = o.ContractMarketLink,
+                                [nameof(ApiHoldingLinks.Link)] = o.ContractLink,
+                                [nameof(ApiHoldingLinks.ImageLink)] = o.ContractImageLink,
+                                [nameof(ApiHoldingLinks.MarketLink)] = o.ContractMarketLink,
                             }
                         }
                     })
                     .ToList()
             };
-
-            TransferAction GetOperationTransferAction(IOperation operation)
-            {
-                return operation.Type == OperationTypes.Transfer
-                    ? GetTransferAction(operation.Sender, operation.Recipient)
-                    : TransferAction.None;
-            }
-
-            TransferAction GetTransferAction(EthereumAddress? sender, EthereumAddress? recipient)
-            {
-                if (sender.HasValue &&
-                    recipient.HasValue &&
-                    address.HasValue)
-                {
-                    if (sender == address)
-                    {
-                        return TransferAction.Outbound;
-                    }
-                    else if (recipient == address)
-                    {
-                        return TransferAction.Inbound;
-                    }
-                }
-
-                return TransferAction.None;
-            }
         }
 
         protected ApiStake MapStake(IStake stake)
         {
             return new ApiStake()
             {
+                Name = stake.Name,
+                DisplayName = stake.DisplayName,
+                Description = stake.Description,
+                Token = new ApiToken()
+                {
+                    Symbol = stake.Token.Symbol,
+                    Address = stake.Token.ContractAddress,
+                    Decimals = stake.Token.Decimals
+                },
+                CirculatingSupply = stake.CirculatingSupply,
+                StakingAddress = stake.StakingAddress,
+                Power = MapStakingPower(stake.Power),
+                FundMultipliers = stake.FundMultipliers,
+                TimeMultipliers = stake.TimeMultipliers
+                    .Select(tm => new ApiTimeMultiplier()
+                    {
+                        RangeMin = tm.RangeMin,
+                        RangeMax = tm.RangeMax,
+                        Multiplier = tm.Multiplier
+                    })
+                    .ToList(),
+                Market = MapMarket(stake.Market),
+                Links = new ApiStakeLinks()
+                {
+                    [nameof(ApiStakeLinks.Self)] = new Uri(AppSettings.HostUrl.OriginalString.TrimEnd('/') + $"/api/v1/stakes/{stake.Token.Symbol}", UriKind.Absolute),
+                    [nameof(ApiStakeLinks.Pool)] = stake.PoolUri,
+                    [nameof(ApiStakeLinks.Fact)] = stake.FactSheetUri,
+                    [nameof(ApiStakeLinks.External)] = stake.InvictusUri
+                }
+            };
+        }
+
+        protected ApiStakingPower MapStakingPower(IStakingPower stakePower)
+        {
+            return new ApiStakingPower()
+            {
+                Date = stakePower.Date,
+                Power = stakePower.Power,
+                Breakdown = stakePower.Breakdown.Any()
+                    ? stakePower.Breakdown
+                        .Select(fp => new ApiStakingPowerFund()
+                        {
+                            Symbol = fp.Symbol,
+                            Quantity = fp.Quantity,
+                            ModifiedQuantity = fp.ModifiedQuantity,
+                            Power = fp.Power
+                        })
+                        .ToList()
+                    : stakePower.Summary
+                        .Select(fs => new ApiStakingPowerFund()
+                        {
+                            Symbol = fs.Symbol,
+                            Power = fs.Power
+                        })
+                        .ToList()
+            };
+        }
+
+        protected ApiStakeEvent MapStakeEvent(IStakeEvent stake)
+        {
+            return new ApiStakeEvent()
+            {
                 Hash = stake.Hash,
                 ContractAddress = stake.ContractAddress,
-                StakedAt = stake.StakedAt,
-                Duration = stake.Duration,
-                ExpiresAt = stake.ExpiresAt,
-                PricePerToken = stake.PricePerToken != default
-                    ? stake.PricePerToken
-                    : default(decimal?),
-                Quantity = stake.Quantity,
-                Total = stake.PricePerToken != default
-                    ? stake.PricePerToken * stake.Quantity
-                    : default(decimal?)
+                ConfirmedAt = stake.ConfirmedAt,
+                Type = stake.Type,
+                Change = stake.Change,
+                Lock = stake.Lock != null
+                    ? new ApiStakeLock()
+                    {
+                        Duration = stake.Lock.Duration,
+                        ExpiresAt = stake.Lock.ExpiresAt,
+                        Quantity = stake.Lock.Quantity
+                    }
+                    : null,
+                Release = stake.Release != null
+                    ? new ApiStakeRelease()
+                    {
+                        Quantity = stake.Release.Quantity,
+                        FeeQuantity = stake.Release.FeeQuantity,
+                    }
+                    : null
+            };
+        }
+
+        private ApiMarket MapMarket(IMarket market)
+        {
+            return new ApiMarket()
+            {
+                IsTradeable = market.IsTradable,
+                Cap = market.Cap,
+                Total = market.Total,
+                PricePerToken = market.PricePerToken,
+                DiffDaily = market.DiffDaily,
+                DiffWeekly = market.DiffWeekly,
+                DiffMonthly = market.DiffMonthly,
+                Volume = market.Volume,
+                VolumeDiffDaily = market.VolumeDiffDaily,
+                VolumeDiffWeekly = market.VolumeDiffWeekly,
+                VolumeDiffMonthly = market.VolumeDiffMonthly
             };
         }
     }

@@ -1,6 +1,8 @@
-﻿namespace Pseudonym.Crypto.Invictus.Funds.Configuration
+﻿using Pseudonym.Crypto.Invictus.Funds.Configuration.Abstractions;
+
+namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 {
-    public sealed class AssetSettings
+    public sealed class AssetSettings : IAssetSettings
     {
         public string Symbol { get; set; }
 

@@ -14,10 +14,30 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Abstractions
 
         IAsyncEnumerable<ApiTransactionSet> ListInvestmentTransactionsAsync(Symbol symbol);
 
+        Task<ApiTransactionSet> GetInvestmentTransactionAsync(Symbol symbol, string hash);
+
         IAsyncEnumerable<ApiFund> ListFundsAsync();
 
         Task<ApiFund> GetFundAsync(Symbol symbol);
 
-        IAsyncEnumerable<ApiPerformance> ListFundPerformanceAsync(Symbol symbol, PriceMode marketMode, DateTime fromDate, DateTime toDate);
+        IAsyncEnumerable<ApiPerformance> ListFundPerformanceAsync(Symbol symbol, PriceMode mode, DateTime fromDate, DateTime toDate);
+
+        IAsyncEnumerable<ApiTransactionSet> ListFundTransactionsAsync(Symbol symbol);
+
+        Task<ApiTransactionSet> GetFundTransactionAsync(Symbol symbol, string hash);
+
+        IAsyncEnumerable<ApiTransactionSet> ListFundBurnsAsync(Symbol symbol);
+
+        IAsyncEnumerable<ApiStake> ListStakesAsync();
+
+        Task<ApiStake> GetStakeAsync(Symbol symbol);
+
+        IAsyncEnumerable<ApiStakingPower> ListStakePowerPerformanceAsync(Symbol symbol, PriceMode mode, DateTime fromDate, DateTime toDate);
+
+        IAsyncEnumerable<ApiStakeEvent> ListStakeEventsAsync(Symbol symbol);
+
+        IAsyncEnumerable<ApiStakeEvent> ListStakeEventsAsync(Symbol symbol, Symbol fundSymbol);
+
+        Task<ApiStakeEvent> GetStakeEventAsync(Symbol symbol, Symbol fundSymbol, string hash);
     }
 }

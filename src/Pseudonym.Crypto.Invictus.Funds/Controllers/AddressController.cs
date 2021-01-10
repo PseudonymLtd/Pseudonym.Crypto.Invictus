@@ -14,6 +14,7 @@ using Pseudonym.Crypto.Invictus.Funds.Controllers.Filters;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
+using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 using Pseudonym.Crypto.Invictus.Shared.Models;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Controllers
@@ -23,19 +24,22 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
     [Route("api/v1/addresses")]
     public class AddressController : AbstractController
     {
+        private readonly IFundService fundService;
         private readonly IStakeService stakeService;
-        private readonly IInvestmentService addressService;
+        private readonly IInvestmentService investmentService;
         private readonly IScopedCancellationToken scopedCancellationToken;
 
         public AddressController(
             IOptions<AppSettings> appSettings,
+            IFundService fundService,
             IStakeService stakeService,
-            IInvestmentService addressService,
+            IInvestmentService investmentService,
             IScopedCancellationToken scopedCancellationToken)
             : base(appSettings)
         {
+            this.fundService = fundService;
             this.stakeService = stakeService;
-            this.addressService = addressService;
+            this.investmentService = investmentService;
             this.scopedCancellationToken = scopedCancellationToken;
         }
 
@@ -46,7 +50,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         public async IAsyncEnumerable<ApiInvestment> ListInvestments(
             [Required, FromRoute, EthereumAddress] string address, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
-            await foreach (var investment in addressService
+            await foreach (var investment in investmentService
                 .ListInvestmentsAsync(GetAddress(address), queryFilter.CurrencyCode)
                 .WithCancellation(scopedCancellationToken.Token))
             {
@@ -54,6 +58,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 {
                     Fund = MapFund(investment.Fund),
                     Held = investment.Held,
+                    Legacy = investment.Legacy,
                     Share = investment.Share,
                     RealValue = investment.RealValue,
                     MarketValue = investment.MarketValue
@@ -68,34 +73,35 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         public async Task<ApiInvestment> GetInvestment(
             [Required, FromRoute, EthereumAddress] string address, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
-            var investment = await addressService.GetInvestmentAsync(GetAddress(address), symbol, queryFilter.CurrencyCode);
+            var investment = await investmentService.GetInvestmentAsync(GetAddress(address), symbol, queryFilter.CurrencyCode);
 
             return new ApiInvestment()
             {
                 Fund = MapFund(investment.Fund),
                 Held = investment.Held,
+                Legacy = investment.Legacy,
                 Share = investment.Share,
                 RealValue = investment.RealValue,
                 MarketValue = investment.MarketValue,
-                Stakes = investment.Stakes.Select(MapStake).ToList(),
+                Stakes = investment.Stakes.Select(MapStakeEvent).ToList(),
                 SubInvestments = investment.SubInvestments
                     .Select(i => new ApiSubInvestment()
                     {
                         Held = i.Held,
                         MarketValue = i.MarketValue,
-                        Coin = new ApiCoin()
+                        Coin = new ApiHolding()
                         {
-                            Name = i.Coin.Name,
-                            Symbol = i.Coin.Symbol ?? "-",
-                            ContractAddress = i.Coin.ContractAddress?.Address,
-                            FixedValuePerCoin = i.Coin.FixedValuePerCoin,
-                            HexColour = i.Coin.HexColour,
-                            Decimals = i.Coin.Decimals,
-                            Links = new ApiCoinLinks()
+                            Name = i.Holding.Name,
+                            Symbol = i.Holding.Symbol ?? "-",
+                            ContractAddress = i.Holding.ContractAddress?.Address,
+                            FixedValuePerCoin = i.Holding.FixedValuePerCoin,
+                            HexColour = i.Holding.HexColour,
+                            Decimals = i.Holding.Decimals,
+                            Links = new ApiHoldingLinks()
                             {
-                                [nameof(ApiCoinLinks.Link)] = i.Coin.Link,
-                                [nameof(ApiCoinLinks.ImageLink)] = i.Coin.ImageLink,
-                                [nameof(ApiCoinLinks.MarketLink)] = i.Coin.MarketLink,
+                                [nameof(ApiHoldingLinks.Link)] = i.Holding.Link,
+                                [nameof(ApiHoldingLinks.ImageLink)] = i.Holding.ImageLink,
+                                [nameof(ApiHoldingLinks.MarketLink)] = i.Holding.MarketLink,
                             }
                         }
                     })
@@ -112,7 +118,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         {
             var addr = GetAddress(address);
 
-            var transactions = await addressService
+            var transactions = await investmentService
                 .ListTransactionsAsync(addr, symbol, queryFilter.CurrencyCode)
                 .ToListAsync(scopedCancellationToken.Token);
 
@@ -123,46 +129,73 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
         }
 
         [HttpGet]
-        [Route("{address}/stakes")]
+        [Route("{address}/investments/{symbol}/transactions/{hash}")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(List<ApiStake>), StatusCodes.Status200OK)]
-        public async IAsyncEnumerable<ApiStake> ListStakes(
-            [Required, FromRoute, EthereumAddress] string address, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        [ProducesResponseType(typeof(List<ApiTransactionSet>), StatusCodes.Status200OK)]
+        public async Task<ApiTransactionSet> GetTransaction(
+            [Required, FromRoute, EthereumAddress] string address,
+            [Required, FromRoute] Symbol symbol,
+            [Required, FromRoute, TransactionHash] string hash,
+            [FromQuery] ApiCurrencyQueryFilter queryFilter)
         {
-            await foreach (var stake in stakeService
-                .ListStakesAsync(GetAddress(address), queryFilter.CurrencyCode)
-                .WithCancellation(scopedCancellationToken.Token))
-            {
-                yield return MapStake(stake);
-            }
+            var addr = GetAddress(address);
+
+            var transaction = await fundService.GetTransactionAsync(symbol, new EthereumTransactionHash(hash), queryFilter.CurrencyCode);
+
+            return MapTransactionSet(transaction, addr);
         }
 
         [HttpGet]
         [Route("{address}/stakes/{symbol}")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(ApiStake), StatusCodes.Status200OK)]
-        public async IAsyncEnumerable<ApiStake> GetStake(
-            [Required, FromRoute, EthereumAddress] string address, [Required, FromRoute] Symbol symbol, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        [ProducesResponseType(typeof(List<ApiStakeEvent>), StatusCodes.Status200OK)]
+        public async IAsyncEnumerable<ApiStakeEvent> ListStakes(
+            [Required, FromRoute, EthereumAddress] string address,
+            [Required, FromRoute] Symbol symbol)
         {
             await foreach (var stake in stakeService
-                .ListStakesAsync(GetAddress(address), symbol, queryFilter.CurrencyCode)
+                .ListStakeEventsAsync(symbol, GetAddress(address))
                 .WithCancellation(scopedCancellationToken.Token))
             {
-                yield return MapStake(stake);
+                yield return MapStakeEvent(stake);
             }
         }
 
         [HttpGet]
-        [Route("{address}/stakes/{symbol}/{hash}")]
+        [Route("{address}/stakes/{symbol}/funds/{fundSymbol}")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(ApiStake), StatusCodes.Status200OK)]
-        public async Task<ApiStake> GetStake(
-            [Required, FromRoute, EthereumAddress] string address, [Required, FromRoute] Symbol symbol, [Required, FromRoute, TransactionHash] string hash, [FromQuery] ApiCurrencyQueryFilter queryFilter)
+        [ProducesResponseType(typeof(List<ApiStakeEvent>), StatusCodes.Status200OK)]
+        public async IAsyncEnumerable<ApiStakeEvent> GetStake(
+            [Required, FromRoute, EthereumAddress] string address,
+            [Required, FromRoute] Symbol symbol,
+            [Required, FromRoute] Symbol fundSymbol)
+        {
+            await foreach (var stake in stakeService
+                .ListStakeEventsAsync(symbol, GetAddress(address), fundSymbol)
+                .WithCancellation(scopedCancellationToken.Token))
+            {
+                yield return MapStakeEvent(stake);
+            }
+        }
+
+        [HttpGet]
+        [Route("{address}/stakes/{symbol}/funds/{fundSymbol}/events/{hash}")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(ApiStakeEvent), StatusCodes.Status200OK)]
+        public async Task<ApiStakeEvent> GetStake(
+            [Required, FromRoute, EthereumAddress] string address,
+            [Required, FromRoute] Symbol symbol,
+            [Required, FromRoute] Symbol fundSymbol,
+            [Required, FromRoute, TransactionHash] string hash)
         {
             var txHash = new EthereumTransactionHash(hash);
-            var stake = await stakeService.GetStakeAsync(GetAddress(address), symbol, txHash, queryFilter.CurrencyCode);
+            var stake = await stakeService.GetStakeEventAsync(
+                symbol,
+                GetAddress(address),
+                fundSymbol,
+                txHash);
 
-            return MapStake(stake);
+            return MapStakeEvent(stake);
         }
     }
 }

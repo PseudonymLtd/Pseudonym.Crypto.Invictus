@@ -7,7 +7,7 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
     {
         [Required]
         [JsonProperty("coin")]
-        public ApiCoin Coin { get; set; }
+        public ApiHolding Coin { get; set; }
 
         [Required]
         [JsonProperty("held")]

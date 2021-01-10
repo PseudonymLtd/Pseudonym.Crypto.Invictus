@@ -8,6 +8,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         decimal Held { get; }
 
+        bool Legacy { get; }
+
         decimal RealValue { get; }
 
         decimal? MarketValue { get; }
@@ -16,6 +18,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         IReadOnlyList<ISubInvestment> SubInvestments { get; }
 
-        IReadOnlyList<IStake> Stakes { get; }
+        IReadOnlyList<IStakeEvent> Stakes { get; }
     }
 }

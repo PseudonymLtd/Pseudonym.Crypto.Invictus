@@ -42,14 +42,36 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
         public IAsyncEnumerable<ApiPerformance> ListFundPerformanceAsync(Symbol symbol, PriceMode mode, DateTime fromDate, DateTime toDate)
         {
             return ListAsync<ApiPerformance>(string.Format(
-                    "/api/v1/funds/{0}/performance?{1}={2}&{3}={4}&{5}={6}",
-                    symbol,
-                    ApiFilterNames.FromQueryName,
-                    fromDate.ToString(Format.DateFormat),
-                    ApiFilterNames.ToQueryName,
-                    toDate.ToString(Format.DateFormat),
-                    ApiFilterNames.ModeQueryName,
-                    mode));
+                "/api/v1/funds/{0}/performance?{1}={2}&{3}={4}&{5}={6}",
+                symbol,
+                ApiFilterNames.FromQueryName,
+                fromDate.ToString(Format.DateFormat),
+                ApiFilterNames.ToQueryName,
+                toDate.ToString(Format.DateFormat),
+                ApiFilterNames.ModeQueryName,
+                mode));
+        }
+
+        public IAsyncEnumerable<ApiTransactionSet> ListFundTransactionsAsync(Symbol symbol)
+        {
+            return ListAsync<ApiTransactionSet>($"/api/v1/funds/{symbol}/transactions");
+        }
+
+        public IAsyncEnumerable<ApiTransactionSet> ListFundBurnsAsync(Symbol symbol)
+        {
+            return ListAsync<ApiTransactionSet>($"/api/v1/funds/{symbol}/burns");
+        }
+
+        public Task<ApiTransactionSet> GetFundTransactionAsync(Symbol symbol, string hash)
+        {
+            if (userSettings.HasValidAddress())
+            {
+                return GetAsync<ApiTransactionSet>($"/api/v1/funds/{symbol}/transactions/{hash}");
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public IAsyncEnumerable<ApiInvestment> ListInvestmentsAsync()
@@ -67,6 +89,70 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Clients
         public Task<ApiInvestment> GetInvestmentAsync(Symbol symbol)
         {
             return GetAsync<ApiInvestment>($"/api/v1/addresses/{userSettings.WalletAddress}/investments/{symbol}");
+        }
+
+        public Task<ApiTransactionSet> GetInvestmentTransactionAsync(Symbol symbol, string hash)
+        {
+            return GetAsync<ApiTransactionSet>($"/api/v1/addresses/{userSettings.WalletAddress}/investments/{symbol}/transactions/{hash}");
+        }
+
+        public IAsyncEnumerable<ApiStake> ListStakesAsync()
+        {
+            return ListAsync<ApiStake>($"/api/v1/stakes");
+        }
+
+        public Task<ApiStake> GetStakeAsync(Symbol symbol)
+        {
+            return GetAsync<ApiStake>($"/api/v1/stakes/{symbol}");
+        }
+
+        public IAsyncEnumerable<ApiStakingPower> ListStakePowerPerformanceAsync(Symbol symbol, PriceMode mode, DateTime fromDate, DateTime toDate)
+        {
+            return ListAsync<ApiStakingPower>(string.Format(
+                "/api/v1/stakes/{0}/performance?{1}={2}&{3}={4}&{5}={6}",
+                symbol,
+                ApiFilterNames.FromQueryName,
+                fromDate.ToString(Format.DateFormat),
+                ApiFilterNames.ToQueryName,
+                toDate.ToString(Format.DateFormat),
+                ApiFilterNames.ModeQueryName,
+                mode));
+        }
+
+        public IAsyncEnumerable<ApiStakeEvent> ListStakeEventsAsync(Symbol symbol)
+        {
+            if (userSettings.HasValidAddress())
+            {
+                return ListAsync<ApiStakeEvent>($"/api/v1/addresses/{userSettings.WalletAddress}/stakes/{symbol}");
+            }
+            else
+            {
+                return new EmptyAsyncEnumerable<ApiStakeEvent>();
+            }
+        }
+
+        public IAsyncEnumerable<ApiStakeEvent> ListStakeEventsAsync(Symbol symbol, Symbol fundSymbol)
+        {
+            if (userSettings.HasValidAddress())
+            {
+                return ListAsync<ApiStakeEvent>($"/api/v1/addresses/{userSettings.WalletAddress}/stakes/{symbol}/funds/{fundSymbol}");
+            }
+            else
+            {
+                return new EmptyAsyncEnumerable<ApiStakeEvent>();
+            }
+        }
+
+        public Task<ApiStakeEvent> GetStakeEventAsync(Symbol symbol, Symbol fundSymbol, string hash)
+        {
+            if (userSettings.HasValidAddress())
+            {
+                return GetAsync<ApiStakeEvent>($"/api/v1/addresses/{userSettings.WalletAddress}/stakes/{symbol}/funds/{fundSymbol}/events/{hash}");
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public IAsyncEnumerable<ApiTransactionSet> ListInvestmentTransactionsAsync(Symbol symbol)

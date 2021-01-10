@@ -1,8 +1,10 @@
 ﻿@inherits LayoutComponentBase
 @inject IWebAssemblyHostEnvironment Environment
 @inject IOptions<AppSettings> Settings
-@inject IUserSettings UserSettings
+@inject IUserSettingsHandle UserSettingsHandle
+@inject IApiClient Client
 @inject IAppState AppState
+@inject NavigationManager NavigationManager
 
 <div class="page">
     <div class="sidebar">
@@ -10,8 +12,28 @@
     </div>
 
     <div class="main">
-        @*<div class="top-row px-4">
-        </div>*@
+        <div class="top-row px-4">
+            @foreach (var fund in funds)
+            {
+                <div style="padding-right: 10px; cursor: pointer;" @onclick="@((e) => NavigationManager.NavigateTo($"funds/{fund.Token.Symbol}", true))">
+                    <ValueBubble Type="@fund.Token.Symbol.ToString()"
+                                 Pricing="fund.Nav"
+                                 Decimals="2"
+                                 Symbol="fund.Token.Symbol"
+                                 ShowPricePerToken="true" />
+                </div>
+            }
+            @foreach (var stake in stakes)
+            {
+                <div style="padding-right: 10px; cursor: pointer;" @onclick="@((e) => NavigationManager.NavigateTo($"stakes/{stake.Token.Symbol}", true))">
+                    <ValueBubble Type="@stake.Token.Symbol.ToString()"
+                                 Pricing="stake.Market"
+                                 Decimals="2"
+                                 Symbol="stake.Token.Symbol"
+                                 ShowPricePerToken="true" />
+                </div>
+            }
+        </div>
 
         <div class="content px-4" style="position: relative; padding-bottom: 225px;">
             <div>
@@ -37,8 +59,58 @@
 
 @code
 {
+    private readonly List<ApiFund> funds;
+    private readonly List<ApiStake> stakes;
+
+    public MainLayout()
+    {
+        funds = new List<ApiFund>();
+        stakes = new List<ApiStake>();
+    }
+
     protected override void OnInitialized()
     {
         AppState.Assign(StateHasChanged);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.Assign(async () => await DrawAsync(false));
+
+        await DrawAsync(true);
+    }
+
+    private async Task DrawAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            funds.Clear();
+            stakes.Clear();
+
+            StateHasChanged();
+        }
+
+        await foreach (var fund in Client.ListFundsAsync())
+        {
+            await UserSettingsHandle.UpdateAsync(x => x.AddFund(
+                fund.Token.Symbol,
+                new FundInfo()
+                {
+                    Name = fund.Name,
+                    DisplayName = fund.DisplayName,
+                    Description = fund.Description,
+                    ContractAddress = fund.Token.Address,
+                    Decimals = fund.Token.Decimals
+                }));
+
+            funds.Add(fund);
+        }
+
+        await foreach (var stake in Client.ListStakesAsync())
+        {
+            stakes.Add(stake);
+        }
+
+        StateHasChanged();
     }
 }

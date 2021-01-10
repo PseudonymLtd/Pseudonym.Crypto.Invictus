@@ -1,0 +1,167 @@
+﻿@inject IAppState AppState
+@inject IUserSettings UserSettings
+
+<div class="jumbotron jumbotron-fluid">
+    <div class="container" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
+        <div class="container-fluid" style="max-width: none">
+            <div class="row">
+                <div class="col-xs-1 py-1">
+                    <h1 class="display-4">@Stake.Token.Symbol Staking Events</h1>
+                    <p class="lead">
+                        <span>You will currently earn a</span>
+                        <LargeNumber Value="RelativePercentage" Suffix="%" ShowZeroValue="true" Decimals="4" />
+                        <span>share of @Stake.Token.Symbol at each distribution.</span>
+                    </p>
+                    @if (Events.Any())
+                    {
+                        <div class="container-fluid" style="max-width: none">
+                            <div class="row">
+                                <div class="col-3 py-1" style="font-weight: bold;">
+                                    Date
+                                </div>
+                                <div class="col-3 py-1" style="font-weight: bold;">
+                                    Quantity
+                                </div>
+                                <div class="col-3 py-1" style="font-weight: bold;">
+                                    Value (@UserSettings.CurrencyCode.GetSymbol())
+                                </div>
+                                <div class="col-3 py-1" style="font-weight: bold;">
+                                    Type
+                                </div>
+                            </div>
+                        </div>
+                        @foreach (var eventItem in Events.OrderBy(x => x.ConfirmedAt))
+                        {
+                            var fund = Funds.Single(x => x.Token.Address.Equals(eventItem.ContractAddress, StringComparison.OrdinalIgnoreCase));
+
+                            <StakeEventFundBanner Fund="fund" Event="eventItem" />
+                        }
+                        <div class="container-fluid" style="max-width: none">
+                            <div class="row">
+                                <div class="col-3 py-1" style="font-weight: bold;">
+                                </div>
+                                <div class="col-3 py-1" style="font-weight: bold;">
+                                </div>
+                                <div class="col-3 py-1" style="font-weight: bold;">
+                                    Total Power
+                                </div>
+                                <div class="col-3 py-1" style="font-weight: bold;">
+                                    <Money Value="Power" Decimals="2" ShowZeroValue="true" CurrencyCode="UserSettings.CurrencyCode" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="col py-1">
+                    @if (stakingPowerFunds.Any())
+                    {
+                        <StakePowerDistributionChart StakingPowerFunds="stakingPowerFunds" IsHollow="true" />
+                    }
+                </div>
+            </div>
+        </div>
+        <a href="stakes/@Stake.Token.Symbol"
+           class="btn btn-primary btn-lg @Stake.Token.Symbol.ToString().ToLower()"
+           role="button"
+           style="display: block; max-width: 200px; margin: auto;">Explore @Stake.Token.Symbol</a>
+    </div>
+</div>
+
+
+@code {
+
+    private const decimal Precision = 0.000000001m;
+
+    private readonly List<ApiStakingPowerFund> stakingPowerFunds;
+
+    public StakeEventBreakdown()
+    {
+        stakingPowerFunds = new List<ApiStakingPowerFund>();
+    }
+
+    [Parameter]
+    public List<ApiFund> Funds { get; set; }
+
+    [Parameter]
+    public ApiStake Stake { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<ApiStakeEvent> Events { get; set; }
+
+    protected decimal Power => stakingPowerFunds.Sum(x => x.Power);
+
+    protected decimal RelativePercentage => (Power / Stake.Power.Power) * 100;
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(() => Draw(false));
+
+        Draw(true);
+    }
+
+    private void Draw(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            stakingPowerFunds.Clear();
+
+            StateHasChanged();
+        }
+
+        foreach (var eventGroup in Events.GroupBy(x => x.ContractAddress))
+        {
+            var fund = Funds.Single(x => x.Token.Address.Equals(eventGroup.Key, StringComparison.OrdinalIgnoreCase));
+
+            var fundPower = new ApiStakingPowerFund()
+            {
+                Symbol = fund.Token.Symbol,
+                Power = decimal.Zero
+            };
+
+            foreach (var eventItem in eventGroup)
+            {
+                if (eventItem.Type == StakeEventType.Lockup)
+                {
+                    fundPower.Power += CalculateQuantity(fund, eventItem) * fund.Nav.PricePerToken;
+                }
+                else
+                {
+                    var approximateQuantity = eventItem.Release.Quantity + (eventItem.Release.FeeQuantity ?? decimal.Zero);
+
+                    var items = eventGroup
+                        .Where(x => x.Type == StakeEventType.Lockup)
+                        .ToList();
+
+                    var lockUp = items.Count > 0
+                        ? items.Count == 1
+                            ? items.Single()
+                            : items
+                                .OrderBy(x => x.ConfirmedAt)
+                                .FirstOrDefault(e => Math.Abs(e.Lock.Quantity - approximateQuantity) <= Precision)
+                        : throw new PermanentException($"No existing lockup data could be found for release event {eventItem.Hash}");
+
+                    fundPower.Power -= CalculateQuantity(fund, lockUp) * fund.Nav.PricePerToken;
+                }
+            }
+
+            stakingPowerFunds.Add(fundPower);
+
+            StateHasChanged();
+        }
+
+        decimal CalculateQuantity(ApiFund fund, ApiStakeEvent eventItem)
+        {
+            var timeModifier = Stake.TimeMultipliers
+                .SingleOrDefault(tm =>
+                    tm.RangeMin <= eventItem.Lock.Duration.Days &&
+                    tm.RangeMax >= eventItem.Lock.Duration.Days)
+                ?.Multiplier ?? 1m;
+
+            var fundModifier = Stake.FundMultipliers.ContainsKey(fund.Token.Symbol)
+                ? Stake.FundMultipliers[fund.Token.Symbol]
+                : 1m;
+
+            return eventItem.Lock.Quantity * timeModifier * fundModifier;
+        }
+    }
+}

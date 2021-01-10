@@ -23,6 +23,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
             DateTime to,
             CurrencyCode currencyCode);
 
+        IAsyncEnumerable<ITransactionSet> ListBurnsAsync(Symbol symbol, CurrencyCode currencyCode);
+
         Task<bool> DeletePerformanceAsync(Symbol symbol, DateTime date);
 
         Task<ITransactionSet> GetTransactionAsync(Symbol symbol, EthereumTransactionHash hash, CurrencyCode currencyCode);

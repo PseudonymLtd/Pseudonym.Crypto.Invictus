@@ -1,0 +1,64 @@
+﻿@inherits BaseComponent
+@page "/stakes"
+@inject IUserSettings UserSettings
+@inject IApiClient Client
+@inject IAppState AppState
+
+<div style="text-align: center;">
+    <h1 class="display-1">Stakes</h1>
+    <p class="lead">
+        Below shows the summary of stakes provided by <a href="https://invictuscapital.com/" target="_blank">Invictus Capital</a>.
+        There is currently @(stakes?.Count ?? 0) available @((stakes?.Count ?? 0) == 1 ? "stake" : "stakes").
+    </p>
+</div>
+
+@if (!stakes.Any())
+{
+    <Loading />
+}
+else
+{
+    <div class="container" style="display: contents;">
+        @foreach (var stake in stakes)
+        {
+            <div class="row">
+                <div class="col">
+                    <StakeSummary Stake="stake" Clickable="true" />
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private readonly List<ApiStake> stakes;
+
+    public Stakes()
+    {
+        stakes = new List<ApiStake>();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.Assign(async () => await DrawAsync(false));
+
+        await DrawAsync(true);
+    }
+
+    private async Task DrawAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            stakes.Clear();
+
+            StateHasChanged();
+        }
+
+        await foreach (var stake in Client.ListStakesAsync())
+        {
+            stakes.Add(stake);
+
+            StateHasChanged();
+        }
+    }
+}

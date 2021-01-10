@@ -112,7 +112,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client
                         var settings = sp.GetRequiredService<IOptions<AppSettings>>();
 
                         client.BaseAddress = settings.Value.ApiUrl;
-                        client.Timeout = TimeSpan.FromSeconds(10);
+                        client.Timeout = TimeSpan.FromSeconds(30);
                         client.DefaultRequestHeaders.TryAddWithoutValidation(Headers.Origin, webAssemblyHostEnvironment.BaseAddress);
                         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(settings.Value.ServiceName, $"v{settings.Value.Version}"));
                     });

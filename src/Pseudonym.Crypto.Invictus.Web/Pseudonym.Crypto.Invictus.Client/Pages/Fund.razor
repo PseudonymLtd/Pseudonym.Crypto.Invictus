@@ -1,4 +1,5 @@
-﻿@page "/funds/{symbol}"
+﻿@inherits BaseComponent
+@page "/funds/{symbol}"
 @inject IUserSettings UserSettings
 @inject IApiClient Client
 @inject IAppState AppState
@@ -11,6 +12,10 @@ else
 {
     <FundSummary Fund="fund" Clickable="false" ShowGraph="true" />
     <FundBreakdown Fund="fund" />
+    @if (fund.Token.Symbol == Invictus.Shared.Enums.Symbol.IHF)
+    {
+        <FundBuyAndBurns Fund="fund" />
+    }
     @if (fund.Market.IsTradeable)
     {
         switch (fund.Token.Symbol)
@@ -20,7 +25,6 @@ else
                 {
                     ("HITBTC", "IHFUSDT")
                 };
-
                 <MarketView ExchangePairs="ihfPairs" />
                 break;
             case Invictus.Shared.Enums.Symbol.C20:

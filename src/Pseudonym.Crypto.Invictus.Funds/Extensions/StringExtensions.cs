@@ -9,17 +9,23 @@ namespace System
     {
         private static readonly Regex ExponentRegex = new Regex(@"^([\d.]+)[e|E]-([\d]+)$");
 
-        public static decimal FromBigInteger(this string s)
+        public static decimal FromBigInteger(this string s, int decimals = 18)
         {
             if (string.IsNullOrWhiteSpace(s))
             {
-                return 0;
+                return decimal.Zero;
+            }
+            else if (s.Contains('.'))
+            {
+                var parts = s.Split('.', StringSplitOptions.RemoveEmptyEntries);
+
+                return decimal.Parse($"{parts[0].Trim()}.{parts[1].Trim().Substring(0, Math.Min(parts[1].Trim().Length, 18))}");
             }
             else
             {
                 var bigInt = BigInteger.Parse(s);
 
-                return Web3.Convert.FromWei(bigInt);
+                return Web3.Convert.FromWei(bigInt, decimals);
             }
         }
 
@@ -27,7 +33,7 @@ namespace System
         {
             if (string.IsNullOrWhiteSpace(s))
             {
-                return 0;
+                return decimal.Zero;
             }
             else
             {

@@ -1,43 +1,54 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Models
 {
     public sealed class ApiStake
     {
         [Required]
-        [TransactionHash]
-        [JsonProperty("hash")]
-        public string Hash { get; set; }
+        [JsonProperty("name")]
+        public string Name { get; set; }
 
         [Required]
-        [EthereumAddress]
-        [JsonProperty("contract_address")]
-        public string ContractAddress { get; set; }
+        [JsonProperty("display_name")]
+        public string DisplayName { get; set; }
 
         [Required]
-        [JsonProperty("staked_at")]
-        public DateTime StakedAt { get; set; }
+        [JsonProperty("description")]
+        public string Description { get; set; }
 
         [Required]
-        [JsonProperty("duration")]
-        public TimeSpan Duration { get; set; }
+        [JsonProperty("token")]
+        public ApiToken Token { get; set; }
 
         [Required]
-        [JsonProperty("expires_at")]
-        public DateTime ExpiresAt { get; set; }
+        [JsonProperty("circulating_supply")]
+        public decimal CirculatingSupply { get; set; }
 
         [Required]
-        [JsonProperty("price_per_token")]
-        public decimal? PricePerToken { get; set; }
+        [JsonProperty("market")]
+        public ApiMarket Market { get; set; }
 
         [Required]
-        [JsonProperty("quantity")]
-        public decimal Quantity { get; set; }
+        [JsonProperty("staking_address")]
+        public string StakingAddress { get; set; }
 
         [Required]
-        [JsonProperty("total")]
-        public decimal? Total { get; set; }
+        [JsonProperty("power")]
+        public ApiStakingPower Power { get; set; }
+
+        [Required]
+        [JsonProperty("time_multipliers")]
+        public IReadOnlyList<ApiTimeMultiplier> TimeMultipliers { get; set; }
+
+        [Required]
+        [JsonProperty("fund_multipliers")]
+        public IReadOnlyDictionary<Symbol, decimal> FundMultipliers { get; set; }
+
+        [Required]
+        [JsonProperty("links")]
+        public ApiStakeLinks Links { get; set; }
     }
 }

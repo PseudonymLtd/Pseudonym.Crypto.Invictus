@@ -19,6 +19,7 @@ async function onInstall(event) {
         .filter(asset => offlineAssetsInclude.some(pattern => pattern.test(asset.url)))
         .filter(asset => !offlineAssetsExclude.some(pattern => pattern.test(asset.url)))
         .map(asset => new Request(asset.url, { integrity: asset.hash }));
+
     await caches.open(cacheName).then(cache => cache.addAll(assetsRequests));
 }
 
@@ -27,6 +28,7 @@ async function onActivate(event) {
 
     // Delete unused caches
     const cacheKeys = await caches.keys();
+
     await Promise.all(cacheKeys
         .filter(key => key.startsWith(cacheNamePrefix) && key !== cacheName)
         .map(key => caches.delete(key)));

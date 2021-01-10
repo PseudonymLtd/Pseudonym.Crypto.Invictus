@@ -16,6 +16,18 @@
         background: #4f5863;
     }
 
+input[type="range"]::-webkit-slider-thumb {
+    background: #cf2127;
+}
+
+input[type="range"]::-moz-range-thumb {
+    background: #cf2127;
+}
+
+input[type="range"]::-ms-thumb {
+    background: #cf2127;
+}
+
 *[id] {
     scroll-margin-top: 5rem;
 }
@@ -183,12 +195,6 @@ select {
     border-color: #cf2127;
 }
 
-app {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-
 .top-row {
     height: 3.5rem;
     display: flex;
@@ -200,7 +206,7 @@ app {
 }
 
     .main .top-row {
-        background-color: #2d3238;
+        background-color: transparent;
         justify-content: flex-end;
         z-index: 1040;
     }
@@ -344,6 +350,7 @@ app {
         position: absolute;
         z-index: 10;
         margin: -2px 0px 0px 5px;
+        white-space: nowrap;
     }
 
     .tooltip-container:hover .tooltip-text {
@@ -497,10 +504,6 @@ app {
 }
 
 @media (min-width: 768px) {
-    app {
-        flex-direction: row;
-    }
-
     .sidebar {
         width: 250px;
         min-width: 250px;

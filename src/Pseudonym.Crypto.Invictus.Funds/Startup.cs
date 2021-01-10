@@ -242,6 +242,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
                 .AddCoinGeckoClient()
                 .AddEthplorerClient()
                 .AddInfuraClient()
+                .AddTheGraphClient()
                 .AddLightstreamClient()
                 .AddInvictusClient()
                 .AddExchangeRateClient();
@@ -254,6 +255,7 @@ namespace Pseudonym.Crypto.Invictus.Funds
             container.AddScoped<ITransactionRepository, TransactionRepository>();
             container.AddScoped<IOperationRepository, OperationRepository>();
             container.AddScoped<IFundPerformanceRepository, FundPerformanceRepository>();
+            container.AddScoped<IStakingPowerRepository, StakingPowerRepository>();
 
             container.AddDefaultAWSOptions(Configuration.GetAWSOptions());
             container.AddScoped<IAmazonDynamoDB>(sp =>
@@ -277,10 +279,19 @@ namespace Pseudonym.Crypto.Invictus.Funds
                 .AddSingleton<CurrencyConverter>()
                 .AddTransient<ICurrencyConverter>(sp => sp.GetRequiredService<CurrencyConverter>());
 
-            if (appSettings.CachingEnabled)
+            if (appSettings.CacheTransactions)
             {
                 container.AddHostedService<TransactionCachingService>();
-                container.AddHostedService<InvictusFundMarketCachingService>();
+            }
+
+            if (appSettings.CacheStakePower)
+            {
+                container.AddHostedService<FundStakingPowerCachingService>();
+            }
+
+            if (appSettings.CacheFundPerformance)
+            {
+                container.AddHostedService<FundPerformanceCachingService>();
             }
         }
 

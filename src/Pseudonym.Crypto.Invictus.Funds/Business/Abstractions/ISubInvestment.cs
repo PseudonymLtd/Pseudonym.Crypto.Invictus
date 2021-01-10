@@ -2,7 +2,7 @@
 {
     public interface ISubInvestment
     {
-        ICoin Coin { get; }
+        IHolding Holding { get; }
 
         decimal Held { get; }
 
