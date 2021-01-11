@@ -7,15 +7,16 @@
 
 <div>
     <div>
-        <DateRangePicker MinDate="DateTimeOffset.UtcNow.AddYears(-1)"
-                            MaxDate="DateTimeOffset.UtcNow.AddDays(1).Date"
-                            StartDate="StartDate"
-                            EndDate="EndDate"
-                            Culture="CultureInfo.CurrentUICulture"
-                            CancelButtonClasses="neutral"
-                            ApplyButtonClasses="invictus"
-                            OnRangeSelect="OnRangeSelectAsync"
-                            class="form-control form-control-sm date-picker" />
+        <DateRangePicker
+            MinDate="DateTimeOffset.UtcNow.AddYears(-1)"
+            MaxDate="DateTimeOffset.UtcNow"
+            StartDate="StartDate"
+            EndDate="EndDate"
+            Culture="CultureInfo.CurrentUICulture"
+            CancelButtonClasses="neutral"
+            ApplyButtonClasses="invictus"
+            OnRangeSelect="OnRangeSelectAsync"
+            class="form-control form-control-sm date-picker" />
         <ul class="pagination pagination-sm price-mode" style="margin-right: -10px;">
             @foreach (PriceMode val in Enum.GetValues(typeof(PriceMode)).Cast<PriceMode>().Where(pm => pm != PriceMode.Raw))
             {
@@ -54,7 +55,7 @@
     public FundPerformanceChart()
     {
         Mode = PriceMode.Avg;
-        EndDate = DateTimeOffset.UtcNow.AddDays(1).Date;
+        EndDate = DateTimeOffset.UtcNow;
         StartDate = EndDate.Value.AddYears(-1);
 
         config = new LineConfig()
@@ -221,7 +222,11 @@
             marketDataset.RemoveAll(x => true);
         }
 
-        await foreach (var perf in ApiClient.ListFundPerformanceAsync(Fund.Token.Symbol, Mode, StartDate.Value.UtcDateTime, EndDate.Value.UtcDateTime))
+        await foreach (var perf in ApiClient.ListFundPerformanceAsync(
+            Fund.Token.Symbol,
+            Mode,
+            StartDate.Value.UtcDateTime,
+            EndDate.Value.Date.AddDays(1)))
         {
             navDataset.Add(new TimeTuple<decimal>(new Moment(perf.Date), perf.NetAssetValuePerToken));
 

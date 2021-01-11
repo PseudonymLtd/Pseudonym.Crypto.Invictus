@@ -450,6 +450,12 @@ select {
         text-align: center !important;
     }
 
+    .date-picker {
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 0;
+    }
+
     .invisible-mob {
         display: none;
     }

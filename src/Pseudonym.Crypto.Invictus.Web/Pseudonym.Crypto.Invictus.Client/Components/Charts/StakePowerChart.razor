@@ -8,7 +8,7 @@
 <div>
     <div>
         <DateRangePicker MinDate="DateTimeOffset.UtcNow.AddYears(-1)"
-                         MaxDate="DateTimeOffset.UtcNow.AddDays(1).Date"
+                         MaxDate="DateTimeOffset.UtcNow"
                          StartDate="StartDate"
                          EndDate="EndDate"
                          Culture="CultureInfo.CurrentUICulture"
@@ -55,7 +55,7 @@
         rendering = true;
 
         Mode = PriceMode.Avg;
-        EndDate = DateTimeOffset.UtcNow.AddDays(1).Date;
+        EndDate = DateTimeOffset.UtcNow;
         StartDate = EndDate.Value.AddYears(-1);
 
         config = new LineConfig()
@@ -211,7 +211,11 @@
         }
 
         await foreach (var power in ApiClient
-            .ListStakePowerPerformanceAsync(Stake.Token.Symbol, Mode, StartDate.Value.UtcDateTime, EndDate.Value.UtcDateTime))
+            .ListStakePowerPerformanceAsync(
+            Stake.Token.Symbol,
+            Mode,
+            StartDate.Value.UtcDateTime,
+            EndDate.Value.Date.AddDays(1)))
         {
             foreach (var dataset in datasets)
             {

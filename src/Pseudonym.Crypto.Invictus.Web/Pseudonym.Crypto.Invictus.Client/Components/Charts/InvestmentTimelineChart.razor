@@ -7,7 +7,7 @@
 <div>
     <div style="margin-bottom: 1rem;">
         <DateRangePicker MinDate="Transactions.OrderBy(t => t.ConfirmedAt).FirstOrDefault()?.ConfirmedAt.Date ?? DateTimeOffset.UtcNow.AddYears(-1)"
-                         MaxDate="DateTimeOffset.UtcNow.AddDays(1).Date"
+                         MaxDate="DateTimeOffset.UtcNow"
                          StartDate="StartDate"
                          EndDate="EndDate"
                          Culture="CultureInfo.CurrentUICulture"
@@ -41,7 +41,7 @@
     public InvestmentTimelineChart()
     {
         rendering = true;
-        EndDate = DateTimeOffset.UtcNow.AddDays(1).Date;
+        EndDate = DateTimeOffset.UtcNow;
         StartDate = EndDate.Value.AddYears(-1);
 
         config = new LineConfig()
@@ -185,14 +185,14 @@
             x.ContractAddress.Equals(fund.Token.Address, StringComparison.OrdinalIgnoreCase))
         .OrderBy(t => t.ConfirmedAt)
         .SkipWhile(t => t.ConfirmedAt < StartDate)
-        .TakeWhile(t => t.ConfirmedAt <= EndDate);
+        .TakeWhile(t => t.ConfirmedAt <= EndDate.Value.Date.AddDays(1));
 
     protected IEnumerable<ApiStakeEvent> GetDrawableStakes(ApiFund fund) => Stakes
         .Where(s =>
             s.ContractAddress.Equals(fund.Token.Address, StringComparison.OrdinalIgnoreCase))
         .OrderBy(s => s.ConfirmedAt)
         .SkipWhile(s => s.ConfirmedAt < StartDate)
-        .TakeWhile(s => s.ConfirmedAt <= EndDate);
+        .TakeWhile(s => s.ConfirmedAt <= EndDate.Value.Date.AddDays(1));
 
     protected override async Task OnInitializedAsync()
     {
@@ -266,7 +266,7 @@
         var axis = config.Options.Scales.xAxes.OfType<TimeAxis>().First();
 
         axis.Time.Min = new Moment(StartDate.Value.UtcDateTime);
-        axis.Time.Max = new Moment(EndDate.Value.UtcDateTime);
+        axis.Time.Max = new Moment(EndDate.Value.Date.AddDays(1));
 
         foreach (var dataset in datasets)
         {
@@ -295,7 +295,7 @@
                     dataset.Add(new TimeTuple<decimal>(new Moment(stake.ConfirmedAt), total));
                 }
 
-                dataset.Add(new TimeTuple<decimal>(new Moment(EndDate.Value.UtcDateTime), total));
+                dataset.Add(new TimeTuple<decimal>(new Moment(EndDate.Value.Date.AddDays(1)), total));
             }
             else
             {
@@ -316,7 +316,7 @@
                     dataset.Add(new TimeTuple<decimal>(new Moment(transaction.ConfirmedAt), total));
                 }
 
-                dataset.Add(new TimeTuple<decimal>(new Moment(EndDate.Value.UtcDateTime), total));
+                dataset.Add(new TimeTuple<decimal>(new Moment(EndDate.Value.Date.AddDays(1)), total));
             }
         }
 

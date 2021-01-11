@@ -11,7 +11,7 @@
         </p>
         <div class="container-fluid" style="max-width: none">
             <div class="row">
-                <div class="col-xs-1 py-1" style="min-width: 50%; padding-right: 2rem;">
+                <div class="col-sm-12 col-md-7 py-1" style="min-width: 50%; padding-right: 2rem;">
                     @if (Events.Any())
                     {
                         <StakeTokenAccrualChart Fund="Fund" Stake="Stake" StakeEvents="Events" />
@@ -21,7 +21,7 @@
                         <img src="images/@(Stake.Token.Symbol)_Splash.png" class="invisible-mob" alt="You have not staked." style="margin-bottom: 20px; margin-left: -20px;" />
                     }
                 </div>
-                <div class="col-xs-1 py-1" style="min-width: 50%;">
+                <div class="col-sm-12 col-md-7 py-1" style="min-width: 50%;">
                     @if (Events.Any())
                     {
                         <div class="container-fluid" style="max-width: none">
