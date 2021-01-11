@@ -7,7 +7,7 @@
 <div>
     <div style="margin-bottom: 1rem;">
         <DateRangePicker MinDate="Transactions.OrderBy(t => t.ConfirmedAt).FirstOrDefault()?.ConfirmedAt.Date ?? DateTimeOffset.UtcNow.AddYears(-1)"
-                         MaxDate="DateTimeOffset.UtcNow"
+                         MaxDate="DateTimeOffset.UtcNow.AddDays(1).Date"
                          StartDate="StartDate"
                          EndDate="EndDate"
                          Culture="CultureInfo.CurrentUICulture"
@@ -41,7 +41,7 @@
     public InvestmentTimelineChart()
     {
         rendering = true;
-        EndDate = DateTimeOffset.UtcNow;
+        EndDate = DateTimeOffset.UtcNow.AddDays(1).Date;
         StartDate = EndDate.Value.AddYears(-1);
 
         config = new LineConfig()

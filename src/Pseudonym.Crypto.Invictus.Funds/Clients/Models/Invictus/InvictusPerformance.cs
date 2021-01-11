@@ -1,23 +1,15 @@
 ﻿using System;
-using Newtonsoft.Json;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus
 {
     public sealed class InvictusPerformance
     {
-        private DateTimeOffset date;
+        public DateTime Date { get; set; }
 
-        [JsonProperty("x")]
-        public DateTimeOffset Date
-        {
-            get => date;
-            set => date = value.Round();
-        }
+        public decimal CirculatingSupply { get; set; }
 
-        [JsonProperty("token_y")]
-        public string NetAssetValuePerToken { get; set; }
+        public decimal NetAssetValuePerToken { get; set; }
 
-        [JsonProperty("fund_y")]
-        public string NetValue { get; set; }
+        public decimal NetValue { get; set; }
     }
 }

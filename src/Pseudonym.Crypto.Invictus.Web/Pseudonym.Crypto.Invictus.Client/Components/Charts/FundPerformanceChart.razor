@@ -8,7 +8,7 @@
 <div>
     <div>
         <DateRangePicker MinDate="DateTimeOffset.UtcNow.AddYears(-1)"
-                            MaxDate="DateTimeOffset.UtcNow"
+                            MaxDate="DateTimeOffset.UtcNow.AddDays(1).Date"
                             StartDate="StartDate"
                             EndDate="EndDate"
                             Culture="CultureInfo.CurrentUICulture"
@@ -54,7 +54,7 @@
     public FundPerformanceChart()
     {
         Mode = PriceMode.Avg;
-        EndDate = DateTimeOffset.UtcNow;
+        EndDate = DateTimeOffset.UtcNow.AddDays(1).Date;
         StartDate = EndDate.Value.AddYears(-1);
 
         config = new LineConfig()

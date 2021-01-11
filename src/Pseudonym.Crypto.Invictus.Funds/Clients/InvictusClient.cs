@@ -41,19 +41,20 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             var fundInfo = appSettings.Funds.SingleOrDefault(x => x.Symbol == symbol);
             if (fundInfo != null)
             {
-                var response = await GetAsync<ListPerformanceResponse>(
-                    $"/v2/funds/{fundInfo.FundName}/history?start={from.ToISO8601String()}&end={to.AddDays(1).ToISO8601String()}");
+                var response = await GetAsync<GetFundResponse>(
+                    $"/v2/funds/{fundInfo.FundName}/assets-history?start={from.ToISO8601String()}&end={to.ToISO8601String()}&points={(int)(to - from).TotalHours}");
 
-                foreach (var perfSet in response.Performance
+                foreach (var perfSet in response.Data
                     .Where(x => x.Date >= from && x.Date <= to)
-                    .GroupBy(x => new DateTimeOffset(x.Date.Year, x.Date.Month, x.Date.Day, x.Date.Hour, 0, 0, TimeSpan.Zero))
+                    .GroupBy(x => new DateTime(x.Date.Year, x.Date.Month, x.Date.Day, x.Date.Hour, 0, 0, DateTimeKind.Utc))
                     .OrderBy(x => x.Key))
                 {
                     yield return new InvictusPerformance()
                     {
                         Date = perfSet.Key,
-                        NetValue = perfSet.Average(x => x.NetValue.FromPythonString()).ToString(),
-                        NetAssetValuePerToken = perfSet.Average(x => x.NetAssetValuePerToken.FromPythonString()).ToString()
+                        NetValue = perfSet.Average(x => x.NetValue.FromPythonString()),
+                        NetAssetValuePerToken = perfSet.Average(x => x.NetAssetValuePerToken.FromPythonString()),
+                        CirculatingSupply = perfSet.OrderBy(x => x.Date).Last().CirculatingSupply.FromPythonString(),
                     };
                 }
             }

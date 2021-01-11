@@ -46,21 +46,24 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                         invictusClient,
                         repository,
                         fund,
-                        latestDate.AddDays(-1),
+                        latestDate.AddDays(-1).Round(),
                         DateTimeOffset.UtcNow.AddDays(1).Round(),
                         cancellationToken);
 
                     var lowestDate = await repository.GetLowestDateAsync(fund.ContractAddress)
                         ?? DateTimeOffset.UtcNow.Round();
 
-                    await SyncPerformanceAsync(
-                        coinGeckoClient,
-                        invictusClient,
-                        repository,
-                        fund,
-                        fund.InceptionDate,
-                        lowestDate.AddDays(1),
-                        cancellationToken);
+                    if (lowestDate.Date != fund.InceptionDate.Date)
+                    {
+                        await SyncPerformanceAsync(
+                            coinGeckoClient,
+                            invictusClient,
+                            repository,
+                            fund,
+                            fund.InceptionDate,
+                            lowestDate.AddDays(1).Round(),
+                            cancellationToken);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -83,15 +86,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var end = start
-                    .AddDays(MaxDays)
-                    .AddHours(23)
-                    .AddMinutes(59)
-                    .AddSeconds(59);
+                if (start >= DateTimeOffset.UtcNow)
+                {
+                    break;
+                }
 
-                end = end > endDate
-                    ? endDate
-                    : end;
+                var end = start.AddDays(MaxDays).Round();
 
                 Console.WriteLine($"[{fund.ContractAddress}] Processing Batch: {start} -> {end}");
 
@@ -110,7 +110,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                     foreach (var nav in invictusNavs)
                     {
                         var closestPrice = marketPrices
-                            .OrderBy(i => Math.Abs(i.Date.ToUnixTimeSeconds() - nav.Date.ToUnixTimeSeconds()))
+                            .OrderBy(i => Math.Abs(i.Date.ToUnixTimeSeconds() - new DateTimeOffset(nav.Date, TimeSpan.Zero).ToUnixTimeSeconds()))
                             .FirstOrDefault();
 
                         var perf = MapPerformance(fund.ContractAddress, nav, closestPrice);
@@ -127,7 +127,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                 }
                 else
                 {
-                    start = end.AddSeconds(1);
+                    start = end;
                 }
             }
         }
@@ -140,8 +140,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             return new DataFundPerformance()
             {
                 Address = address,
-                Date = navData.Date.UtcDateTime,
-                Nav = navData.NetAssetValuePerToken.FromPythonString(),
+                Date = navData.Date,
+                Nav = navData.NetAssetValuePerToken,
                 Price = marketData?.Price ?? -1,
                 MarketCap = marketData?.MarketCap ?? -1,
                 Volume = marketData?.Volume ?? -1

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 
@@ -11,6 +12,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus
 
         [JsonIgnore]
         public Symbol Symbol { get; set; }
+
+        [JsonProperty("date")]
+        public DateTime Date { get; set; }
 
         [JsonProperty("net_asset_value")]
         public string NetValue { get; set; }
