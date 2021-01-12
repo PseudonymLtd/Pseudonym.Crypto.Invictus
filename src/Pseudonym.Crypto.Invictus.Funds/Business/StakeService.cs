@@ -26,6 +26,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
         private readonly IEtherClient etherClient;
         private readonly IGraphClient graphClient;
         private readonly IEthplorerClient ethplorerClient;
+        private readonly IFundService fundService;
         private readonly IStakingPowerRepository stakingPowerRepository;
 
         public StakeService(
@@ -33,6 +34,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             IEtherClient etherClient,
             IGraphClient graphClient,
             IEthplorerClient ethplorerClient,
+            IFundService fundService,
             ICurrencyConverter currencyConverter,
             IStakingPowerRepository stakingPowerRepository,
             ITransactionRepository transactionRepository,
@@ -44,6 +46,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             this.etherClient = etherClient;
             this.graphClient = graphClient;
             this.ethplorerClient = ethplorerClient;
+            this.fundService = fundService;
             this.stakingPowerRepository = stakingPowerRepository;
         }
 
@@ -67,6 +70,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             var token = tokenPair.Tokens
                 .First(x => !x.Symbol.Equals(stakeInfo.Symbol.ToString(), StringComparison.OrdinalIgnoreCase));
 
+            var now = DateTime.UtcNow;
+
+            var priceHistory = await fundService.ListPerformanceAsync(stakeSymbol, PriceMode.Raw, now.AddDays(-29), now, currencyCode)
+                .ToListAsync(CancellationToken);
+
+            var dailyNavs = priceHistory.TakeLast(2);
+            var weeklyNavs = priceHistory.TakeLast(8);
+
             return new BusinessStake()
             {
                 Name = stakeInfo.Name,
@@ -84,16 +95,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 Market = new BusinessMarket()
                 {
                     IsTradable = true,
-                    Cap = decimal.Zero,
+                    Cap = CurrencyConverter.Convert(priceHistory.Last().MarketCap.Value, currencyCode),
                     PricePerToken = CurrencyConverter.Convert(token.PricePerToken, currencyCode),
                     Total = CurrencyConverter.Convert(circulatingSupply * token.PricePerToken, currencyCode),
-                    DiffDaily = decimal.Zero,
-                    DiffWeekly = decimal.Zero,
-                    DiffMonthly = decimal.Zero,
+                    DiffDaily = dailyNavs.First().MarketAssetValuePerToken.Value.PercentageDiff(dailyNavs.Last().MarketAssetValuePerToken.Value),
+                    DiffWeekly = weeklyNavs.First().MarketAssetValuePerToken.Value.PercentageDiff(weeklyNavs.Last().MarketAssetValuePerToken.Value),
+                    DiffMonthly = priceHistory.First().MarketAssetValuePerToken.Value.PercentageDiff(priceHistory.Last().MarketAssetValuePerToken.Value),
                     Volume = CurrencyConverter.Convert(tokenPair.Volume, currencyCode),
-                    VolumeDiffDaily = decimal.Zero,
-                    VolumeDiffWeekly = decimal.Zero,
-                    VolumeDiffMonthly = decimal.Zero
+                    VolumeDiffDaily = dailyNavs.First().Volume.Value.PercentageDiff(dailyNavs.Last().Volume.Value),
+                    VolumeDiffWeekly = weeklyNavs.First().Volume.Value.PercentageDiff(weeklyNavs.Last().Volume.Value),
+                    VolumeDiffMonthly = priceHistory.First().Volume.Value.PercentageDiff(priceHistory.Last().Volume.Value),
                 },
                 StakingAddress = stakeInfo.StakingAddress,
                 FundMultipliers = stakeInfo.FundMultipliers,

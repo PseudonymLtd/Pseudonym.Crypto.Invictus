@@ -5,6 +5,7 @@ using System.Linq;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Exceptions;
 using Pseudonym.Crypto.Invictus.Shared.Models;
+using Pseudonym.Crypto.Invictus.Shared.Models.Abstractions;
 using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
 using Pseudonym.Crypto.Invictus.Web.Client.Business.Abstractions;
 
@@ -64,29 +65,29 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
             ?.TransferAction
             ?? TransferAction.None;
 
-        public ITrade GetTrade(ApiFund fund, IUserSettings settings)
+        public ITrade GetTrade(IProduct product, IUserSettings settings)
         {
             return IsSwap()
-                ? GetSwapData(fund)
-                : GetTradeData(fund, settings);
+                ? GetSwapData(product)
+                : GetTradeData(product, settings);
         }
 
-        public BusinessTrade GetTradeData(ApiFund fund, IUserSettings settings)
+        public BusinessTrade GetTradeData(IProduct product, IUserSettings settings)
         {
             if (!IsSwap())
             {
                 return new BusinessTrade()
                 {
                     Date = ConfirmedAt,
-                    IsTradeable = fund.Market.IsTradeable,
+                    IsTradeable = product.Market.IsTradeable,
                     IsInbound = IsInbound(),
                     Quantity = GetTransferQuantity(TransferAction, settings),
-                    NetCurrentPricePerToken = fund.Nav.ValuePerToken,
+                    NetCurrentPricePerToken = product.Nav.ValuePerToken,
                     NetSnapshotPricePerToken = Price.NetAssetValuePerToken,
-                    MarketCurrentPricePerToken = fund.Market.IsTradeable
-                        ? fund.Market.PricePerToken
+                    MarketCurrentPricePerToken = product.Market.IsTradeable
+                        ? product.Market.PricePerToken
                         : default(decimal?),
-                    MarketSnapshotPricePerToken = fund.Market.IsTradeable
+                    MarketSnapshotPricePerToken = product.Market.IsTradeable
                         ? GetTransferPricePerToken(TransferAction, settings)
                         : default(decimal?),
                     IsStakeLockup = Recipient.Equals(settings.StakingAddress, StringComparison.OrdinalIgnoreCase),
@@ -105,13 +106,13 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
             }
         }
 
-        public BusinessSwap GetSwapData(ApiFund fund)
+        public BusinessSwap GetSwapData(IProduct product)
         {
             if (IsSwap())
             {
                 var outboundSwap = GetSwap(TransferAction.Outbound);
                 var inboundSwap = GetSwap(TransferAction.Inbound);
-                var isInbound = inboundSwap.Contract.Address == fund.Token.Address;
+                var isInbound = inboundSwap.Contract.Address == product.Token.Address;
 
                 var fundOp = isInbound
                     ? inboundSwap
@@ -128,15 +129,15 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Business
                         ? "ETH"
                         : outboundSwap.Contract.Symbol,
                     OutboundQuantity = outboundSwap.Quantity,
-                    IsTradeable = fund.Market.IsTradeable,
+                    IsTradeable = product.Market.IsTradeable,
                     IsInbound = isInbound,
                     Quantity = fundOp.Quantity,
-                    NetCurrentPricePerToken = fund.Nav.ValuePerToken,
+                    NetCurrentPricePerToken = product.Nav.ValuePerToken,
                     NetSnapshotPricePerToken = Price.NetAssetValuePerToken,
-                    MarketCurrentPricePerToken = fund.Market.IsTradeable
-                        ? fund.Market.PricePerToken
+                    MarketCurrentPricePerToken = product.Market.IsTradeable
+                        ? product.Market.PricePerToken
                         : default(decimal?),
-                    MarketSnapshotPricePerToken = fund.Market.IsTradeable
+                    MarketSnapshotPricePerToken = product.Market.IsTradeable
                         ? fundOp.PricePerToken
                         : default(decimal?),
                     IsStakeLockup = false,

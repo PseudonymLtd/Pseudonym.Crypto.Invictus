@@ -62,13 +62,19 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
         public async IAsyncEnumerable<IPerformance> ListPerformanceAsync(Symbol symbol, PriceMode priceMode, DateTime from, DateTime to, CurrencyCode currencyCode)
         {
-            var fundInfo = GetFundInfo(symbol);
+            var contractAddress = symbol.IsFund()
+                ? GetFundInfo(symbol).ContractAddress
+                : GetStakeInfo(symbol).ContractAddress;
 
-            var start = from < fundInfo.InceptionDate.UtcDateTime
-                ? fundInfo.InceptionDate.UtcDateTime
+            var inceptionDate = symbol.IsFund()
+                ? GetFundInfo(symbol).InceptionDate
+                : GetStakeInfo(symbol).InceptionDate;
+
+            var start = from < inceptionDate.UtcDateTime
+                ? inceptionDate.UtcDateTime
                 : from;
 
-            if (to <= fundInfo.InceptionDate.UtcDateTime)
+            if (to <= inceptionDate.UtcDateTime)
             {
                 yield break;
             }
@@ -76,7 +82,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             if (priceMode == PriceMode.Raw)
             {
                 await foreach (var perf in fundPerformanceRepository
-                    .ListPerformancesAsync(fundInfo.ContractAddress, start, to)
+                    .ListPerformancesAsync(contractAddress, start, to)
                     .WithCancellation(CancellationToken))
                 {
                     yield return new BusinessPerformance()
@@ -105,7 +111,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             }
 
             var perfs = await fundPerformanceRepository
-                .ListPerformancesAsync(fundInfo.ContractAddress, start, to)
+                .ListPerformancesAsync(contractAddress, start, to)
                 .ToListAsync(CancellationToken);
 
             foreach (var perfGroup in perfs.GroupBy(p => p.Date.Date).OrderBy(x => x.Key))
@@ -149,37 +155,36 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
         public async IAsyncEnumerable<ITransactionSet> ListBurnsAsync(Symbol symbol, CurrencyCode currencyCode)
         {
-            var fundInfo = GetFundInfo(symbol);
+            var contractAddress = symbol.IsFund()
+                ? GetFundInfo(symbol).ContractAddress
+                : GetStakeInfo(symbol).ContractAddress;
 
-            if (fundInfo.Burnable)
+            var transactionHashes = new List<EthereumTransactionHash>();
+
+            await foreach (var hash in Operations
+                .ListInboundHashesAsync(EthereumAddress.Empty, contractAddress)
+                .WithCancellation(CancellationToken))
             {
-                var transactionHashes = new List<EthereumTransactionHash>();
+                transactionHashes.Add(hash);
+            }
 
-                await foreach (var hash in Operations
-                    .ListInboundHashesAsync(EthereumAddress.Empty, fundInfo.ContractAddress)
-                    .WithCancellation(CancellationToken))
+            foreach (var hash in transactionHashes.Distinct())
+            {
+                var transaction = await Transactions.GetTransactionAsync(contractAddress, hash);
+                if (transaction != null &&
+                    transaction.ConfirmedAt.Year > 2019)
                 {
-                    transactionHashes.Add(hash);
-                }
+                    var businessTransaction = MapTransaction<BusinessTransactionSet>(transaction);
 
-                foreach (var hash in transactionHashes.Distinct())
-                {
-                    var transaction = await Transactions.GetTransactionAsync(fundInfo.ContractAddress, hash);
-                    if (transaction != null &&
-                        transaction.ConfirmedAt.Year > 2019)
-                    {
-                        var businessTransaction = MapTransaction<BusinessTransactionSet>(transaction);
+                    var operations = await Operations
+                        .ListOperationsAsync(hash)
+                        .ToListAsync(CancellationToken);
 
-                        var operations = await Operations
-                            .ListOperationsAsync(hash)
-                            .ToListAsync(CancellationToken);
+                    businessTransaction.Operations = operations
+                        .Select(o => MapOperation(o, currencyCode))
+                        .ToList();
 
-                        businessTransaction.Operations = operations
-                            .Select(o => MapOperation(o, currencyCode))
-                            .ToList();
-
-                        yield return businessTransaction;
-                    }
+                    yield return businessTransaction;
                 }
             }
         }

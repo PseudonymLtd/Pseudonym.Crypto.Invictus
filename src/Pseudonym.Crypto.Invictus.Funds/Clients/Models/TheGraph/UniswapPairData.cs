@@ -4,14 +4,7 @@
 
 namespace Pseudonym.Crypto.Invictus.Funds.Clients.Models.TheGraph
 {
-    public sealed class UniswapPairResponse
-    {
-        [JsonRequired]
-        [JsonProperty("data")]
-        public UniswapData Data { get; set; }
-    }
-
-    public sealed class UniswapData
+    public sealed class UniswapPairData
     {
         [JsonRequired]
         [JsonProperty("pair")]

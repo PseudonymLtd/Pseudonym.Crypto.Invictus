@@ -3,6 +3,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Components;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
 using Pseudonym.Crypto.Invictus.Shared.Models;
+using Pseudonym.Crypto.Invictus.Shared.Models.Abstractions;
 using Pseudonym.Crypto.Invictus.Web.Client.Abstractions;
 using Pseudonym.Crypto.Invictus.Web.Client.Business;
 
@@ -10,12 +11,12 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Components.Common
 {
     public class BaseComponent : ComponentBase
     {
-        protected BusinessTransaction Map(IUserSettings userSettings, ApiFund fund, ApiTransactionSet transaction, ApiPerformance performance)
+        protected BusinessTransaction Map(IUserSettings userSettings, IProduct product, ApiTransactionSet transaction, ApiPerformance performance)
         {
             var businessTransaction = new BusinessTransaction()
             {
                 Hash = transaction.Hash,
-                ContractAddress = fund.Token.Address,
+                ContractAddress = product.Token.Address,
                 BlockNumber = transaction.BlockNumber,
                 Confirmations = transaction.Confirmations,
                 ConfirmedAt = transaction.ConfirmedAt,
@@ -42,7 +43,7 @@ namespace Pseudonym.Crypto.Invictus.Web.Client.Components.Common
                         PricePerToken =
                             performance != null &&
                             operation.PricePerToken == default &&
-                            operation.Contract.Symbol.Equals(fund.Token.Symbol.ToString(), StringComparison.OrdinalIgnoreCase)
+                            operation.Contract.Symbol.Equals(product.Token.Symbol.ToString(), StringComparison.OrdinalIgnoreCase)
                                 ? performance.MarketValuePerToken ?? performance.NetAssetValuePerToken
                                 : operation.PricePerToken,
                         Priority = operation.Priority,

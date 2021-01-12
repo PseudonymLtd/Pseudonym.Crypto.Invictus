@@ -57,7 +57,7 @@ else
 
             if (investment != null)
             {
-                NavigationManager.NavigateTo($"/funds/{investment.Fund.Token.Symbol}");
+                NavigationManager.NavigateTo($"/{(investment.Fund.Token.Symbol.IsFund() ? "funds" : "stakes")}/{investment.Fund.Token.Symbol}");
             }
         }
     }

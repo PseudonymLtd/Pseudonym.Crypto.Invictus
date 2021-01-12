@@ -6,16 +6,19 @@
             <img src="images/funds/@($"{Fund.Token.Symbol}.png")" class="mr-3" alt="@Fund.DisplayName">
             <h1 class="display-4">@Fund.DisplayName</h1>
             <div class="text-align-mob-center" style="margin-left: 5px;">
-                <ValueBubble Type="Nav" Pricing="Fund.Nav" Decimals="2" Symbol="Fund.Token.Symbol" />
+                @if (Fund.Token.Symbol.IsFund())
+                {
+                    <ValueBubble Type="Nav" Pricing="Fund.Nav" Decimals="2" Symbol="Fund.Token.Symbol" />
+                }
                 @if (Fund.Market.IsTradeable)
                 {
-                    <span style="padding-left: 5px;">
+                    <span style="padding-left: @(Fund.Token.Symbol.IsFund() ? 5 : 0)px;">
                         <ValueBubble Type="Mkt" Pricing="Fund.Market" Decimals="2" />
                     </span>
                 }
             </div>
             <div style="position: absolute; display: inline-block; right: 0; left: auto; top: 0; height: 20px;">
-                <a class="badge neutral" href="@Fund.Links.Lite" target="_blank" style="">Lite</a>
+                <a class="badge neutral" href="@Fund.Links.Lite" target="_blank" style="">@(Fund.Token.Symbol.IsFund() ? "Lite" : "Pool")</a>
                 <a class="badge @Fund.Token.Symbol.ToString().ToLower()" href="@Fund.Links.Fact" target="_blank">Fact</a>
             </div>
         </div>

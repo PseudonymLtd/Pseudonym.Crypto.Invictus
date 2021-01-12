@@ -21,7 +21,10 @@ else
     {
         <StakeEventFundBreakdown Fund="investment.Fund" Stake="stake.Key" Events="stake.Value" />
     }
-    <FundBreakdown Fund="investment.Fund" />
+    if (investment.Fund.Assets.Any())
+    {
+        <FundBreakdown Fund="investment.Fund" />
+    }
     if (investment.SubInvestments.Any())
     {
         <InvestmentExposure Investments="investment.SubInvestments" />
@@ -59,7 +62,7 @@ else
             @foreach (var transaction in transactions.OrderByDescending(x => x.ConfirmedAt))
             {
                 <Anchor Id="@transaction.Hash" />
-                <TransactionSummary Fund="investment.Fund" Transaction="transaction" CollapseId="@($"Id-{transaction.Hash}")" />
+                <TransactionSummary Product="investment.Fund" Transaction="transaction" CollapseId="@($"Id-{transaction.Hash}")" />
             }
         </div>
     }
@@ -116,18 +119,6 @@ else
 
                 StateHasChanged();
 
-                await foreach (var stake in Client.ListStakesAsync())
-                {
-                    stakes.Add(stake, new List<ApiStakeEvent>());
-
-                    await foreach (var stakeEvent in Client.ListStakeEventsAsync(stake.Token.Symbol, symbol))
-                    {
-                        stakes[stake].Add(stakeEvent);
-                    }
-
-                    StateHasChanged();
-                }
-
                 await foreach (var transaction in Client.ListInvestmentTransactionsAsync(symbol))
                 {
                     transactions.Add(Map(
@@ -144,6 +135,21 @@ else
                 }
 
                 StateHasChanged();
+
+                if (symbol.IsFund())
+                {
+                    await foreach (var stake in Client.ListStakesAsync())
+                    {
+                        stakes.Add(stake, new List<ApiStakeEvent>());
+
+                        await foreach (var stakeEvent in Client.ListStakeEventsAsync(stake.Token.Symbol, symbol))
+                        {
+                            stakes[stake].Add(stakeEvent);
+                        }
+
+                        StateHasChanged();
+                    }
+                }
 
                 var maxDate = transactions.Max(x => x.ConfirmedAt).AddDays(1);
                 var max = now.AddDays(-1);

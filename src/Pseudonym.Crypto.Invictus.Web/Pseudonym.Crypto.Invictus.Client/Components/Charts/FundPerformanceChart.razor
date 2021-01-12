@@ -22,8 +22,8 @@
             {
                 <li class="page-item @(Mode == val ? "active" : string.Empty)" style="cursor: pointer">
                     <span 
-                        style="background-color: #2d3238; color: white; border-color: @ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Fund.Token.Symbol));"
-                        class="page-link @(Mode == val ? Fund.Token.Symbol.ToString().ToLower() : string.Empty)"
+                        style="background-color: #2d3238; color: white; border-color: @ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Product.Token.Symbol));"
+                        class="page-link @(Mode == val ? Product.Token.Symbol.ToString().ToLower() : string.Empty)"
                         @onclick="async (e) => await OnClickAsync(val)">
                         @val.ToString()
                         <span class="sr-only">(@val.ToString())</span>
@@ -37,7 +37,7 @@
             @if (!navDataset.Data.Any())
             {
                 <div style="position: absolute; width: 100%; height: 100%; text-align: center; padding: 100px 0;">
-                    <Awaiting Symbol="Fund.Token.Symbol" />
+                    <Awaiting Symbol="Product.Token.Symbol" />
                 </div>
             }
             <ChartJsLineChart Config="config" Width="Width" Height="Height" @ref="chart" />
@@ -183,7 +183,7 @@
     public string SubTitle { get; set; } = string.Empty;
 
     [Parameter]
-    public ApiFund Fund { get; set; }
+    public IProduct Product { get; set; }
 
     protected DateTimeOffset? StartDate { get; private set; }
 
@@ -199,12 +199,15 @@
         priceAxis.ScaleLabel.LabelString = $"Price {UserSettings.CurrencyCode.GetSymbol()}";
 
         navDataset.Label = "Nav";
-        navDataset.BackgroundColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Fund.Token.Symbol));
-        navDataset.BorderColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Fund.Token.Symbol));
+        navDataset.BackgroundColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Product.Token.Symbol));
+        navDataset.BorderColor = ColorUtil.FromDrawingColor(InvictusColours.GetByFund(Product.Token.Symbol));
 
-        config.Data.Datasets.Add(navDataset);
+        if (Product.Token.Symbol.IsFund())
+        {
+            config.Data.Datasets.Add(navDataset);
+        }
 
-        if (Fund.Market.IsTradeable)
+        if (Product.Market.IsTradeable)
         {
             marketDataset.Label = "Market";
 
@@ -223,7 +226,7 @@
         }
 
         await foreach (var perf in ApiClient.ListFundPerformanceAsync(
-            Fund.Token.Symbol,
+            Product.Token.Symbol,
             Mode,
             StartDate.Value.UtcDateTime,
             EndDate.Value.Date.AddDays(1)))

@@ -2,10 +2,11 @@
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
+using Pseudonym.Crypto.Invictus.Shared.Models.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Models
 {
-    public sealed class ApiStake
+    public sealed class ApiStake : IProduct
     {
         [Required]
         [JsonProperty("name")]
@@ -50,5 +51,15 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [Required]
         [JsonProperty("links")]
         public ApiStakeLinks Links { get; set; }
+
+        [JsonIgnore]
+        public ApiNav Nav => new ApiNav()
+        {
+            Value = Market.Total,
+            ValuePerToken = Market.PricePerToken,
+            DiffDaily = Market.DiffDaily,
+            DiffWeekly = Market.DiffWeekly,
+            DiffMonthly = Market.DiffMonthly
+        };
     }
 }

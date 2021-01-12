@@ -7,11 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Clients.Models.CoinGecko;
-using Pseudonym.Crypto.Invictus.Funds.Clients.Models.Invictus;
 using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Configuration.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Data.Models;
-using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Services
 {
@@ -33,6 +31,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             var repository = scope.ServiceProvider.GetRequiredService<IFundPerformanceRepository>();
             var coinGeckoClient = scope.ServiceProvider.GetRequiredService<ICoinGeckoClient>();
             var invictusClient = scope.ServiceProvider.GetRequiredService<IInvictusClient>();
+            var graphClient = scope.ServiceProvider.GetRequiredService<IGraphClient>();
 
             foreach (var fund in AppSettings.Funds.Cast<IFundSettings>())
             {
@@ -68,6 +67,42 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                 catch (Exception e)
                 {
                     Console.WriteLine($"Error getting market data for {fund.Symbol}.");
+                    Console.WriteLine(e);
+                }
+            }
+
+            foreach (var stake in AppSettings.Stakes.Cast<IStakeSettings>())
+            {
+                try
+                {
+                    var latestDate = await repository.GetLatestDateAsync(stake.ContractAddress)
+                        ?? stake.InceptionDate;
+
+                    await SyncPerformanceAsync(
+                        graphClient,
+                        repository,
+                        stake,
+                        latestDate.AddDays(-1).Round(),
+                        DateTimeOffset.UtcNow.AddDays(1).Round(),
+                        cancellationToken);
+
+                    var lowestDate = await repository.GetLowestDateAsync(stake.ContractAddress)
+                        ?? DateTimeOffset.UtcNow.Round();
+
+                    if (lowestDate.Date != stake.InceptionDate.Date)
+                    {
+                        await SyncPerformanceAsync(
+                            graphClient,
+                            repository,
+                            stake,
+                            stake.InceptionDate,
+                            lowestDate.AddDays(1).Round(),
+                            cancellationToken);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error getting market data for {stake.Symbol}.");
                     Console.WriteLine(e);
                 }
             }
@@ -113,7 +148,15 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                             .OrderBy(i => Math.Abs(i.Date.ToUnixTimeSeconds() - new DateTimeOffset(nav.Date, TimeSpan.Zero).ToUnixTimeSeconds()))
                             .FirstOrDefault();
 
-                        var perf = MapPerformance(fund.ContractAddress, nav, closestPrice);
+                        var perf = new DataFundPerformance()
+                        {
+                            Address = fund.ContractAddress,
+                            Date = nav.Date,
+                            Nav = nav.NetAssetValuePerToken,
+                            Price = closestPrice?.Price ?? -1,
+                            MarketCap = closestPrice?.MarketCap ?? -1,
+                            Volume = closestPrice?.Volume ?? -1
+                        };
 
                         await repository.UploadItemsAsync(perf);
                     }
@@ -132,20 +175,57 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             }
         }
 
-        private DataFundPerformance MapPerformance(
-            EthereumAddress address,
-            InvictusPerformance navData,
-            CoinGeckoCoinPerformance marketData)
+        private async Task SyncPerformanceAsync(
+            IGraphClient graphClient,
+            IFundPerformanceRepository repository,
+            IStakeSettings stake,
+            DateTimeOffset startDate,
+            DateTimeOffset endDate,
+            CancellationToken cancellationToken)
         {
-            return new DataFundPerformance()
+            var start = new DateTimeOffset(startDate.Date, TimeSpan.Zero);
+
+            while (!cancellationToken.IsCancellationRequested)
             {
-                Address = address,
-                Date = navData.Date,
-                Nav = navData.NetAssetValuePerToken,
-                Price = marketData?.Price ?? -1,
-                MarketCap = marketData?.MarketCap ?? -1,
-                Volume = marketData?.Volume ?? -1
-            };
+                if (start >= DateTimeOffset.UtcNow)
+                {
+                    break;
+                }
+
+                var end = start.AddDays(MaxDays).Round();
+
+                Console.WriteLine($"[{stake.ContractAddress}] Processing Batch: {start} -> {end}");
+
+                var uniswapPrices = await graphClient
+                    .ListUniswapTokenPerformanceAsync(stake.ContractAddress, start, end)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var priceData in uniswapPrices)
+                {
+                    var perf = new DataFundPerformance()
+                    {
+                        Address = stake.ContractAddress,
+                        Date = priceData.Date,
+                        Nav = priceData.Price,
+                        Price = priceData.Price,
+                        MarketCap = priceData.MarketCap,
+                        Volume = priceData.Volume
+                    };
+
+                    await repository.UploadItemsAsync(perf);
+                }
+
+                Console.WriteLine($"[{stake.ContractAddress}] Finished Batch: {start} -> {end}");
+
+                if (end >= endDate)
+                {
+                    break;
+                }
+                else
+                {
+                    start = end;
+                }
+            }
         }
     }
 }

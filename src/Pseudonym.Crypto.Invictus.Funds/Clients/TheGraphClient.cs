@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Pseudonym.Crypto.Invictus.Funds.Abstractions;
@@ -20,7 +21,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
 
         public async Task<UniswapPairResult> GetUniswapPairAsync(EthereumAddress pairAddress)
         {
-            var response = await PostAsync<UniswapPairRequest, UniswapPairResponse>(
+            var response = await PostAsync<UniswapPairRequest, UniswapResponse<UniswapPairData>>(
                 "/subgraphs/name/uniswap/uniswap-v2",
                 new UniswapPairRequest(pairAddress));
 
@@ -50,6 +51,31 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
                     }
                 }
             };
+        }
+
+        public async IAsyncEnumerable<UniswapTokenPerformanceResult> ListUniswapTokenPerformanceAsync(EthereumAddress contractAddress, DateTimeOffset from, DateTimeOffset to)
+        {
+            var response = await PostAsync<UniswapTokenPerformanceRequest, UniswapResponse<UniswapPerformanceData>>(
+                "/subgraphs/name/uniswap/uniswap-v2",
+                new UniswapTokenPerformanceRequest(contractAddress, from, to));
+
+            if (response.Data.Performance.Any())
+            {
+                foreach (var perf in response.Data.Performance)
+                {
+                    yield return new UniswapTokenPerformanceResult()
+                    {
+                        Date = DateTimeOffset.FromUnixTimeSeconds(perf.UnixDate).UtcDateTime,
+                        Price = perf.Price.FromBigInteger(),
+                        MarketCap = perf.MarketCap.FromBigInteger(),
+                        Volume = perf.Volume.FromBigInteger()
+                    };
+                }
+            }
+            else
+            {
+                yield break;
+            }
         }
     }
 }

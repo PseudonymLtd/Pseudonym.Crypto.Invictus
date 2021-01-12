@@ -17,16 +17,19 @@
                         <LargeNumber Value="Investment.Held" ShowZeroValue="true" Decimals="2" />
                     </div>
                 </div>
-                <div class="col-xs-2 px-2 pl-sm-0 pr-sm-5 py-1">
-                    <small style="font-weight: bold; color: #cf2127;">Net Value (@UserSettings.CurrencyCode.GetSymbol())</small>
-                    <div>
-                        <Money Value="Investment.RealValue" ShowZeroValue="true" CurrencyCode="UserSettings.CurrencyCode" />
-                        @if (NetProfit.HasValue)
-                        {
-                            <ProfitTag Value="NetProfit.Value" Decimals="2" />
-                        }
+                @if (Investment.Fund.Token.Symbol.IsFund())
+                {
+                    <div class="col-xs-2 px-2 pl-sm-0 pr-sm-5 py-1">
+                        <small style="font-weight: bold; color: #cf2127;">Net Value (@UserSettings.CurrencyCode.GetSymbol())</small>
+                        <div>
+                            <Money Value="Investment.RealValue" ShowZeroValue="true" CurrencyCode="UserSettings.CurrencyCode" />
+                            @if (NetProfit.HasValue)
+                            {
+                                <ProfitTag Value="NetProfit.Value" Decimals="2" />
+                            }
+                        </div>
                     </div>
-                </div>
+                }
                 <div class="col-xs-2 @(Investment.Fund.Market.IsTradeable ? "px-2 pl-sm-0" : string.Empty) pr-sm-5 py-1">
                     <small style="font-weight: bold; color: #cf2127;">Share</small>
                     <div>

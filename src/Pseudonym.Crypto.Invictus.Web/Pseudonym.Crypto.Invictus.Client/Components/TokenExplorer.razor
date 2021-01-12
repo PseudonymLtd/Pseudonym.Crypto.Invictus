@@ -3,7 +3,7 @@
 
 @if (FundSymbol.HasValue)
 {
-    <a @onclick="@(() => NavigationManager.NavigateTo($"funds/{FundSymbol.Value}", true))" style="min-width: 100px;" class="btn btn-primary btn-sm @FundSymbol.Value.ToString().ToLower()" role="button">View Details</a>
+    <a @onclick="@(() => NavigationManager.NavigateTo($"{(FundSymbol.Value.IsFund() ? "funds" : "stakes")}/{FundSymbol.Value}", true))" style="min-width: 100px;" class="btn btn-primary btn-sm @FundSymbol.Value.ToString().ToLower()" role="button">View Details</a>
 }
 else if (MarketLink != null)
 {

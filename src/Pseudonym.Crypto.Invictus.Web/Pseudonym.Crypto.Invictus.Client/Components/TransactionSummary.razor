@@ -6,14 +6,14 @@
         <div style="margin-top: auto; margin-bottom: auto; padding-bottom: 6px;" data-toggle="collapse" href="#@CollapseId" role="button" aria-expanded="false" aria-controls="@CollapseId">
             <blockquote class="blockquote">
                 <h4 style="padding-bottom: 0px; margin-bottom: 0px;">
-                    <img src="images/funds/@FundImageName" class="mr-1 mb-1" height="50" width="50" alt="@Fund.DisplayName">
+                    <img src="images/funds/@(Product.Token.Symbol).png" class="mr-1 mb-1" height="50" width="50" alt="@Product.DisplayName">
                     <small style="padding-left: 3px; position: absolute; font-size: x-small; color: #6c757d;">@Transaction.ConfirmedAt.ToString("F", DateTimeFormatInfo.InvariantInfo)</small>
                     <span style="padding-left: 2px;">
                         @if (Transaction.Price != null)
                         {
                             if (Transaction.IsSwap())
                             {
-                                var swap = Transaction.GetSwapData(Fund);
+                                var swap = Transaction.GetSwapData(Product);
 
                                 <span>Swap</span>
                                 <LargeNumber Value="swap.OutboundQuantity" Decimals="2" ShowZeroValue="true" />
@@ -24,17 +24,17 @@
                             }
                             else
                             {
-                                var trade = Transaction.GetTradeData(Fund, UserSettings);
+                                var trade = Transaction.GetTradeData(Product, UserSettings);
 
                                 <span>@trade.GetTradeName()</span>
                                 <LargeNumber Value="trade.Quantity" Decimals="2" ShowZeroValue="true" />
-                                <small>@Fund.Token.Symbol</small>
+                                <small>@Product.Token.Symbol</small>
                             }
                         }
                         else
                         {
                             <span>Tx </span>
-                            <Awaiting Symbol="Fund.Token.Symbol" />
+                            <Awaiting Symbol="Product.Token.Symbol" />
                         }
                     </span>
                 </h4>
@@ -44,13 +44,16 @@
                     {
                         if (Transaction.IsSwap())
                         {
-                            var swap = Transaction.GetSwapData(Fund);
+                            var swap = Transaction.GetSwapData(Product);
 
-                            <span>
-                                NET
-                                <Money Value="swap.NetSnapshotPrice" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
-                                <ProfitTag Value="swap.NetDiff" Decimals="2" />
-                            </span>
+                            if (Product.Token.Symbol.IsFund())
+                            {
+                                <span>
+                                    NET
+                                    <Money Value="swap.NetSnapshotPrice" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
+                                    <ProfitTag Value="swap.NetDiff" Decimals="2" />
+                                </span>
+                            }
 
                             if (swap.IsTradeable)
                             {
@@ -63,18 +66,21 @@
                         }
                         else
                         {
-                            var trade = Transaction.GetTradeData(Fund, UserSettings);
+                            var trade = Transaction.GetTradeData(Product, UserSettings);
 
-                            <span>
-                                NET
-                                <Money Value="trade.NetSnapshotPrice" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
-                                @if (!trade.IsStake)
-                                {
-                                    <ProfitTag Value="@(trade.IsBurn ? trade.BurnGain : trade.NetDiff)" Decimals="2" />
-                                }
-                            </span>
+                            if (Product.Token.Symbol.IsFund())
+                            {
+                                <span>
+                                    NET
+                                    <Money Value="trade.NetSnapshotPrice" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
+                                    @if (!trade.IsStake)
+                                    {
+                                        <ProfitTag Value="@(trade.IsBurn ? trade.BurnGain : trade.NetDiff)" Decimals="2" />
+                                    }
+                                </span>
+                            }   
 
-                            if (trade.IsTradeable && !trade.IsBurn)
+                            if (trade.IsTradeable)
                             {
                                 <span>
                                     MKT
@@ -134,15 +140,13 @@
 @code {
 
     [Parameter]
-    public ApiFund Fund { get; set; }
+    public IProduct Product { get; set; }
 
     [Parameter]
     public BusinessTransaction Transaction { get; set; }
 
     [Parameter]
     public string CollapseId { get; set; }
-
-    public string FundImageName => $"{Fund.Token.Symbol}.png";
 
     protected override void OnInitialized()
     {
