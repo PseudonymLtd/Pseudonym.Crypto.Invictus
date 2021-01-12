@@ -2,16 +2,16 @@
 @inject IUserSettings UserSettings
 
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-3 py-1 text-mob-sm">
+    <div class="row text-mob-sm">
+        <div class="col-4 col-sm-3 py-1 pl-0 pr-4 invisible-mob">
             <Date Value="Event.ConfirmedAt" />
         </div>
-        <div class="col-3 py-1">
+        <div class="col-4 col-sm-3 py-1 pl-0 pr-4">
             <img src="images/funds/@(Fund.Token.Symbol).png" width="32" height="32">
             <span>@Fund.Token.Symbol</span>
             <ProfitTag Value="Event.Change" Decimals="2" />
         </div>
-        <div class="col-3 py-1 text-mob-sm">
+        <div class="col-4 col-sm-3 py-1 pl-0 pr-4">
             @if (Event.Type == StakeEventType.Lockup)
             {
                 <Money Value="Event.Lock.Quantity * Fund.Nav.ValuePerToken" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" ShowZeroValue="true" />
@@ -25,7 +25,7 @@
                 }
             }
         </div>
-        <div class="col-3 py-1 text-mob-sm">
+        <div class="col-4 col-sm-3 py-1 px-0">
             @switch (Event.Type)
             {
                 case StakeEventType.Lockup:

@@ -2,18 +2,18 @@
 @inject IAppState AppState
 
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-4 py-1">
+    <div class="row text-mob-sm">
+        <div class="col-6 col-sm-4 py-1 pl-0 pr-4 my-auto">
             <img src="@Asset.Holding.Links.ImageLink.OriginalString" onerror="this.attributes.getNamedItem('src').value = 'images/default.png'" width="32" height="32" style="margin: 0 auto; margin-right: 3px;" />
-            @Asset.Holding.Name
+            <span>@Asset.Holding.Name</span>
         </div>
-        <div class="col-3 py-1">
+        <div class="col-5 col-sm-3 py-1 pl-0 pr-4 pr-sm-4 my-auto">
             <Money Value="@Asset.Total" CurrencyCode="UserSettings.CurrencyCode" />
         </div>
-        <div class="col-2 py-1">
+        <div class="col-1 col-sm-2 py-1 pl-0 pr-0 pr-sm-4 my-auto">
             <LargeNumber Value="Asset.Share" Decimals="2" Suffix="%" />
         </div>
-        <div class="col-3 py-1">
+        <div class="col-12 col-sm-3 py-1 pl-0 pr-0 invisible-mob">
             <TokenExplorer Symbol="@Asset.Holding.Symbol" Name="@Asset.Holding.Name" Link="Asset.Holding.Links.Link" ImageLink="Asset.Holding.Links.ImageLink" MarketLink="Asset.Holding.Links.MarketLink" />
         </div>
     </div>

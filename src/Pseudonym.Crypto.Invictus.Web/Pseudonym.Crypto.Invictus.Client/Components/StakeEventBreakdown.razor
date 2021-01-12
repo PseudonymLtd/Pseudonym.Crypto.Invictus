@@ -7,7 +7,7 @@
             <div class="row">
                 <div class="col-xs-1 py-1">
                     <h1 class="display-4">@Stake.Token.Symbol Staking Events</h1>
-                    <p class="lead">
+                    <p class="lead text-justify text-sm-left">
                         <span>You will currently earn a</span>
                         <LargeNumber Value="RelativePercentage" Suffix="%" ShowZeroValue="true" Decimals="4" />
                         <span>share of @Stake.Token.Symbol at each distribution.</span>
@@ -16,16 +16,16 @@
                     {
                         <div class="container-fluid" style="max-width: none">
                             <div class="row">
-                                <div class="col-3 py-1" style="font-weight: bold;">
+                                <div class="col-4 col-sm-3 py-1 pl-0 pr-4 invisible-mob" style="font-weight: bold;">
                                     Date
                                 </div>
-                                <div class="col-3 py-1" style="font-weight: bold;">
+                                <div class="col-4 col-sm-3 py-1 pl-0 pr-4" style="font-weight: bold;">
                                     Quantity
                                 </div>
-                                <div class="col-3 py-1" style="font-weight: bold;">
-                                    Value (@UserSettings.CurrencyCode.GetSymbol())
+                                <div class="col-4 col-sm-3 py-1 pl-0 pr-4" style="font-weight: bold;">
+                                    Power (@UserSettings.CurrencyCode.GetSymbol())
                                 </div>
-                                <div class="col-3 py-1" style="font-weight: bold;">
+                                <div class="col-4 col-sm-3 py-1 px-0" style="font-weight: bold;">
                                     Type
                                 </div>
                             </div>
@@ -38,14 +38,14 @@
                         }
                         <div class="container-fluid" style="max-width: none">
                             <div class="row">
-                                <div class="col-3 py-1" style="font-weight: bold;">
+                                <div class="col-4 col-sm-3 py-1 pl-0 pr-4 invisible-mob" style="font-weight: bold;">
                                 </div>
-                                <div class="col-3 py-1" style="font-weight: bold;">
+                                <div class="col-4 col-sm-3 py-1 pl-0 pr-4" style="font-weight: bold;">
                                 </div>
-                                <div class="col-3 py-1" style="font-weight: bold;">
-                                    Total Power
+                                <div class="col-4 col-sm-3 py-1 pl-0 pr-4" style="font-weight: bold;">
+                                    Total
                                 </div>
-                                <div class="col-3 py-1" style="font-weight: bold;">
+                                <div class="col-4 col-sm-3 py-1 px-0" style="font-weight: bold;">
                                     <Money Value="Power" Decimals="2" ShowZeroValue="true" CurrencyCode="UserSettings.CurrencyCode" />
                                 </div>
                             </div>

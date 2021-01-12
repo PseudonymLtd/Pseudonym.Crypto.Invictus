@@ -10,21 +10,21 @@
                 </div>
                 <div class="col py-1">
                     <h1 class="display-4">Asset Exposure</h1>
-                    <p class="lead">
+                    <p class="lead text-justify text-sm-left">
                         You hold personal investments in @(Investments.Count) underlying asset(s).
                     </p>
                     <div class="container-fluid" style="max-width: none">
                         <div class="row">
-                            <div class="col-4 py-1" style="font-weight: bold;">
+                            <div class="col-6 col-sm-4 pl-0 pr-4 py-1" style="font-weight: bold;">
                                 Asset
                             </div>
-                            <div class="col-2 py-1" style="font-weight: bold;">
+                            <div class="col-2 col-sm-3 py-1 pl-0 pr-4 my-auto" style="font-weight: bold;">
                                 Held
                             </div>
-                            <div class="col-3 py-1" style="font-weight: bold;">
+                            <div class="col-4 col-sm-3 py-1 pl-0 pr-0 pr-sm-4 my-auto" style="font-weight: bold;">
                                 Value (@UserSettings.CurrencyCode.GetSymbol())
                             </div>
-                            <div class="col-3 py-1" style="font-weight: bold;">
+                            <div class="col-12 col-sm-3 py-1 pl-0 pr-0 invisible-mob" style="font-weight: bold;">
                                 Explore
                             </div>
                         </div>
@@ -35,15 +35,15 @@
                     }
                     <div class="container-fluid" style="max-width: none">
                         <div class="row">
-                            <div class="col-4 py-1">
+                            <div class="col-6 col-sm-4 pl-0 pr-4 py-1">
                             </div>
-                            <div class="col-2 py-1" style="font-weight: bold;">
+                            <div class="col-2 col-sm-3 py-1 pl-0 pr-4 my-auto" style="font-weight: bold;">
                                 Total:
                             </div>
-                            <div class="col-3 py-1" style="font-weight: bold;">
+                            <div class="col-4 col-sm-3 py-1 pl-0 pr-0 pr-sm-4 my-auto" style="font-weight: bold;">
                                 <Money Value="@Investments.Sum(x => x.MarketValue)" Decimals="2" CurrencyCode="UserSettings.CurrencyCode" ShowZeroValue="true" />
                             </div>
-                            <div class="col-3 py-1">
+                            <div class="col-12 col-sm-3 py-1 pl-0 pr-0 invisible-mob">
                             </div>
                         </div>
                     </div>

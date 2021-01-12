@@ -10,15 +10,15 @@
                 </div>
                 <div class="col py-1">
                     <h1 class="display-4">Portfolio Breakdown</h1>
-                    <p class="lead">
+                    <p class="lead text-center text-sm-left">
                         <EthAddress Address="@UserSettings.WalletAddress" HighlightOwnership="false" FontSize="24" />
                     </p>
                     <div class="container-fluid" style="max-width: none">
                         <div class="row">
-                            <div class="col py-1" style="font-weight: bold;">
+                            <div class="col py-1 pl-0 pr-4" style="font-weight: bold;">
                                 Fund
                             </div>
-                            <div class="col py-1" style="font-weight: bold;">
+                            <div class="col py-1 px-0" style="font-weight: bold;">
                                 Nav / Market Price
                             </div>
                         </div>
@@ -31,9 +31,9 @@
                     }
                     <div class="container-fluid" style="max-width: none">
                         <div class="row">
-                            <div class="col py-1">
+                            <div class="col py-1 pl-0 pr-4">
                             </div>
-                            <div class="col py-1" style="font-weight: bold;">
+                            <div class="col py-1 px-0" style="font-weight: bold;">
                                 <Money Value="TotalAssetValue" Decimals="2" CurrencyCode="UserSettings.CurrencyCode" />
                                 <span> / </span>
                                 <Money Value="TotalMarketValue" Decimals="2" CurrencyCode="UserSettings.CurrencyCode" />

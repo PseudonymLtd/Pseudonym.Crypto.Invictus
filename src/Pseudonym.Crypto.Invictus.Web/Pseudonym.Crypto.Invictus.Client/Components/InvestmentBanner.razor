@@ -2,9 +2,9 @@
 @inject IUserSettings UserSettings
 
 <div class="container-fluid" style="max-width: none">
-    <div class="row">
-        <div class="col py-1">
-            <img src="images/funds/@(Investment.Fund.Token.Symbol).png" class="mr-3" width="32" height="32">
+    <div class="row text-mob-sm">
+        <div class="col py-1 pl-0 pr-4">
+            <img src="images/funds/@(Investment.Fund.Token.Symbol).png" width="32" height="32">
             <span>@Investment.Fund.Token.Symbol</span>
             @if (Investment.Held != default)
             {
@@ -13,7 +13,7 @@
                 </small>
             }
         </div>
-        <div class="col py-1">
+        <div class="col py-1 px-0">
             <Money Value="Investment.RealValue" CurrencyCode="UserSettings.CurrencyCode" Decimals="2" />
             @if (Investment.Fund.Market.IsTradeable)
             {

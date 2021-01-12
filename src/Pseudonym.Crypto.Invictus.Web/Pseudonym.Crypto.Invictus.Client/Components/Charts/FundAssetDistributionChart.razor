@@ -32,7 +32,7 @@ else
     }
 
     [Parameter]
-    public int Height { get; set; } = 600;
+    public int Height { get; set; } = 800;
 
     [Parameter]
     public int Width { get; set; } = 600;
@@ -45,6 +45,9 @@ else
 
     [Parameter]
     public ApiFund Fund { get; set; }
+
+    [Parameter]
+    public EventCallback<ApiHolding> HoldingClickCallback { get; set; }
 
     [JSInvokable]
     public void InstanceClickHandler(object sender, object args)
@@ -96,7 +99,7 @@ else
             {
                 Labels = new LegendLabelConfiguration()
                 {
-                    FontColor = ColorUtil.FromDrawingColor(Color.White)
+                    FontColor = ColorUtil.FromDrawingColor(Color.White),
                 }
             },
             Animation = new ArcAnimation()
