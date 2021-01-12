@@ -12,7 +12,6 @@ using Pseudonym.Crypto.Invictus.Funds.Data.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 using Pseudonym.Crypto.Invictus.Shared.Abstractions;
 using Pseudonym.Crypto.Invictus.Shared.Enums;
-using Pseudonym.Crypto.Invictus.Shared.Models;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Business
 {
@@ -107,106 +106,137 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     }
                 }
             }
+
+            await foreach (var stake in stakeService
+                .ListStakesAsync(currencyCode)
+                .WithCancellation(CancellationToken))
+            {
+                var tokenCount = await etherClient.GetContractBalanceAsync(stake.Token.ContractAddress, address, stake.Token.Decimals);
+                if (tokenCount > 0)
+                {
+                    yield return new BusinessInvestment()
+                    {
+                        Fund = MapStakeToFund(stake),
+                        Held = tokenCount
+                    };
+                }
+            }
         }
 
         public async Task<IInvestment> GetInvestmentAsync(EthereumAddress address, Symbol symbol, CurrencyCode currencyCode)
         {
-            var fundInfo = GetFundInfo(symbol);
-            var fund = await fundService.GetFundAsync(symbol, currencyCode);
-            var tokenCount = await etherClient.GetContractBalanceAsync(fundInfo.ContractAddress, address, fund.Token.Decimals);
-            var stakeEvents = new List<IStakeEvent>();
-
-            foreach (var stake in GetStakes())
+            if (symbol.IsFund())
             {
-                stakeEvents.AddRange(
-                    await stakeService
-                        .ListStakeEventsAsync(stake.Symbol, address, fund.Token.Symbol)
-                        .ToListAsync(CancellationToken));
-            }
+                var fund = await fundService.GetFundAsync(symbol, currencyCode);
+                var tokenCount = await etherClient.GetContractBalanceAsync(fund.Token.ContractAddress, address, fund.Token.Decimals);
+                var stakeEvents = new List<IStakeEvent>();
 
-            tokenCount += stakeEvents.Sum(s => s.Change);
-
-            var subInvestments = new List<ISubInvestment>();
-
-            foreach (var asset in fund.Assets.Where(a => a.Holding.ContractAddress.HasValue))
-            {
-                var held = await etherClient.GetContractBalanceAsync(asset.Holding.ContractAddress.Value, address, asset.Holding.Decimals.Value);
-                if (held > 0)
+                foreach (var stake in GetStakes())
                 {
-                    var marketValuePerToken = asset.Holding.FixedValuePerCoin.HasValue
-                        ? asset.Holding.FixedValuePerCoin.Value
-                        : (await ethplorerClient.GetTokenInfoAsync(asset.Holding.ContractAddress.Value)).Price?.MarketValuePerToken;
-
-                    subInvestments.Add(new BusinessSubInvestment()
-                    {
-                        Holding = asset.Holding,
-                        Held = held,
-                        MarketValue = (CurrencyConverter.Convert(marketValuePerToken, currencyCode) ?? decimal.Zero) * held
-                    });
+                    stakeEvents.AddRange(
+                        await stakeService
+                            .ListStakeEventsAsync(stake.Symbol, address, fund.Token.Symbol)
+                            .ToListAsync(CancellationToken));
                 }
-            }
 
-            var lightStreamAsset = fund.Assets.SingleOrDefault(a =>
-                a.Holding.Name.Equals(nameof(Dependencies.Lightstreams), StringComparison.OrdinalIgnoreCase));
+                tokenCount += stakeEvents.Sum(s => s.Change);
 
-            if (lightStreamAsset != null)
-            {
-                var held = await lightstreamClient.GetEthBalanceAsync(address);
-                if (held > 0)
+                var subInvestments = new List<ISubInvestment>();
+
+                foreach (var asset in fund.Assets.Where(a => a.Holding.ContractAddress.HasValue))
                 {
-                    var marketValuePerToken = lightStreamAsset.Holding.FixedValuePerCoin.HasValue
-                        ? lightStreamAsset.Holding.FixedValuePerCoin.Value
-                        : decimal.Zero;
-
-                    subInvestments.Add(new BusinessSubInvestment()
+                    var held = await etherClient.GetContractBalanceAsync(asset.Holding.ContractAddress.Value, address, asset.Holding.Decimals.Value);
+                    if (held > 0)
                     {
-                        Holding = lightStreamAsset.Holding,
-                        Held = held,
-                        MarketValue = CurrencyConverter.Convert(marketValuePerToken, currencyCode) * held
-                    });
-                }
-            }
+                        var marketValuePerToken = asset.Holding.FixedValuePerCoin.HasValue
+                            ? asset.Holding.FixedValuePerCoin.Value
+                            : (await ethplorerClient.GetTokenInfoAsync(asset.Holding.ContractAddress.Value)).Price?.MarketValuePerToken;
 
-            return new BusinessInvestment()
+                        subInvestments.Add(new BusinessSubInvestment()
+                        {
+                            Holding = asset.Holding,
+                            Held = held,
+                            MarketValue = (CurrencyConverter.Convert(marketValuePerToken, currencyCode) ?? decimal.Zero) * held
+                        });
+                    }
+                }
+
+                var lightStreamAsset = fund.Assets.SingleOrDefault(a =>
+                    a.Holding.Name.Equals(nameof(Dependencies.Lightstreams), StringComparison.OrdinalIgnoreCase));
+
+                if (lightStreamAsset != null)
+                {
+                    var held = await lightstreamClient.GetEthBalanceAsync(address);
+                    if (held > 0)
+                    {
+                        var marketValuePerToken = lightStreamAsset.Holding.FixedValuePerCoin.HasValue
+                            ? lightStreamAsset.Holding.FixedValuePerCoin.Value
+                            : decimal.Zero;
+
+                        subInvestments.Add(new BusinessSubInvestment()
+                        {
+                            Holding = lightStreamAsset.Holding,
+                            Held = held,
+                            MarketValue = CurrencyConverter.Convert(marketValuePerToken, currencyCode) * held
+                        });
+                    }
+                }
+
+                return new BusinessInvestment()
+                {
+                    Fund = fund,
+                    Held = tokenCount,
+                    Legacy = tokenCount == default,
+                    SubInvestments = subInvestments,
+                    Stakes = stakeEvents
+                };
+            }
+            else
             {
-                Fund = fund,
-                Held = tokenCount,
-                Legacy = tokenCount == default,
-                SubInvestments = subInvestments,
-                Stakes = stakeEvents
-            };
+                var stake = await stakeService.GetStakeAsync(symbol, currencyCode);
+
+                var tokenCount = await etherClient.GetContractBalanceAsync(stake.Token.ContractAddress, address, stake.Token.Decimals);
+
+                return new BusinessInvestment()
+                {
+                    Fund = MapStakeToFund(stake),
+                    Held = tokenCount
+                };
+            }
         }
 
         public async IAsyncEnumerable<ITransactionSet> ListTransactionsAsync(EthereumAddress address, Symbol symbol, CurrencyCode currencyCode)
         {
-            var fundInfo = GetFundInfo(symbol);
+            var contractAddress = symbol.IsFund()
+                ? GetFundInfo(symbol).ContractAddress
+                : GetStakeInfo(symbol).ContractAddress;
 
             var transactionHashes = new List<EthereumTransactionHash>();
             var transactions = new List<DataTransaction>();
 
             await foreach (var transaction in Transactions
-                .ListInboundTransactionsAsync(fundInfo.ContractAddress, address)
+                .ListInboundTransactionsAsync(contractAddress, address)
                 .WithCancellation(CancellationToken))
             {
                 transactions.Add(transaction);
             }
 
             await foreach (var transaction in Transactions
-                .ListOutboundTransactionsAsync(fundInfo.ContractAddress, address)
+                .ListOutboundTransactionsAsync(contractAddress, address)
                 .WithCancellation(CancellationToken))
             {
                 transactions.Add(transaction);
             }
 
             await foreach (var hash in Operations
-                .ListInboundHashesAsync(address, fundInfo.ContractAddress)
+                .ListInboundHashesAsync(address, contractAddress)
                 .WithCancellation(CancellationToken))
             {
                 transactionHashes.Add(hash);
             }
 
             await foreach (var hash in Operations
-                .ListOutboundHashesAsync(address, fundInfo.ContractAddress)
+                .ListOutboundHashesAsync(address, contractAddress)
                 .WithCancellation(CancellationToken))
             {
                 transactionHashes.Add(hash);
@@ -215,11 +245,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             foreach (var hash in transactionHashes.Distinct())
             {
                 var transaction = transactions
-                    .SingleOrDefault(t => t.Address == fundInfo.ContractAddress && t.Hash == hash)
-                        ?? await Transactions.GetTransactionAsync(fundInfo.ContractAddress, hash);
+                    .SingleOrDefault(t => t.Address == contractAddress && t.Hash == hash)
+                        ?? await Transactions.GetTransactionAsync(contractAddress, hash);
 
                 if (transaction != null &&
-                    transaction.Address == fundInfo.ContractAddress)
+                    transaction.Address == contractAddress)
                 {
                     var businessTransaction = MapTransaction<BusinessTransactionSet>(transaction);
 
@@ -234,6 +264,29 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     yield return businessTransaction;
                 }
             }
+        }
+
+        private IFund MapStakeToFund(IStake stake)
+        {
+            return new BusinessFund()
+            {
+                Name = stake.Name,
+                InvictusUri = stake.InvictusUri,
+                FactSheetUri = stake.FactSheetUri,
+                LitepaperUri = stake.PoolUri,
+                Market = stake.Market,
+                Nav = new BusinessNav()
+                {
+                    Value = stake.Market.Total,
+                    ValuePerToken = stake.Market.PricePerToken,
+                    DiffDaily = stake.Market.DiffDaily,
+                    DiffWeekly = stake.Market.DiffWeekly,
+                    DiffMonthly = stake.Market.DiffMonthly
+                },
+                Token = stake.Token,
+                CirculatingSupply = stake.CirculatingSupply,
+                Description = stake.Description
+            };
         }
     }
 }

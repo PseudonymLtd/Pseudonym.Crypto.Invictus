@@ -11,6 +11,7 @@ using Pseudonym.Crypto.Invictus.Funds.Configuration;
 using Pseudonym.Crypto.Invictus.Funds.Configuration.Abstractions;
 using Pseudonym.Crypto.Invictus.Funds.Data.Models;
 using Pseudonym.Crypto.Invictus.Funds.Ethereum;
+using Pseudonym.Crypto.Invictus.Shared.Enums;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Services
 {
@@ -32,23 +33,41 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
             var transactionService = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
             var operationService = scope.ServiceProvider.GetRequiredService<IOperationRepository>();
 
-            foreach (var fund in AppSettings.Funds.Cast<IFundSettings>())
+            var jobs = AppSettings.Funds
+                .Cast<IFundSettings>()
+                .Select(x => new TransactionJob()
+                {
+                    Symbol = x.Symbol,
+                    ContractAddress = x.ContractAddress,
+                    InceptionDate = x.InceptionDate.UtcDateTime
+                })
+                .Union(AppSettings.Stakes
+                    .Cast<IStakeSettings>()
+                    .Select(x => new TransactionJob()
+                    {
+                        Symbol = x.Symbol,
+                        ContractAddress = x.ContractAddress,
+                        InceptionDate = x.InceptionDate
+                    }))
+                .ToList();
+
+            foreach (var job in jobs)
             {
                 try
                 {
-                    var latestDate = await transactionService.GetLatestDateAsync(fund.ContractAddress)
-                        ?? InvictusStartDate;
+                    var latestDate = await transactionService.GetLatestDateAsync(job.ContractAddress)
+                        ?? job.InceptionDate;
 
                     await SyncTransactionsAsync(
                         ethplorerClient,
                         bloxyClient,
                         transactionService,
                         operationService,
-                        fund.ContractAddress,
+                        job.ContractAddress,
                         latestDate.AddDays(-7),
                         DateTime.UtcNow);
 
-                    var lowestDate = await transactionService.GetLowestDateAsync(fund.ContractAddress)
+                    var lowestDate = await transactionService.GetLowestDateAsync(job.ContractAddress)
                         ?? DateTime.UtcNow;
 
                     await SyncTransactionsAsync(
@@ -56,13 +75,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                         bloxyClient,
                         transactionService,
                         operationService,
-                        fund.ContractAddress,
-                        InvictusStartDate,
+                        job.ContractAddress,
+                        job.InceptionDate,
                         lowestDate.AddDays(1));
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Error getting transactions for {fund.Symbol}.");
+                    Console.WriteLine($"Error getting transactions for {job.Symbol}.");
                     Console.WriteLine(e);
                 }
             }
@@ -157,6 +176,15 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                 ContractIssuances = operation.TokenInfo.IssuanceCount,
                 ContractLink = operation.TokenInfo.WebsiteUri
             };
+        }
+
+        private class TransactionJob
+        {
+            public Symbol Symbol { get; set; }
+
+            public EthereumAddress ContractAddress { get; set; }
+
+            public DateTime InceptionDate { get; set; }
         }
     }
 }

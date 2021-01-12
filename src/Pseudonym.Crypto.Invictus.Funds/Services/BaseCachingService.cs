@@ -10,8 +10,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
 {
     internal abstract class BaseCachingService : BackgroundService
     {
-        protected static readonly DateTime InvictusStartDate = new DateTime(2017, 10, 13, 0, 0, 0, DateTimeKind.Utc);
-
         private readonly IServiceProvider serviceProvider;
 
         protected BaseCachingService(

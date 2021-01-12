@@ -19,8 +19,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
             ? Fund.Market.PricePerToken * Held
             : default(decimal?);
 
-        public IReadOnlyList<ISubInvestment> SubInvestments { get; set; }
+        public IReadOnlyList<ISubInvestment> SubInvestments { get; set; } = new List<ISubInvestment>();
 
-        public IReadOnlyList<IStakeEvent> Stakes { get; set; }
+        public IReadOnlyList<IStakeEvent> Stakes { get; set; } = new List<IStakeEvent>();
     }
 }

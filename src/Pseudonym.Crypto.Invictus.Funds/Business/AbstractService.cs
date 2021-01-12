@@ -147,8 +147,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             var sanitisedId = operation.ContractName?.Replace(" ", "-").Replace(".", "-").ToLower().Trim() ?? string.Empty;
             var coinloreId = GetAssetInfo(operation.ContractSymbol)?.CoinLore ?? sanitisedId;
             var coinMarketCapId = GetAssetInfo(operation.ContractSymbol)?.CoinMarketCap ?? sanitisedId;
-            var fund = Enum.TryParse(operation.ContractSymbol, out Symbol symbol)
+            var isInvictus = Enum.TryParse(operation.ContractSymbol, out Symbol symbol);
+
+            var fund = isInvictus && symbol.IsFund()
                 ? GetFundInfo(symbol)
+                : null;
+
+            var stake = isInvictus && symbol.IsStake()
+                ? GetStakeInfo(symbol)
                 : null;
 
             return new BusinessOperation()
@@ -171,7 +177,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 IsEth = operation.IsEth,
                 PricePerToken = CurrencyConverter.Convert(operation.Price, currencyCode),
                 Quantity = operation.Type == OperationTypes.Transfer
-                    ? Web3.Convert.FromWei(BigInteger.Parse(operation.Value), fund?.Decimals ?? 18)
+                    ? Web3.Convert.FromWei(BigInteger.Parse(operation.Value), fund?.Decimals ?? stake?.Decimals ?? 18)
                     : 0,
                 Value = operation.Value,
                 Priority = operation.Priority,
@@ -180,15 +186,16 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 ContractDecimals = operation.ContractDecimals,
                 ContractHolders = operation.ContractHolders,
                 ContractIssuances = operation.ContractIssuances,
-                ContractName = operation.ContractName,
+                ContractName = fund?.FundName ?? stake?.Name ?? operation.ContractName,
                 ContractLink = fund?.Links?.External
+                    ?? stake?.Links?.External
                     ?? (!string.IsNullOrEmpty(operation.ContractLink)
                         ? new Uri(operation.ContractLink, UriKind.Absolute)
                         : new Uri(string.Format(LinkTemplate, coinMarketCapId), UriKind.Absolute)),
-                ContractImageLink = fund != null
+                ContractImageLink = isInvictus
                     ? new Uri($"https://{HostUrl.Host}/resources/{symbol}.png", UriKind.Absolute)
                     : new Uri(string.Format(ImageTemplate, coinloreId), UriKind.Absolute),
-                ContractMarketLink = !string.IsNullOrEmpty(coinloreId) && (fund == null || fund.Tradable)
+                ContractMarketLink = !string.IsNullOrEmpty(coinloreId) && !symbol.IsStake() && (fund == null || fund.Tradable)
                     ? new Uri(string.Format(MarketTemplate, coinloreId, currencyCode), UriKind.Absolute)
                     : null
             };
