@@ -215,7 +215,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 ? await ethplorerClient.GetTokenInfoAsync(settings.ContractAddress)
                 : null;
 
-            var navData = await ListPerformanceAsync(settings.Symbol, PriceMode.Raw, now.AddDays(-29), now, currencyCode)
+            var navData = await ListPerformanceAsync(settings.Symbol, PriceMode.Close, now.AddDays(-29), now, currencyCode)
                 .ToListAsync(CancellationToken);
 
             return MapFund(
