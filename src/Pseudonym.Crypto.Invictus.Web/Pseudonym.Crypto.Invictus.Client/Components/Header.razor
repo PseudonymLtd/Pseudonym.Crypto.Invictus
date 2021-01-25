@@ -3,26 +3,29 @@
 <div class="jumbotron jumbotron-fluid">
     <div class="container">
         <div class="media" style="margin-top: auto; margin-bottom: auto; padding-bottom: 6px; position: relative;">
-            <img src="images/funds/@($"{Fund.Token.Symbol}.png")" class="mr-3" alt="@Fund.DisplayName">
-            <h1 class="display-4">@Fund.DisplayName</h1>
+            <img src="images/funds/@($"{Product.Token.Symbol}.png")" class="mr-1" alt="@Product.DisplayName">
+            <h1 class="display-3" style="display: inline-grid;">
+                <small class="text-muted" style="font-size: xx-large;">@Product.Category</small>
+                @Product.DisplayName
+            </h1>
             <div class="text-align-mob-center" style="margin-left: 5px;">
-                @if (Fund.Token.Symbol.IsFund())
+                @if (Product.Token.Symbol.IsFund())
                 {
-                    <ValueBubble Type="Nav" Pricing="Fund.Nav" Decimals="2" Symbol="Fund.Token.Symbol" />
+                    <ValueBubble Type="Nav" Pricing="Product.Nav" Decimals="2" Symbol="Product.Token.Symbol" />
                 }
-                @if (Fund.Market.IsTradeable)
+                @if (Product.Market.IsTradeable)
                 {
-                    <span style="padding-left: @(Fund.Token.Symbol.IsFund() ? 5 : 0)px;">
-                        <ValueBubble Type="Mkt" Pricing="Fund.Market" Decimals="2" />
+                    <span style="padding-left: @(Product.Token.Symbol.IsFund() ? 5 : 0)px;">
+                        <ValueBubble Type="Mkt" Pricing="Product.Market" Decimals="2" />
                     </span>
                 }
             </div>
             <div style="position: absolute; display: inline-block; right: 0; left: auto; top: 0; height: 20px;">
-                <a class="badge neutral" href="@Fund.Links.Lite" target="_blank" style="">@(Fund.Token.Symbol.IsFund() ? "Lite" : "Pool")</a>
-                <a class="badge @Fund.Token.Symbol.ToString().ToLower()" href="@Fund.Links.Fact" target="_blank">Fact</a>
+                <a class="badge neutral" href="@Product.Links.Detail" target="_blank" style="">@(Product.Token.Symbol.IsFund() ? "Lite" : "Pool")</a>
+                <a class="badge @Product.Token.Symbol.ToString().ToLower()" href="@Product.Links.Fact" target="_blank">Fact</a>
             </div>
         </div>
-        <p class="lead text-mob-md text-justify text-sm-left">@Fund.Description</p>
+        <p class="lead text-mob-md text-justify text-sm-left">@Product.Description</p>
         <div class="media text-center text-sm-left" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
             @Content
         </div>
@@ -33,7 +36,7 @@
         @if (Link != null)
         {
             <a href="@Link.OriginalString"
-               class="btn btn-primary btn-lg @Fund.Token.Symbol.ToString().ToLower() mx-auto mr-sm-0"
+               class="btn btn-primary btn-lg @Product.Token.Symbol.ToString().ToLower() mx-auto mr-sm-0"
                role="button"
                style="display: block; max-width: 150px;">Explore</a>
         }
@@ -55,7 +58,7 @@
     public RenderFragment Content { get; set; }
 
     [Parameter]
-    public ApiFund Fund { get; set; }
+    public IProduct Product { get; set; }
 
     protected override void OnInitialized()
     {

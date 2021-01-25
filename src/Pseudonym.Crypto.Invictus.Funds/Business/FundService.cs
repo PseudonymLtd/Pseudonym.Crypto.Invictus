@@ -241,6 +241,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             return new BusinessFund()
             {
                 Name = fund.Name,
+                Category = fundInfo.Category,
                 Description = fundInfo.Description,
                 FactSheetUri = fundInfo.Links.Fact,
                 LitepaperUri = fundInfo.Links.Lite,

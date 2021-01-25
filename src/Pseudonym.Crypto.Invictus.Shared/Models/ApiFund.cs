@@ -16,6 +16,10 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         public string DisplayName { get; set; }
 
         [Required]
+        [JsonProperty("category")]
+        public string Category { get; set; }
+
+        [Required]
         [JsonProperty("description")]
         public string Description { get; set; }
 
@@ -41,5 +45,8 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [Required]
         [JsonProperty("links")]
         public ApiFundLinks Links { get; set; }
+
+        [JsonIgnore]
+        ILinks IProduct.Links => Links;
     }
 }

@@ -271,6 +271,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             return new BusinessFund()
             {
                 Name = stake.Name,
+                Category = stake.Category,
+                Description = stake.Description,
                 InvictusUri = stake.InvictusUri,
                 FactSheetUri = stake.FactSheetUri,
                 LitepaperUri = stake.PoolUri,
@@ -284,8 +286,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     DiffMonthly = stake.Market.DiffMonthly
                 },
                 Token = stake.Token,
-                CirculatingSupply = stake.CirculatingSupply,
-                Description = stake.Description
+                CirculatingSupply = stake.CirculatingSupply
             };
         }
     }

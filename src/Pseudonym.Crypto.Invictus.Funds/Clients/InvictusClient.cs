@@ -42,7 +42,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
             if (fundInfo != null)
             {
                 var response = await GetAsync<GetFundResponse>(
-                    $"/v2/funds/{fundInfo.FundName}/assets-history?start={from.ToISO8601String()}&end={to.ToISO8601String()}&points={(int)(to - from).TotalHours}");
+                    $"/v2/funds/{fundInfo.Name}/assets-history?start={from.ToISO8601String()}&end={to.ToISO8601String()}&points={(int)(to - from).TotalHours}");
 
                 foreach (var perfSet in response.Data
                     .Where(x => x.Date >= from && x.Date <= to)
@@ -72,14 +72,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
                 var date = DateTime.UtcNow;
 
                 var fund = await GetAsync<GetFundResponse>(
-                    $"/v2/funds/{fundInfo.FundName}/assets-history?start={date.AddHours(-1).ToISO8601String()}&end={date.AddHours(1).ToISO8601String()}&points=1&summary=false");
+                    $"/v2/funds/{fundInfo.Name}/assets-history?start={date.AddHours(-1).ToISO8601String()}&end={date.AddHours(1).ToISO8601String()}&points=1&summary=false");
 
                 var data = fund.Data.Last();
 
                 data.Symbol = symbol;
                 data.Name = symbol == Symbol.C10
-                    ? $"{fundInfo.FundName} Hedged"
-                    : fundInfo.FundName;
+                    ? $"{fundInfo.Name} Hedged"
+                    : fundInfo.Name;
 
                 return data;
             }

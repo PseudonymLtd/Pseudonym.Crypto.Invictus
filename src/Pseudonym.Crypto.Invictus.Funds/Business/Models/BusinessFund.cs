@@ -20,6 +20,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
                     return new string(chars);
                 }));
 
+        public string Category { get; set; }
+
         public string Description { get; set; }
 
         public Uri InvictusUri { get; set; }

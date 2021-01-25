@@ -10,12 +10,14 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 {
     public sealed class StakeSettings : IStakeSettings
     {
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public Symbol Symbol { get; set; }
-
         public string Name { get; set; }
 
+        public string Category { get; set; }
+
         public string Description { get; set; }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public Symbol Symbol { get; set; }
 
         public DateTime InceptionDate { get; set; }
 

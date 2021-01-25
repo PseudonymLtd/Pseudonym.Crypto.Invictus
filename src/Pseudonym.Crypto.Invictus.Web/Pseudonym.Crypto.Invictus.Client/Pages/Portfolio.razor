@@ -5,14 +5,18 @@
 @inject IAppState AppState
 
 <div style="text-align: center;">
-    <h1 class="display-2">Portfolio</h1>
+    <h1 class="display-3">Portfolio</h1>
     <p class="lead">
         Below shows the snapshot of your portfolio value, you have invested in @investments.Count funds.
     </p>
 </div>
 @if (!UserSettings.HasValidAddress())
 {
-    <WalletEntry />
+    <WalletEntry Issue="Please enter a valid wallet address to view your portfolio." />
+}
+else if (noInvestments)
+{
+    <WalletEntry Issue="The following address does not contain any Invictus investments, please try a different wallet." />
 }
 else if (!investments.Any())
 {
@@ -42,6 +46,7 @@ else
 
     private readonly Dictionary<ApiStake, List<ApiStakeEvent>> stakes;
     private readonly List<ApiInvestment> investments;
+    private bool noInvestments = false;
 
     public Portfolio()
     {
@@ -60,6 +65,7 @@ else
     {
         if (!firstRender)
         {
+            noInvestments = false;
             stakes.Clear();
             investments.Clear();
 
@@ -86,6 +92,8 @@ else
 
                 StateHasChanged();
             }
+
+            noInvestments = !stakes.Any() || !investments.Any();
         }
     }
 }

@@ -43,6 +43,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
             {
                 Name = fund.Name,
                 DisplayName = fund.DisplayName,
+                Category = fund.Category,
                 Description = fund.Description,
                 Token = new ApiToken()
                 {
@@ -166,6 +167,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
             {
                 Name = stake.Name,
                 DisplayName = stake.DisplayName,
+                Category = stake.Category,
                 Description = stake.Description,
                 Token = new ApiToken()
                 {

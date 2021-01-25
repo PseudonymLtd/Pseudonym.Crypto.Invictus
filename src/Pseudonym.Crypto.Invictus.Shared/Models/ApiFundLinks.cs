@@ -1,15 +1,16 @@
 ﻿using System;
 using Newtonsoft.Json;
+using Pseudonym.Crypto.Invictus.Shared.Models.Abstractions;
 
 namespace Pseudonym.Crypto.Invictus.Shared.Models
 {
-    public sealed class ApiFundLinks : ApiCollection<Uri>
+    public sealed class ApiFundLinks : ApiCollection<Uri>, ILinks
     {
         [JsonIgnore]
         public Uri Self => this[nameof(Self)];
 
         [JsonIgnore]
-        public Uri Lite => this[nameof(Lite)];
+        public Uri Detail => this["Lite"];
 
         [JsonIgnore]
         public Uri Fact => this[nameof(Fact)];

@@ -1,0 +1,57 @@
+﻿@inject IAppState AppState
+@inject IUserSettings UserSettings
+
+<div class="jumbotron jumbotron-fluid">
+    <div class="container" style="padding-top: 12px; padding-bottom: 12px; border: 1px solid transparent;">
+        <div class="container-fluid" style="max-width: none">
+            <div class="row">
+                <div class="col-12 py-1">
+                    <h1 class="display-4 text-center">@Product.Token.Symbol Transactions</h1>
+                    <p class="lead text-justify">
+                        Bing Bong
+                    </p>
+                    @if (transactions.Any())
+                    {
+                        
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+    private readonly List<BusinessTransaction> transactions;
+
+    public TransactionExplorer()
+    {
+        transactions = new List<BusinessTransaction>();
+    }
+
+    [Parameter]
+    public ApiFund Fund { get; set; }
+
+    [Parameter]
+    public IProduct Product { get; set; }
+
+    protected override void OnInitialized()
+    {
+        AppState.Assign(() => Draw(false));
+
+        Draw(true);
+    }
+
+    private void Draw(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            transactions.Clear();
+
+            StateHasChanged();
+        }
+
+        
+    }
+}

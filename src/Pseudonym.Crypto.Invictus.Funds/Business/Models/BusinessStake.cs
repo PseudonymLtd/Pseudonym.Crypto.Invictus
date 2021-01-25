@@ -24,6 +24,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Models
 
         public string Description { get; set; }
 
+        public string Category { get; set; }
+
         public Uri InvictusUri { get; set; }
 
         public Uri FactSheetUri { get; set; }

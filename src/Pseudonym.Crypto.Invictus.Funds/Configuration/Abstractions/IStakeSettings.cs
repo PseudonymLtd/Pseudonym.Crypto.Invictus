@@ -8,11 +8,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration.Abstractions
 {
     public interface IStakeSettings
     {
-        Symbol Symbol { get; }
-
         string Name { get; }
 
+        string Category { get; }
+
         string Description { get; }
+
+        Symbol Symbol { get; }
 
         DateTime InceptionDate { get; }
 

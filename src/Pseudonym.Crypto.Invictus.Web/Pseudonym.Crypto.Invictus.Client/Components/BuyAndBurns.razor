@@ -34,7 +34,10 @@
                                     </div>
                                     <div class="col-5 col-sm-4 py-1 pl-0 pr-4">
                                         <Money Value="trade.NetCurrentPrice" Decimals="2" ShowZeroValue="true" CurrencyCode="UserSettings.CurrencyCode" />
-                                        <ProfitTag Value="trade.BurnGain" Decimals="2" />
+                                        @if (Product.Token.Symbol.IsFund())
+                                        {
+                                            <ProfitTag Value="trade.BurnGain" Decimals="2" />
+                                        }
                                     </div>
                                     <div class="col-3 col-sm-4 py-1 px-0">
                                         <LargeNumber Value="trade.Quantity" Decimals="2" ShowZeroValue="true" />
@@ -88,7 +91,7 @@
     public IProduct Product { get; set; }
 
     protected IReadOnlyList<ITrade> Trades => transactions
-        .OrderBy(x => x.ConfirmedAt)
+        .OrderByDescending(x => x.ConfirmedAt)
         .Select(x => x.GetTrade(Product, UserSettings))
         .ToList();
 

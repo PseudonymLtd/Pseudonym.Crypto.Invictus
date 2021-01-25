@@ -81,6 +81,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             return new BusinessStake()
             {
                 Name = stakeInfo.Name,
+                Category = stakeInfo.Category,
                 Description = stakeInfo.Description,
                 InvictusUri = stakeInfo.Links.External,
                 FactSheetUri = stakeInfo.Links.Fact,

@@ -186,7 +186,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 ContractDecimals = operation.ContractDecimals,
                 ContractHolders = operation.ContractHolders,
                 ContractIssuances = operation.ContractIssuances,
-                ContractName = fund?.FundName ?? stake?.Name ?? operation.ContractName,
+                ContractName = fund?.Name ?? stake?.Name ?? operation.ContractName,
                 ContractLink = fund?.Links?.External
                     ?? stake?.Links?.External
                     ?? (!string.IsNullOrEmpty(operation.ContractLink)

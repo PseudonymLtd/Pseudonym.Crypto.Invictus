@@ -9,7 +9,9 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 {
     public sealed class FundSettings : IFundSettings
     {
-        public string FundName { get; set; }
+        public string Name { get; set; }
+
+        public string Category { get; set; }
 
         public string Description { get; set; }
 

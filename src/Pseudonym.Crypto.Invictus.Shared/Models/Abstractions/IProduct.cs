@@ -6,6 +6,8 @@
 
         string DisplayName { get; }
 
+        string Category { get; }
+
         string Description { get; }
 
         ApiToken Token { get; }
@@ -15,5 +17,7 @@
         ApiNav Nav { get; }
 
         ApiMarket Market { get; }
+
+        ILinks Links { get; }
     }
 }
