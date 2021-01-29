@@ -89,7 +89,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 Links = new ApiFundLinks()
                 {
                     [nameof(ApiFundLinks.Self)] = new Uri(AppSettings.HostUrl.OriginalString.TrimEnd('/') + $"/api/v1/funds/{fund.Token.Symbol}", UriKind.Absolute),
-                    [nameof(ApiFundLinks.Lite)] = fund.LitepaperUri,
+                    ["Lite"] = fund.LitepaperUri,
                     [nameof(ApiFundLinks.Fact)] = fund.FactSheetUri,
                     [nameof(ApiFundLinks.External)] = fund.InvictusUri
                 }
@@ -191,7 +191,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                 Links = new ApiStakeLinks()
                 {
                     [nameof(ApiStakeLinks.Self)] = new Uri(AppSettings.HostUrl.OriginalString.TrimEnd('/') + $"/api/v1/stakes/{stake.Token.Symbol}", UriKind.Absolute),
-                    [nameof(ApiStakeLinks.Pool)] = stake.PoolUri,
+                    ["Pool"] = stake.PoolUri,
                     [nameof(ApiStakeLinks.Fact)] = stake.FactSheetUri,
                     [nameof(ApiStakeLinks.External)] = stake.InvictusUri
                 }

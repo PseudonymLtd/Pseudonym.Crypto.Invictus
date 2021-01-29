@@ -161,8 +161,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                             var prices = await fundService.ListPerformanceAsync(
                                     symbol,
                                     PriceMode.Raw,
-                                    currentDate.AddDays(-1),
-                                    currentDate.AddDays(1),
+                                    currentDate.Date.AddDays(-1),
+                                    currentDate.Date.AddDays(2),
                                     CurrencyCode.USD)
                                 .ToListAsync(cancellationToken);
 
