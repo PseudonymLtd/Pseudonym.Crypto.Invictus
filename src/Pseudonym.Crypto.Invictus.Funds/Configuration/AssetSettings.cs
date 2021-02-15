@@ -11,5 +11,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
         public string CoinLore { get; set; }
 
         public string Colour { get; set; }
+
+        public bool IsUSDStableCoin { get; set; }
     }
 }

@@ -9,5 +9,7 @@
         string CoinLore { get; }
 
         string Colour { get; }
+
+        bool IsUSDStableCoin { get; }
     }
 }

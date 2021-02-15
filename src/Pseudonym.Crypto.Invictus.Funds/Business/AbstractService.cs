@@ -145,9 +145,12 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
         protected BusinessOperation MapOperation(DataOperation operation, CurrencyCode currencyCode)
         {
             var sanitisedId = operation.ContractName?.Replace(" ", "-").Replace(".", "-").ToLower().Trim() ?? string.Empty;
-            var coinloreId = GetAssetInfo(operation.ContractSymbol)?.CoinLore ?? sanitisedId;
-            var coinMarketCapId = GetAssetInfo(operation.ContractSymbol)?.CoinMarketCap ?? sanitisedId;
             var isInvictus = Enum.TryParse(operation.ContractSymbol, out Symbol symbol);
+
+            var assetInfo = GetAssetInfo(operation.ContractSymbol);
+            var coinloreId = assetInfo?.CoinLore ?? sanitisedId;
+            var coinMarketCapId = assetInfo?.CoinMarketCap ?? sanitisedId;
+            var isUSDStableCoin = assetInfo?.IsUSDStableCoin ?? false;
 
             var fund = isInvictus && symbol.IsFund()
                 ? GetFundInfo(symbol)
@@ -175,9 +178,11 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     .Select(a => new EthereumAddress(a))
                     .ToList(),
                 IsEth = operation.IsEth,
-                PricePerToken = CurrencyConverter.Convert(operation.Price, currencyCode),
+                PricePerToken = operation.Price == default && isUSDStableCoin
+                    ? CurrencyConverter.Convert(1, currencyCode)
+                    : CurrencyConverter.Convert(operation.Price, currencyCode),
                 Quantity = operation.Type == OperationTypes.Transfer
-                    ? Web3.Convert.FromWei(BigInteger.Parse(operation.Value), fund?.Decimals ?? stake?.Decimals ?? 18)
+                    ? Web3.Convert.FromWei(BigInteger.Parse(operation.Value), fund?.Decimals ?? stake?.Decimals ?? operation.ContractDecimals)
                     : 0,
                 Value = operation.Value,
                 Priority = operation.Priority,
