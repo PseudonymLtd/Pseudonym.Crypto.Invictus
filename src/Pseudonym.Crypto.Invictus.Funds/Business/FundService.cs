@@ -23,11 +23,15 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
         private readonly IInvictusClient invictusClient;
         private readonly IEthplorerClient ethplorerClient;
         private readonly IFundPerformanceRepository fundPerformanceRepository;
+        private readonly ICoinGeckoClient coinGeckoClient;
+        private readonly IGraphClient graphClient;
 
         public FundService(
             IOptions<AppSettings> appSettings,
             IInvictusClient invictusClient,
             IEthplorerClient ethplorerClient,
+            ICoinGeckoClient coinGeckoClient,
+            IGraphClient graphClient,
             ICurrencyConverter currencyConverter,
             IFundPerformanceRepository fundPerformanceRepository,
             ITransactionRepository transactionRepository,
@@ -38,6 +42,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
         {
             this.invictusClient = invictusClient;
             this.ethplorerClient = ethplorerClient;
+            this.coinGeckoClient = coinGeckoClient;
+            this.graphClient = graphClient;
             this.fundPerformanceRepository = fundPerformanceRepository;
         }
 
@@ -218,7 +224,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             var navData = await ListPerformanceAsync(settings.Symbol, PriceMode.Close, now.AddDays(-29), now, currencyCode)
                 .ToListAsync(CancellationToken);
 
-            return MapFund(
+            return await MapFundAsync(
                 fund,
                 navData
                     .Select(x => x.NetAssetValuePerToken)
@@ -228,7 +234,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 currencyCode);
         }
 
-        private IFund MapFund(IInvictusFund fund, IReadOnlyList<decimal> navs, EthplorerPriceSummary priceData, Symbol symbol, CurrencyCode currencyCode)
+        private async Task<IFund> MapFundAsync(IInvictusFund fund, IReadOnlyList<decimal> navs, EthplorerPriceSummary priceData, Symbol symbol, CurrencyCode currencyCode)
         {
             var dailyNavs = navs.TakeLast(2);
             var weeklyNavs = navs.TakeLast(8);
@@ -238,7 +244,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             var circulatingSupply = fund.CirculatingSupply.FromPythonString();
             var fundInfo = GetFundInfo(symbol);
 
-            return new BusinessFund()
+            var businessFund = new BusinessFund()
             {
                 Name = fund.Name,
                 Category = fundInfo.Category,
@@ -264,24 +270,34 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                 Market = new BusinessMarket()
                 {
                     IsTradable = priceData != null,
-                    Cap = priceData?.MarketCap ?? 0,
-                    Total = CurrencyConverter.Convert((priceData?.MarketValuePerToken ?? 0) * circulatingSupply, currencyCode),
-                    PricePerToken = CurrencyConverter.Convert(priceData?.MarketValuePerToken ?? 0, currencyCode),
-                    DiffDaily = priceData?.DiffDaily ?? 0,
-                    DiffWeekly = priceData?.DiffWeekly ?? 0,
-                    DiffMonthly = priceData?.DiffMonthly ?? 0,
-                    Volume = CurrencyConverter.Convert(priceData?.Volume ?? 0, currencyCode),
-                    VolumeDiffDaily = priceData?.VolumeDiffDaily ?? 0,
-                    VolumeDiffWeekly = priceData?.VolumeDiffWeekly ?? 0,
-                    VolumeDiffMonthly = priceData?.VolumeDiffMonthly ?? 0
-                },
-                Assets = fund.Assets
-                    .Select(FromInvictusAsset)
-                    .Where(x => x.Total > 0)
-                    .Union(fundInfo.Assets.Select(a => MapFundAsset(a, netVal, currencyCode)))
-                    .OrderByDescending(x => x.Total)
-                    .ToList()
+                    Cap = priceData?.MarketCap ?? decimal.Zero,
+                    Total = CurrencyConverter.Convert((priceData?.MarketValuePerToken ?? decimal.Zero) * circulatingSupply, currencyCode),
+                    PricePerToken = CurrencyConverter.Convert(priceData?.MarketValuePerToken ?? decimal.Zero, currencyCode),
+                    DiffDaily = priceData?.DiffDaily ?? decimal.Zero,
+                    DiffWeekly = priceData?.DiffWeekly ?? decimal.Zero,
+                    DiffMonthly = priceData?.DiffMonthly ?? decimal.Zero,
+                    Volume = CurrencyConverter.Convert(priceData?.Volume ?? decimal.Zero, currencyCode),
+                    VolumeDiffDaily = priceData?.VolumeDiffDaily ?? decimal.Zero,
+                    VolumeDiffWeekly = priceData?.VolumeDiffWeekly ?? decimal.Zero,
+                    VolumeDiffMonthly = priceData?.VolumeDiffMonthly ?? decimal.Zero
+                }
             };
+
+            var assets = fund.Assets
+                .Select(FromInvictusAsset)
+                .Where(x => x.Total > 0)
+                .ToList();
+
+            foreach (var asset in fundInfo.Assets)
+            {
+                assets.Add(await MapFundAssetAsync(asset, netVal, currencyCode));
+            }
+
+            businessFund.Assets = assets
+                .OrderByDescending(x => x.Total)
+                .ToList();
+
+            return businessFund;
 
             BusinessFundAsset FromInvictusAsset(InvictusAsset asset)
             {
@@ -325,6 +341,59 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
                     Share = total / netVal * 100
                 };
             }
+        }
+
+        private async Task<BusinessFundAsset> MapFundAssetAsync(FundSettings.FundAsset asset, decimal fundValue, CurrencyCode currencyCode)
+        {
+            var total = CurrencyConverter.Convert(asset.Value, currencyCode);
+            var sanitisedId = asset.Name.Replace(" ", "-").Replace(".", "-").ToLower().Trim();
+            var coinloreId = GetAssetInfo(asset.Symbol)?.CoinLore ?? sanitisedId;
+            var coinMarketCapId = GetAssetInfo(asset.Symbol)?.CoinMarketCap ?? sanitisedId;
+            var assetInfo = GetAssetInfo(asset.Symbol);
+            var contractAddress = !string.IsNullOrWhiteSpace(asset.ContractAddress)
+                ? new EthereumAddress(asset.ContractAddress)
+                : default(EthereumAddress?);
+
+            var marketValuePerToken = default(decimal?);
+
+            if (contractAddress.HasValue)
+            {
+                marketValuePerToken = assetInfo?.PoolAddress == null
+                    ? (await ethplorerClient.GetTokenInfoAsync(contractAddress.Value)).Price?.MarketValuePerToken
+                    : await graphClient.GetUniswapPriceAsync(assetInfo.PoolAddress.Value, contractAddress.Value);
+            }
+            else if (asset.Symbol == "PHT")
+            {
+                marketValuePerToken = (await coinGeckoClient.GetCoinAsync("lightstreams")).Market.Price.Value;
+            }
+
+            return new BusinessFundAsset()
+            {
+                Holding = new BusinessHolding()
+                {
+                    Name = asset.Name,
+                    Symbol = asset.Symbol,
+                    HexColour = GetAssetInfo(asset.Symbol)?.Colour,
+                    ContractAddress = !string.IsNullOrEmpty(asset.ContractAddress)
+                        ? new EthereumAddress(asset.ContractAddress)
+                        : default(EthereumAddress?),
+                    Decimals = asset.Decimals,
+                    IsCoin = asset.IsCoin,
+                    Link = assetInfo?.PoolAddress != null
+                        ? new Uri(string.Format(PoolTemplate, assetInfo.PoolAddress.Value), UriKind.Absolute)
+                        : asset.Link
+                                ?? new Uri(string.Format(LinkTemplate, coinMarketCapId), UriKind.Absolute),
+                    ImageLink = asset.ImageLink
+                        ?? new Uri(string.Format(ImageTemplate, coinloreId), UriKind.Absolute),
+                    MarketLink = asset.Tradable
+                        ? new Uri(string.Format(MarketTemplate, coinloreId, currencyCode), UriKind.Absolute)
+                        : null
+                },
+                Quantity = decimal.Zero,
+                PricePerToken = marketValuePerToken ?? decimal.Zero,
+                Total = total,
+                Share = total / fundValue * 100
+            };
         }
     }
 }

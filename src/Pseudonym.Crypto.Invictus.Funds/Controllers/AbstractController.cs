@@ -71,7 +71,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Controllers
                             Symbol = a.Holding.Symbol ?? "-",
                             ContractAddress = a.Holding.ContractAddress?.Address,
                             HexColour = a.Holding.HexColour,
-                            FixedValuePerCoin = a.Holding.FixedValuePerCoin,
                             Decimals = a.Holding.Decimals,
                             Links = new ApiHoldingLinks()
                             {

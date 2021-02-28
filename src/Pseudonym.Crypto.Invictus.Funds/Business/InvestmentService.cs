@@ -21,7 +21,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
         private readonly IStakeService stakeService;
         private readonly IEtherClient etherClient;
         private readonly ILightstreamClient lightstreamClient;
-        private readonly IEthplorerClient ethplorerClient;
 
         public InvestmentService(
             IOptions<AppSettings> appSettings,
@@ -29,7 +28,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             IStakeService stakeService,
             IEtherClient etherClient,
             ILightstreamClient lightstreamClient,
-            IEthplorerClient ethplorerClient,
             ICurrencyConverter currencyConverter,
             ITransactionRepository transactionRepository,
             IOperationRepository operationRepository,
@@ -41,7 +39,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             this.stakeService = stakeService;
             this.etherClient = etherClient;
             this.lightstreamClient = lightstreamClient;
-            this.ethplorerClient = ethplorerClient;
         }
 
         public async IAsyncEnumerable<IInvestment> ListInvestmentsAsync(EthereumAddress address, CurrencyCode currencyCode)
@@ -143,41 +140,21 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
                 var subInvestments = new List<ISubInvestment>();
 
-                foreach (var asset in fund.Assets.Where(a => a.Holding.ContractAddress.HasValue))
+                foreach (var asset in fund.Assets)
                 {
-                    var held = await etherClient.GetContractBalanceAsync(asset.Holding.ContractAddress.Value, address, asset.Holding.Decimals.Value);
-                    if (held > 0)
-                    {
-                        var marketValuePerToken = asset.Holding.FixedValuePerCoin.HasValue
-                            ? asset.Holding.FixedValuePerCoin.Value
-                            : (await ethplorerClient.GetTokenInfoAsync(asset.Holding.ContractAddress.Value)).Price?.MarketValuePerToken;
+                    var held = asset.Holding.ContractAddress.HasValue
+                        ? await etherClient.GetContractBalanceAsync(asset.Holding.ContractAddress.Value, address, asset.Holding.Decimals.Value)
+                        : asset.Holding.Symbol == "PHT"
+                            ? await lightstreamClient.GetEthBalanceAsync(address)
+                            : decimal.Zero;
 
+                    if (held > decimal.Zero)
+                    {
                         subInvestments.Add(new BusinessSubInvestment()
                         {
                             Holding = asset.Holding,
                             Held = held,
-                            MarketValue = (CurrencyConverter.Convert(marketValuePerToken, currencyCode) ?? decimal.Zero) * held
-                        });
-                    }
-                }
-
-                var lightStreamAsset = fund.Assets.SingleOrDefault(a =>
-                    a.Holding.Name.Equals(nameof(Dependencies.Lightstreams), StringComparison.OrdinalIgnoreCase));
-
-                if (lightStreamAsset != null)
-                {
-                    var held = await lightstreamClient.GetEthBalanceAsync(address);
-                    if (held > 0)
-                    {
-                        var marketValuePerToken = lightStreamAsset.Holding.FixedValuePerCoin.HasValue
-                            ? lightStreamAsset.Holding.FixedValuePerCoin.Value
-                            : decimal.Zero;
-
-                        subInvestments.Add(new BusinessSubInvestment()
-                        {
-                            Holding = lightStreamAsset.Holding,
-                            Held = held,
-                            MarketValue = CurrencyConverter.Convert(marketValuePerToken, currencyCode) * held
+                            MarketValue = CurrencyConverter.Convert(asset.PricePerToken, currencyCode) * held
                         });
                     }
                 }

@@ -15,8 +15,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business.Abstractions
 
         EthereumAddress? ContractAddress { get; }
 
-        decimal? FixedValuePerCoin { get; }
-
         string HexColour { get; }
 
         Uri Link { get; }

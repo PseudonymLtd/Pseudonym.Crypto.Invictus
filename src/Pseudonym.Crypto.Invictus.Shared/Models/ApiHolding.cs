@@ -23,9 +23,6 @@ namespace Pseudonym.Crypto.Invictus.Shared.Models
         [JsonProperty("contract_address")]
         public string ContractAddress { get; set; }
 
-        [JsonProperty("fixed_value_per_coin")]
-        public decimal? FixedValuePerCoin { get; set; }
-
         [JsonProperty("hex_colour")]
         public string HexColour { get; set; }
 

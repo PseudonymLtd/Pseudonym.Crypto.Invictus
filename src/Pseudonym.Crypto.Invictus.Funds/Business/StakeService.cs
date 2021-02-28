@@ -68,7 +68,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
 
             var circulatingSupply = tokenInfo.TotalSupply.FromBigInteger(int.Parse(tokenInfo.Decimals));
             var token = tokenPair.Tokens
-                .First(x => !x.Symbol.Equals(stakeInfo.Symbol.ToString(), StringComparison.OrdinalIgnoreCase));
+                .Single(x => x.Symbol.Equals(stakeInfo.Symbol.ToString(), StringComparison.OrdinalIgnoreCase));
 
             var now = DateTime.UtcNow;
 

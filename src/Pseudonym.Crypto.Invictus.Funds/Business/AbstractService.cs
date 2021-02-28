@@ -206,39 +206,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Business
             };
         }
 
-        protected BusinessFundAsset MapFundAsset(FundSettings.FundAsset asset, decimal fundValue, CurrencyCode currencyCode)
-        {
-            var total = CurrencyConverter.Convert(asset.Value, currencyCode);
-            var sanitisedId = asset.Name.Replace(" ", "-").Replace(".", "-").ToLower().Trim();
-            var coinloreId = GetAssetInfo(asset.Symbol)?.CoinLore ?? sanitisedId;
-            var coinMarketCapId = GetAssetInfo(asset.Symbol)?.CoinMarketCap ?? sanitisedId;
-
-            return new BusinessFundAsset()
-            {
-                Holding = new BusinessHolding()
-                {
-                    Name = asset.Name,
-                    Symbol = asset.Symbol,
-                    HexColour = GetAssetInfo(asset.Symbol)?.Colour,
-                    ContractAddress = !string.IsNullOrEmpty(asset.ContractAddress)
-                        ? new EthereumAddress(asset.ContractAddress)
-                        : default(EthereumAddress?),
-                    Decimals = asset.Decimals,
-                    IsCoin = asset.IsCoin,
-                    FixedValuePerCoin = asset.FixedValuePerCoin,
-                    Link = asset.Link
-                        ?? new Uri(string.Format(LinkTemplate, coinMarketCapId), UriKind.Absolute),
-                    ImageLink = asset.ImageLink
-                        ?? new Uri(string.Format(ImageTemplate, coinloreId), UriKind.Absolute),
-                    MarketLink = asset.Tradable
-                        ? new Uri(string.Format(MarketTemplate, coinloreId, currencyCode), UriKind.Absolute)
-                        : null
-                },
-                Total = total,
-                Share = total / fundValue * 100
-            };
-        }
-
         protected decimal? Aggregate<T>(IEnumerable<T> data, Func<T, decimal> selector, PriceMode mode)
             where T : IDataAggregatable
         {

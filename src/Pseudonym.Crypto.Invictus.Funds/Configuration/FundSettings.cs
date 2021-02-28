@@ -54,8 +54,6 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 
             public string ContractAddress { get; set; }
 
-            public decimal? FixedValuePerCoin { get; set; }
-
             public int? Decimals { get; set; }
 
             public Uri Link { get; set; }

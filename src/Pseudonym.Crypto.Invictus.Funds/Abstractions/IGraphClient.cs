@@ -10,6 +10,8 @@ namespace Pseudonym.Crypto.Invictus.Funds.Abstractions
     {
         Task<UniswapPairResult> GetUniswapPairAsync(EthereumAddress pairAddress);
 
+        Task<decimal> GetUniswapPriceAsync(EthereumAddress pairAddress, EthereumAddress contractAddress);
+
         IAsyncEnumerable<UniswapTokenPerformanceResult> ListUniswapTokenPerformanceAsync(EthereumAddress contractAddress, DateTimeOffset from, DateTimeOffset to);
     }
 }

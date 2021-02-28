@@ -1,4 +1,6 @@
-﻿using Pseudonym.Crypto.Invictus.Funds.Configuration.Abstractions;
+﻿using System.Text.Json.Serialization;
+using Pseudonym.Crypto.Invictus.Funds.Configuration.Abstractions;
+using Pseudonym.Crypto.Invictus.Funds.Ethereum;
 
 namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 {
@@ -12,6 +14,13 @@ namespace Pseudonym.Crypto.Invictus.Funds.Configuration
 
         public string Colour { get; set; }
 
+        public string PoolAddress { get; set; }
+
         public bool IsUSDStableCoin { get; set; }
+
+        [JsonIgnore]
+        EthereumAddress? IAssetSettings.PoolAddress => !string.IsNullOrWhiteSpace(PoolAddress)
+            ? new EthereumAddress(PoolAddress)
+            : default(EthereumAddress?);
     }
 }

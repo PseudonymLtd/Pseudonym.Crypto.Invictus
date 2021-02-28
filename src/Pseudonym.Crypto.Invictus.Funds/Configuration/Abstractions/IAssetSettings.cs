@@ -1,4 +1,6 @@
-﻿namespace Pseudonym.Crypto.Invictus.Funds.Configuration.Abstractions
+﻿using Pseudonym.Crypto.Invictus.Funds.Ethereum;
+
+namespace Pseudonym.Crypto.Invictus.Funds.Configuration.Abstractions
 {
     public interface IAssetSettings
     {
@@ -9,6 +11,8 @@
         string CoinLore { get; }
 
         string Colour { get; }
+
+        EthereumAddress? PoolAddress { get; }
 
         bool IsUSDStableCoin { get; }
     }

@@ -37,7 +37,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
                         Name = response.Data.Pair.Token0.Name,
                         Decimals = int.Parse(response.Data.Pair.Token0.Decimals),
                         ContractAddress = new EthereumAddress(response.Data.Pair.Token0.ContractAddress),
-                        PricePerToken = response.Data.Pair.Price0.FromBigInteger(),
+                        PricePerToken = response.Data.Pair.Price1.FromBigInteger(),
                         PoolSupply = response.Data.Pair.Supply0.FromBigInteger()
                     },
                     new UniswapTokenResult()
@@ -46,11 +46,21 @@ namespace Pseudonym.Crypto.Invictus.Funds.Clients
                         Name = response.Data.Pair.Token1.Name,
                         Decimals = int.Parse(response.Data.Pair.Token1.Decimals),
                         ContractAddress = new EthereumAddress(response.Data.Pair.Token1.ContractAddress),
-                        PricePerToken = response.Data.Pair.Price1.FromBigInteger(),
+                        PricePerToken = response.Data.Pair.Price0.FromBigInteger(),
                         PoolSupply = response.Data.Pair.Supply1.FromBigInteger()
                     }
                 }
             };
+        }
+
+        public async Task<decimal> GetUniswapPriceAsync(EthereumAddress pairAddress, EthereumAddress contractAddress)
+        {
+            var pair = await GetUniswapPairAsync(pairAddress);
+
+            var token = pair.Tokens
+                .SingleOrDefault(x => x.ContractAddress == contractAddress);
+
+            return token?.PricePerToken ?? decimal.Zero;
         }
 
         public async IAsyncEnumerable<UniswapTokenPerformanceResult> ListUniswapTokenPerformanceAsync(EthereumAddress contractAddress, DateTimeOffset from, DateTimeOffset to)
