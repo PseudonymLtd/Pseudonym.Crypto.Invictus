@@ -48,7 +48,7 @@ namespace Pseudonym.Crypto.Invictus.Funds.Services
                         stakeSettings,
                         latestDate == stakeSettings.InceptionDate
                             ? stakeSettings.InceptionDate
-                            : latestDate.AddHours(-5).Round(),
+                            : latestDate.AddDays(-3).Round(),
                         DateTimeOffset.UtcNow.AddHours(-1).Round(),
                         cancellationToken);
 
