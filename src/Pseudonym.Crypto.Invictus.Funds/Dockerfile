@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:5.0-buster-slim AS build-env
+﻿FROM mcr.microsoft.com/dotnet/sdk:5.0.103-buster-slim AS build-env
 
 # Copy csproj and restore as distinct layers
 COPY src/Pseudonym.Crypto.Invictus.Funds/Pseudonym.Crypto.Invictus.Funds.csproj ./Pseudonym.Crypto.Invictus.Funds/Pseudonym.Crypto.Invictus.Funds.csproj
